@@ -1,0 +1,39 @@
+# TEST PROPERTIES
+
+# PROJECT
+projId=20111006_1
+srcGrupCd=tm
+eclipseProjNm=lotte-super-tms
+depPhsDivCd=3
+phsCd=60
+
+# SUBVERSION
+svnSvrUrl=svn://vcs2.lotte.com
+svnReposNm=lottesuper2011
+svnUserId=hudson
+svnUserPassword=hudson201
+
+# HUDSON
+hdsnWrkSpPath=E:/jenkins-lottesuper/jobs/LOTTESUPER_TMS_1_TEST_BUILD_1/workspace
+hdsnTrunkPath=trunk
+hdsnBranchPath=branches/REAL
+hdsnPackPath=pack/REAL
+
+# SOURCE
+srcWebrootPath=lotte-super-tms/none
+srcWebappPath=lotte-super-tms/WebContent
+
+srcJavaPath=lotte-super-tms/src6,lotte-super-tms/src7
+srcClassesPath=lotte-super-tms/WebContent/WEB-INF/services/TMSIF006SERVICE,lotte-super-tms/WebContent/WEB-INF/services/TMSIF007SERVICE
+srcLibPath=lotte-super-tms/WebContent/WEB-INF/lib
+srcConfPath=lotte-super-tms/conf
+
+# SERVER
+svrDocRoot=/esuper
+svrWebrootPath=project/none
+svrWebappPath=project/tms
+svrClassesPath=project/tms/WEB-INF/services/TMSIF006SERVICE,project/tms/WEB-INF/services/TMSIF007SERVICE
+svrLibPath=project/tms/WEB-INF/lib
+svrConfPath=project/tms/conf
+svrUserId=jeus
+svrUserPassword=ALcHefghi|&l

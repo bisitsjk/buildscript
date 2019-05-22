@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="smartpick_local">
+	<target name="build">
+		<copy todir="d:/deployer/scripts" verbose="true">
+					<fileset dir="E:/jenkins-smartpick/jobs/script_svn_deploy/workspace/smartpick/local"/>
+				</copy>
+	</target>
+</project>

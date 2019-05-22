@@ -1,0 +1,489 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lotte_bo" basedir=".">
+	<!-- ================================================== -->
+	<!-- properties -->
+	<!-- ================================================== -->
+	<property name="srv" value="${TARGET_SERVER}"/>
+	
+	<property file="build_lotte_bo_${srv}.properties" /> 
+		
+	<property name="java.dir" value="C:/Program Files (x86)/Java/jdk1.7.0_80"/>
+	<property name="jeus.dir" value="C:/TmaxSoft/JEUS6.0/lib"/>
+	
+	<property name="project"       value="bo"/>
+	<property name="project.dir"       value="lotte2017"/>
+	<property name="branches.dir"     value="branches/PROJECT/${project.dir}"/>
+	<property name="lotte2010.dir"		value="lotte2010/${branches.dir}"/>
+	<property name="lotteframework2010.dir"		value="lotteframework2010/${branches.dir}"/>
+	<property name="bo.src.dir"       value="${wrkspc}/${lotte2010.dir}/${project}"/>
+	<property name="bo.src.java.dir"  value="${bo.src.dir}/src"/>
+	<property name="bo.src.class.dir" value="${bo.src.dir}/APP-INF/classes"/>
+	<property name="bo.cmm.dir"       value="${wrkspc}/${lotteframework2010.dir}"/>	
+	<property name="bo.pkg.dir"       value="${wrkspc}"/>
+	
+	<property name="tar.name" value="BO_${project.dir}_PROJECT"/>
+	<property name="web.work.log" value="${wrkspc}/deploy_web.log"/>
+	<property name="was.work.log" value="${wrkspc}/deploy_was.log"/>
+	
+	<!-- server info -->
+	<property name="user.id"  value="jeus"/>
+		
+	<!-- document root -->
+	<property name="docroot"  value="/h2010/bo_tomcat"/>
+	
+	<!-- cmd -->
+	<property name="init.cmd"  value="${project.dir}${project}init ${tar.name}"/>
+	<property name="deploy.cmd"  value="${project.dir}${project}deploy ${tar.name}"/>
+	
+	
+	
+	<!-- **************************************************************** -->
+	<!-- BUILD -->
+	<!-- **************************************************************** -->
+	<target name="build">
+		<antcall target="compile.pdk" />
+		<antcall target="jar.pdk" />
+		
+		<antcall target="compile.if" />
+		<antcall target="jar.if" />
+		
+		<antcall target="compile.pricemgr" />
+		<antcall target="jar.pricemgr" />
+		
+		<antcall target="compile" />
+	</target>	
+	
+	
+	
+	<!-- **************************************************************** -->
+	<!-- COMPILE zPDK -->
+	<!-- **************************************************************** -->
+	<path id="classpath.pdk">
+		<fileset dir="${java.dir}/lib">
+			<include name="rt.jar" />
+		</fileset>		
+		<fileset dir="${jeus.dir}">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${bo.cmm.dir}/zCommon/reference">
+			<include name="*.jar" />
+		</fileset>		
+		<fileset dir="${bo.cmm.dir}/zCommon/common_lib">
+			<include name="*.jar" />
+			<exclude name="commons-pionnet.jar" />
+			<exclude name="commons-interfaces.jar" />
+			<exclude name="commons-pricemgr.jar" />
+			<exclude name="ZipIt.jar" />
+		</fileset>	
+	</path>
+			
+	<target name="compile.pdk">
+		<mkdir dir="${bo.cmm.dir}/zPDK/build" />
+		<delete includeemptydirs="true">
+			<fileset dir="${bo.cmm.dir}/zPDK/build" includes="**/*"/>
+    	</delete>
+		<javac srcdir="${bo.cmm.dir}/zPDK/src" destdir="${bo.cmm.dir}/zPDK/build"
+			classpathref="classpath.pdk"
+			failonerror="on" debug="on"	encoding="utf-8"
+			fork="true" includeantruntime="false" />
+		<copy todir="${bo.cmm.dir}/zPDK/build">
+			<fileset dir="${bo.cmm.dir}/zPDK/src">
+				<exclude name="**/*.java" />
+				<exclude name="**/.svn/**" />
+		    </fileset>
+		</copy>
+	</target>
+	
+	<target name="jar.pdk">
+		<mkdir dir="${bo.cmm.dir}/zPDK/dist" />
+		<delete includeemptydirs="true">
+			<fileset dir="${bo.cmm.dir}/zPDK/dist" includes="**/*"/>
+    	</delete>
+		<jar encoding="UTF-8" destfile="${bo.cmm.dir}/zPDK/dist/commons-pionnet.jar">
+			<fileset dir="${bo.cmm.dir}/zPDK/build">
+				<exclude name="**/.svn/**" />
+			</fileset>
+		</jar>
+	</target>
+	
+	
+	
+	<!-- **************************************************************** -->
+	<!-- COMPILE zInterface -->
+	<!-- **************************************************************** -->			
+	<path id="classpath.ifapp">
+		<fileset dir="${java.dir}/jre/lib">
+			<include name="rt.jar" />
+		</fileset>
+		<fileset dir="${bo.cmm.dir}/zCommon/common_lib">
+			<include name="*.jar" />
+			<exclude name="commons-pionnet.jar" />
+			<exclude name="commons-interfaces.jar" />
+			<exclude name="commons-pricemgr.jar" />
+			<exclude name="ZipIt.jar" />			
+		</fileset>
+		<fileset dir="${bo.cmm.dir}/zPDK/dist">
+			<include name="commons-pionnet.jar"/>
+		</fileset>
+	</path>
+	
+	<path id="classpath.if">
+		<fileset dir="${java.dir}/jre/lib">
+			<include name="rt.jar" />
+		</fileset>
+		<fileset dir="${bo.cmm.dir}/zCommon/common_lib">
+			<include name="*.jar" />
+			<exclude name="commons-pionnet.jar" />
+			<exclude name="commons-interfaces.jar" />
+			<exclude name="commons-pricemgr.jar" />
+			<exclude name="ZipIt.jar" />
+		</fileset>		
+		<fileset dir="${bo.cmm.dir}/zPDK/dist">
+			<include name="commons-pionnet.jar"/>
+		</fileset>		
+		<fileset dir="${bo.cmm.dir}/zInterfaces/lib">
+			<include name="*.jar" />
+			<exclude name="commons-pionnet.jar"/>
+			<exclude name="ibatis-2.3.4.726.jar"/>
+			<exclude name="mcash.jar"/>
+			<exclude name="mgcs.jar"/>
+		</fileset>
+
+		<dirset dir="${bo.cmm.dir}/zInterfaces/build_app" />
+	</path>
+				
+	<target name="compile.if">
+		<mkdir dir="${bo.cmm.dir}/zInterfaces/build_app" />
+		<delete includeemptydirs="true">
+			<fileset dir="${bo.cmm.dir}/zInterfaces/build_app" includes="**/*"/>
+    	</delete>
+		<javac 
+			classpathref="classpath.ifapp"
+			srcdir="${bo.cmm.dir}/zInterfaces/src_app"
+			destdir="${bo.cmm.dir}/zInterfaces/build_app"
+			includes="com/mall/**"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			fork="true" 
+			includeantruntime="false" />
+			
+		<mkdir dir="${bo.cmm.dir}/zInterfaces/build" />
+		<delete includeemptydirs="true">
+			<fileset dir="${bo.cmm.dir}/zInterfaces/build" includes="**/*"/>
+    	</delete>
+		<javac 
+			srcdir="${bo.cmm.dir}/zInterfaces/src"
+			classpathref="classpath.if"
+			destdir="${bo.cmm.dir}/zInterfaces/build"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			fork="true" 
+			includeantruntime="false" />
+			
+		<copy todir="${bo.cmm.dir}/zInterfaces/build">
+			<fileset dir="${bo.cmm.dir}/zInterfaces/src">
+				<exclude name="**/*.java" />
+				<exclude name="**/.svn/**" />
+		    </fileset>
+		</copy>
+	</target>
+	
+	<target name="jar.if">
+		<mkdir dir="${bo.cmm.dir}/zInterfaces/dist" />
+		<delete includeemptydirs="true">
+			<fileset dir="${bo.cmm.dir}/zInterfaces/dist" includes="**/*"/>
+    	</delete>
+		<jar encoding="UTF-8" destfile="${bo.cmm.dir}/zInterfaces/dist/commons-interfaces.jar">
+			<fileset dir="${bo.cmm.dir}/zInterfaces/build">
+				<exclude name="**/.svn/**" />
+			</fileset>
+		</jar>		
+	</target>
+	
+	
+		
+	<!-- **************************************************************** -->
+	<!-- COMPILE zPriceMgr -->
+	<!-- **************************************************************** -->
+	<path id="classpath.pricemgr">
+		<fileset dir="${java.dir}/jre/lib">
+			<include name="rt.jar" />
+		</fileset>
+		<fileset dir="${bo.cmm.dir}/zCommon/common_lib">
+			<include name="*.jar" />
+			<exclude name="commons-pionnet.jar"/>
+			<exclude name="commons-interfaces.jar" />
+			<exclude name="commons-pricemgr.jar" />
+			<exclude name="ZipIt.jar" />
+		</fileset>			
+		<fileset dir="${bo.cmm.dir}/zPDK/dist">
+			<include name="commons-pionnet.jar"/>
+		</fileset>
+	</path>	
+		
+	<target name="compile.pricemgr">
+		<mkdir dir="${bo.cmm.dir}/zPriceMgr/build" />
+		<delete includeemptydirs="true">
+			<fileset dir="${bo.cmm.dir}/zPriceMgr/build" includes="**/*"/>
+    	</delete>
+		<javac
+			srcdir="${bo.cmm.dir}/zPriceMgr/src"
+			classpathref="classpath.pricemgr"
+			destdir="${bo.cmm.dir}/zPriceMgr/build"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			fork="true" 
+			includeantruntime="false" />
+			
+		<copy todir="${bo.cmm.dir}/zPriceMgr/build">
+			<fileset dir="${bo.cmm.dir}/zPriceMgr/src">
+				<exclude name="**/*.java" />
+				<exclude name="**/.svn/**" />
+		    </fileset>
+		</copy>
+	</target>
+	
+	<target name="jar.pricemgr">
+		<mkdir dir="${bo.cmm.dir}/zPriceMgr/dist" />
+		<delete includeemptydirs="true">
+			<fileset dir="${bo.cmm.dir}/zPriceMgr/dist" includes="**/*"/>
+    	</delete>
+		<jar encoding="UTF-8" destfile="${bo.cmm.dir}/zPriceMgr/dist/commons-pricemgr.jar">
+			<fileset dir="${bo.cmm.dir}/zPriceMgr/build">
+				<exclude name="**/.svn/**" />
+			</fileset>
+		</jar>
+	</target>	
+	
+	
+	
+	<!-- **************************************************************** -->
+	<!-- COMPILE bo -->
+	<!-- **************************************************************** -->	
+	<path id="classpath">
+		<fileset dir="${java.dir}/jre/lib">
+			<include name="rt.jar" />
+		</fileset>
+		<fileset dir="${bo.cmm.dir}/zCommon/reference">
+			<include name="*.jar" />
+		</fileset>		
+		<fileset dir="${bo.cmm.dir}/zCommon/common_lib">
+			<include name="*.jar" />
+			<exclude name="commons-pionnet.jar" />
+			<exclude name="commons-interfaces.jar" />
+			<exclude name="commons-pricemgr.jar" />
+		</fileset>	
+		<fileset dir="${bo.cmm.dir}/zPDK/dist">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="${bo.cmm.dir}/zInterfaces/dist">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="${bo.cmm.dir}/zPriceMgr/dist">
+			<include name="*.jar" />
+		</fileset>			
+		<fileset dir="${bo.src.dir}/APP-INF/lib">
+			<include name="*.jar" />
+			<exclude name="commons-pionnet.jar" />
+			<exclude name="commons-interfaces.jar" />
+			<exclude name="commons-pricemgr.jar" />
+		</fileset>
+	</path>	
+	
+	<target name="compile">
+		<echo>${bo.src.java.dir}</echo>
+		<mkdir dir="${bo.src.class.dir}" />
+		<delete includeemptydirs="true">
+			<fileset dir="${bo.src.class.dir}" includes="**/*"/>
+    	</delete>
+		<javac srcdir="${bo.src.java.dir}" destdir="${bo.src.class.dir}"
+			classpathref="classpath"			
+			failonerror="on" debug="on"	encoding="utf-8" fork="true" 
+			memoryMaximumSize="512m" includeantruntime="false" />
+	</target>
+	
+	
+	
+	<!-- **************************************************************** -->
+	<!-- PACKAGING -->
+	<!-- **************************************************************** -->
+	<target name="package">
+		<antcall target="framework_pack" />
+		<!-- <antcall target="tar.web" /> -->
+		<antcall target="tar.was" />
+	</target>
+	<target name="framework_pack">
+		<copy todir="${bo.src.dir}/APP-INF/lib">
+			<fileset dir="${bo.pkg.dir}/${lotteframework2010.dir}/zCommon/common_lib">
+				<exclude name="commons-pionnet.jar" />
+				<exclude name="commons-interfaces.jar" />
+				<exclude name="commons-pricemgr.jar" />
+				<exclude name="ZipIt.jar" />
+				<exclude name="**/*.java" />
+				<exclude name="**/.svn/**" />
+		    </fileset>
+		</copy>
+		<copy todir="${bo.src.dir}/APP-INF/lib">
+			<fileset dir="${bo.pkg.dir}/${lotteframework2010.dir}/zPDK/dist">
+				<exclude name="**/*.java" />
+				<exclude name="**/.svn/**" />
+		    </fileset>
+		</copy>
+		<copy todir="${bo.src.dir}/APP-INF/lib">
+			<fileset dir="${bo.pkg.dir}/${lotteframework2010.dir}/zInterfaces/dist">
+				<exclude name="**/*.java" />
+				<exclude name="**/.svn/**" />
+		    </fileset>
+		</copy>
+		<copy todir="${bo.src.dir}/APP-INF/lib">
+			<fileset dir="${bo.pkg.dir}/${lotteframework2010.dir}/zPriceMgr/dist">
+				<exclude name="**/*.java" />
+				<exclude name="**/.svn/**" />
+		    </fileset>
+		</copy>
+	</target>
+	<target name="tar.web">
+		<delete file="${bo.pkg.dir}/${tar.name}_WEB.tar" />
+		<tar destfile="${bo.pkg.dir}/${tar.name}_WEB.tar" longfile="gnu">
+			<tarfileset dir="${wrkspc}/${lotte2010.dir}/bo">
+				<include name="/webroot/**"/>
+				<exclude name="**/.svn/**"/>
+			</tarfileset>
+		</tar>
+	</target>
+	
+	<target name="tar.was">
+		<delete file="${bo.pkg.dir}/${tar.name}_WAS.tar" />
+		<tar destfile="${bo.pkg.dir}/${tar.name}_WAS.tar" longfile="gnu">
+			<tarfileset dir="${wrkspc}/${lotte2010.dir}/bo">
+				<include name="/APP-INF/**"/>
+				<include name="/webapp/**"/>
+				<exclude name="**/.svn/**"/>
+			</tarfileset>			
+		</tar>
+	</target>
+	
+	
+	
+	<!-- **************************************************************** -->
+	<!-- DEPLOY -->
+	<!-- **************************************************************** -->	
+	<target name="deploy.server">
+		<antcall target="clean.server"/>
+		<antcall target="send.was"/>
+		<!-- <antcall target="send.web"/> -->
+		<antcall target="copy.server"/>
+	</target>
+
+	
+	
+	<!-- ================================================== -->
+	<!-- INIT --> 
+	<!-- ================================================== -->
+	<target name="clean.server">
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${was.work.log}"
+			command="cd deploy/lotte2017;./${init.cmd}" />
+			<condition property="isSuccess">
+			<resourcecontains resource="${was.work.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />	
+	</target>
+	
+	
+	
+	<!-- ================================================== -->
+	<!-- SEND --> 
+	<!-- ================================================== -->
+	<target name="send.web">
+		<scp todir="${user.id}:${user.pwd}@${web.ip}:${docroot}" trust="true">
+			<fileset dir="${bo.pkg.dir}">
+				<include name="${tar.name}_WEB.tar"></include>
+			</fileset>
+		</scp>
+	</target>
+	
+	<target name="send.was">
+		<scp todir="${user.id}:${user.pwd}@${was.ip}:${docroot}" trust="true">
+			<fileset dir="${bo.pkg.dir}">
+				<include name="${tar.name}_WAS.tar"></include>
+			</fileset>
+		</scp>
+	</target>
+	
+	
+	
+	<!-- ================================================== -->
+	<!-- COPY	 --> 
+	<!-- ================================================== -->	
+	<target name="copy.server">
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${was.work.log}"
+			command="cd deploy/lotte2017;./${deploy.cmd}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${was.work.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />		
+	</target>	
+	
+	<target name="check_remote_work" unless="isSuccess">
+		<fail message="원격지 작업이 실패하였습니다..." />
+	</target>	
+	
+	
+	
+	<!-- **************************************************************** -->
+	<!-- restart jeus -->
+	<!-- **************************************************************** -->	
+	<target name="restart_tomcat">
+			<antcall target="shutdown_tomcat"/>
+			<antcall target="was_status_check"/>
+			<antcall target="start_tomcat"/>
+			<antcall target="was_status_check"/>
+	</target>
+	
+	<target name="restart"> <!-- test server only -->
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${was.work.log}"
+			command="ja downcon ${con.name1};ja startcon ${con.name1}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${was.work.log}" substring="Succeeded to start" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />			
+	</target>
+
+	<target name="restart_linux"> <!-- test server only -->
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${was.work.log}"
+			command="/usr2/jeus6/bin/jeusadmin boprj -Uadministrator -Pjeusadmin downcon ${con.name1};/usr2/jeus6/bin/jeusadmin boprj -Uadministrator -Pjeusadmin startcon ${con.name1};/usr2/jeus6/bin/jeusadmin boprj -Uadministrator -Pjeusadmin downcon ${con.name2};/usr2/jeus6/bin/jeusadmin boprj -Uadministrator -Pjeusadmin startcon ${con.name2};" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${was.work.log}" substring="Succeeded to start" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />			
+	</target>
+	
+	<!-- *************************************************************** -->
+	<!-- ******************** RESTART APACHE-TOMCAT ******************** -->
+	<!-- *************************************************************** -->
+
+		<target name="shutdown_tomcat"> 
+			<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+				trust="true" verbose="false" output="${was.work.log}"
+				command="/usr2/apache-tomcat/instance/bo11/bin/shutdown.sh;/usr2/apache-tomcat/instance/po11/bin/shutdown.sh;/usr2/apache-tomcat/instance/cc11/bin/shutdown.sh;/usr2/apache-tomcat/instance/mpo11/bin/shutdown.sh" />
+		</target>
+		
+		<target name="start_tomcat"> 
+			<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+				trust="true" verbose="false" output="${was.work.log}"
+				command="/usr2/apache-tomcat/instance/bo11/bin/start.sh;/usr2/apache-tomcat/instance/po11/bin/start.sh;/usr2/apache-tomcat/instance/cc11/bin/start.sh;/usr2/apache-tomcat/instance/mpo11/bin/start.sh" />
+		</target>
+		
+		<target name="was_status_check"> 
+			<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+				trust="true" verbose="false" output="${was.work.log}"
+				command="${tomcat.check}" />
+		</target>
+</project>

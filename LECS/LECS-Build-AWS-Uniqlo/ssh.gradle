@@ -1,0 +1,178 @@
+buildscript {
+    repositories { mavenCentral() }
+    dependencies {
+        classpath group:'com.jcraft', name:'jsch', version:'0.1.45'
+    }
+}
+
+
+import com.jcraft.jsch.*;
+import java.util.*;
+
+class HardcodedUserInfo implements UserInfo {
+ 	private final String password;
+ 	private HardcodedUserInfo(String password) {
+		this.password = password;
+	}
+ 	public String getPassphrase() {
+		return null;
+	}
+ 	public String getPassword() {
+		return password;
+	}
+ 	public boolean promptPassword(String s) {
+		return true;
+	}
+ 	public boolean promptPassphrase(String s) {
+		return true;
+	}
+ 	public boolean promptYesNo(String s) {
+		return true;
+	}
+ 	public void showMessage(String s) {
+		System.out.println("message = " + s);
+	}
+}
+
+
+scp = { params ->
+	println "scp $params"
+	fromFile  = params['fromFile']
+	destPath   = params['destPath']
+	user  = params['user']
+	password = params['password']
+	address = params['address']
+	port = params['port'] == null ? 22 : params['port']
+	
+	JSch jsch = new JSch()
+	Session session = jsch.getSession(user, address,port)
+	session.setUserInfo(new HardcodedUserInfo(password));
+	Properties config = new Properties();
+	config.setProperty("StrictHostKeyChecking", "no");
+	session.setConfig(config);
+	session.connect();
+	ChannelSftp channel = (ChannelSftp)session.openChannel("sftp");
+	channel.connect();
+	channel.cd(destPath);
+	File file = new File(fromFile)
+	channel.put(new FileInputStream(file), file.name);
+	channel.disconnect();
+	session.disconnect();
+	return channel.exitStatus
+}
+
+class SSHExecResult {
+	int exitCode;
+	String output;
+}
+
+/*sshexec = { params ->
+	user  = params['user']
+	password = params['password']
+	address = params['address']
+ 	commnad  = params['command']
+	port = params['port'] == null ? 22 : params['port']
+	
+	JSch jsch = new JSch();
+	JSch.setConfig("StrictHostKeyChecking", "no");
+
+	Session session = (Session) jsch.getSession(user, address, port);
+	session.setPassword(password);
+	session.connect(3000);
+
+	ChannelExec channel = (ChannelExec) session.openChannel("exec");
+	channel.setCommand("/bin/ls");
+	channel.connect();
+	
+	BufferedReader br = new BufferedReader(new InputStreamReader(channel.getInputStream(), "UTF-8"));
+	StringBuffer buf = new StringBuffer();
+	while(true){
+		int r = br.read();
+		if (r == -1){
+			break;
+		}
+		buf.append((char) r);
+
+	}
+	channel.disconnect();
+	session.disconnect();
+	def result = new SSHExecResult()
+	result.exitCode = channel.exitStatus;
+	result.output = buf.toString()
+	return result
+}
+*/
+
+sshexec = { params ->
+	println "sshexec $params"
+	user  = params['user']
+	password = params['password']
+	address = params['address']
+ 	port = params['port'] == null ? 22 : params['port']
+	encoding = params['encoding'] == null ? 'UTF-8' : params['encoding']
+	command = params['commnad'];
+	
+	
+	closure =  { cmd ->
+		
+		println "sshexec command: $cmd"
+		JSch jsch = new JSch();
+		JSch.setConfig("StrictHostKeyChecking", "no");
+		Session session = jsch.getSession(user, address,port)
+		session.setUserInfo(new HardcodedUserInfo(password));
+		session.connect(3000);
+
+		ChannelExec channel = (ChannelExec) session.openChannel("exec");
+		channel.setCommand( cmd.toString() );
+		channel.connect();
+	
+		BufferedReader br = new BufferedReader(new InputStreamReader(channel.getInputStream(), encoding));
+		StringBuffer buf = new StringBuffer();
+		while(true){
+			int r = br.read();
+			if (r == -1){
+				break;
+			}
+			buf.append((char) r);
+
+		}
+		channel.disconnect();
+		session.disconnect();
+		def result = new SSHExecResult()
+		result.exitCode = channel.exitStatus;
+		result.output = buf.toString()
+		println buf.toString()
+		return result
+	}
+	if (command == null) {
+		return closure
+	}
+	
+	return closure(command)
+}
+
+
+
+
+
+task scpppp << {
+//	println sshexec( user:'jeus', password:'aS1tsn2!', address:'210.93.129.162', command:'/bin/ls' ).output
+	scp (user:'jeus', password:'k^684_C9zbT?P1/home/jeus')
+	//scp ("compile.gradle", "jeus", "aS1tsn2!", "210.93.129.162", "/usr1/home/jeus")
+	/*String filename = "compile.gradle"
+		println filename
+		JSch jsch = new JSch()
+		Session session = jsch.getSession("jeus", "210.93.129.162",22)
+		session.setUserInfo(new HardcodedUserInfo("aS1tsn2!"));
+		Properties config = new Properties();
+		config.setProperty("StrictHostKeyChecking", "no");
+		session.setConfig(config);
+		session.connect();
+		ChannelSftp channel = (ChannelSftp)session.openChannel("sftp");
+		channel.connect();
+		channel.cd("/usr1/home/jeus");
+		channel.put(new FileInputStream(new File("compile.gradle")), "compile.gradle");
+		channel.disconnect();
+		session.disconnect();*/
+}
+

@@ -1,0 +1,673 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lotteweb" basedir=".">
+<!-- **************************************************************** -->
+<!-- 롯데닷컴 빌드 스크립트(서비스 공통) -->
+<!-- 작성자 : 강의석 -->
+<!-- **************************************************************** -->
+	<!-- SET PROPERTY -->
+	<!-- properties 로 관리 -->
+	<property file="lotteweb.properties" />
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties">
+		<classpath>
+			<pathelement location="C:/Ant-1.8.2/lib/ant-contrib-1.0b3.jar"/>
+		</classpath>
+	</taskdef>
+	
+	<macrodef name="substring">
+		<attribute name="property"/>
+		<attribute name="string"/>
+		<attribute name="start"/>
+		<attribute name="end"/>
+		<sequential>
+			<script language="javascript">
+				self.getProject().setNewProperty("@{property}", "@{string}".substring(@{start}, @{end}));
+			</script>
+		</sequential>
+	</macrodef>	
+	
+	<macrodef name="propertyvalue">
+		<attribute name="property"/>
+		<attribute name="value"/>
+		<sequential>
+			<property name="@{property}" value="${@{value}}"/>
+		</sequential>
+	</macrodef>
+	
+	
+<!-- **************************************************************** -->
+<!-- COMMON PROPERTIES -->
+<!-- **************************************************************** -->	
+	<!-- dir -->
+	<property name="java.home.dir" 			value="C:/Program Files (x86)/Java/jdk1.6.0_25" />
+	<property name="java17.home.dir" 		value="C:/Program Files (x86)/Java/jdk1.7.0_80" />
+	<property name="jeus.home.dir"			value="C:/TmaxSoft/JEUS6.0" />
+	<property name="deployer.home.dir"		value="D:/deployer" />
+	
+	<!-- common library path -->
+	<property name="comm.project.name" 		value="lottewebcm"/>
+	<property name="comm.svn.repos.name" 	value="lotteframework2010" />
+	<property name="comm.wrksp.path" 		value="e:/hudson-lotte/teams/lotte/jobs/lotte.S01CM1TEST/workspace" />
+	<property name="comm16.wrksp.path" 		value="e:/hudson-lotte/teams/lotte/jobs/lotte.S10CM1TEST.16/workspace" />
+	<property name="comm.ref.path" 			value="zCommon/reference" />
+	<property name="comm.lib.path" 			value="zCommon/common_lib"/>
+	<property name="comm.pdk.path" 			value="zPDK/dist"/>
+	<property name="comm.ifc.path" 			value="zInterfaces/dist"/>
+	<property name="comm.prm.path" 			value="zPriceMgr/dist"/>	
+	
+	<!-- parameter -->
+	<property name="workspace.dir"			value="${WORKSPACE_DIR}"/>
+	<property name="project.name"			value="${PROJECT_NAME}"/>
+	<property name="deploy.phase"			value="${DEPLOY_PHASE}"/>
+	<property name="main.deploy.id"			value="${DEPLOY_ID}"/>
+	<property name="comm.deploy.id"			value="${COMM_DEPLOY_ID}"/>
+	<property name="host.ip"      			value="${HOST_IP}"/>
+	<property name="restart.cmd"   			value="${RESTART_COMMAND}"/>
+	<property name="tomcat.down.cmd"   		value="${TDOWN_COMMAND}"/>
+	<property name="tomcat.start.cmd"   	value="${TSTART_COMMAND}"/>
+	<property name="stopover.dir"  			value="${STOPOVER_DIR}"/>
+
+	<!-- external property file -->
+	<property file="${deployer.home.dir}/scripts/${project.name}.${deploy.phase}.properties"/>
+	
+	<property name="src.dir" 				value="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcJavaPath}" />
+	<property name="dest.dir" 				value="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}" />
+	
+	<!-- log files 경로가 미리 생성되어 있어야 함 -->
+	<property name="log.path" 		value="${deployer.home.dir}/logs/${project.name}" /> 
+	<!-- /${deploy.id}_BUILD.log -->
+	<!-- /${deploy.id}_REMOTEWORK.log -->
+	
+	<!-- parameter files -->
+	<property name="param.prop" 			value="${deployer.home.dir}/scripts/${project.name}_param.properties" />
+	
+	<!-- user -->
+	<!--
+	<property name="user.id"				value="jeus"/>
+	<property name="user.pwd"				value="8Yqi4q(1=Z"/>
+	<property name="batch.user.id"			value="xclass"/>
+	<property name="batch.user.pwd"			value="jqg6w6;5RH"/>
+	-->
+	<!-- 
+	<property name="jeus"					value="8Yqi4q(1=Z"/>
+	<property name="xclass"					value="jqg6w6;5RH"/>
+	-->	
+	
+<!-- **************************************************************** -->
+<!-- CHECK -->
+<!-- **************************************************************** -->
+	<target name="check_id">
+		<condition property="isValidId" value="true" else="false">
+			<and>
+				<contains string="${deploy.id}" substring="${deploy.id.prefix}_" casesensitive="true"/>
+				<length   string="${deploy.id}" when="greater" length="15"/>
+			</and>
+		</condition>
+	</target>
+	
+	<target name="check_alive"/>
+	
+	<target name="check_remote_work" unless="${isSuccess}">
+		<fail message="원격지 작업이 실패하였습니다..." />
+	</target>
+	
+	<target name="check_common_id" depends="set_id">
+		<condition property="isCommonDeployId" value="true" else="false">
+			<contains string="${DEPLOY_ID}" substring="CM_" casesensitive="true"/>
+		</condition>
+		<echo>■ ${DEPLOY_ID} is common ID : ${isCommonDeployId}</echo>
+	</target>
+	
+	<!--
+	<target name="check_accept_prop">
+		<condition property="existAcceptProp">
+			<resourceexists>
+				<file file="${accept.prop}"/>
+			</resourceexists>
+		</condition>
+	</target>
+	-->
+	
+	
+<!-- **************************************************************** -->
+<!-- ACCEPT -->
+<!-- **************************************************************** -->
+	<target name="accept">
+		<echo>■ 배포ID 유무 확인</echo>
+		<condition property="exsitMainId" value="true" else="false">
+			<length string="${main.deploy.id}" length="16"/>
+		</condition>
+		<echo>  - main : ${exsitMainId}</echo>
+		<condition property="exsitCommId" value="true" else="false">
+			<length string="${comm.deploy.id}" length="16"/>
+		</condition>
+		<echo>  - comm : ${exsitCommId}</echo>
+		<condition property="isAuto" value="true" else="false">
+			<and>
+				<isfalse value="${exsitMainId}"/>
+				<isfalse value="${exsitCommId}"/>
+			</and>
+		</condition>
+
+		<echo>■ 배포ID 체크</echo>
+		<echo>  - check ${main.deploy.id}</echo>
+		<condition property="deploy.id" value="${main.deploy.id}">
+			<and>
+				<contains string="${main.deploy.id}" substring="${deploy.id.prefix}_" casesensitive="true" />
+				<!-- <contains string="${main.deploy.id}" substring="_${rglrDepHhmm}"/> -->
+				<length   string="${main.deploy.id}" when="greater" length="15"/>
+			</and>
+		</condition>
+		<echo>  - check ${comm.deploy.id}</echo>
+		<condition property="deploy.id" value="${comm.deploy.id}">
+			<and>
+				<contains string="${comm.deploy.id}" substring="CM_" casesensitive="true" />
+				<!-- <contains string="${comm.deploy.id}" substring="_${rglrDepHhmm}"/> -->
+				<length   string="${comm.deploy.id}" when="greater" length="15"/>
+			</and>
+		</condition>
+		
+		<echo>■ 배포이력 유무 확인</echo>
+		<condition property="existAcceptProp" value="true" else="false">
+			<resourceexists>
+				<file file="${workspace.dir}/${deploy.id}_accept.properties"/>
+			</resourceexists>
+		</condition>
+		<echo>  - 배포이력 : ${existAcceptProp}</echo>
+		
+		<antcall target="manual"/>
+		<antcall target="auto"/>
+	</target>
+	
+	<!-- manual isAuto==false -->
+	<!-- 배포ID가 파라미터로 제공됨. 접수는 수동으로 한 후 빌드만 돌리는 방식 -->
+	<!-- 배포ID가 있으면 실행(배포ID를 properties에 저장하고 다음 step으로 넘어감)! -->
+	<!-- 배포ID가 없으면 accept로 넘어감 -->
+	<target name="manual" unless="${isAuto}">
+		<condition property="isValid" value="true" else="false">
+			<and>
+				<contains string="${deploy.id}" substring="${deploy.id.prefix}_" casesensitive="true"/>
+				<length string="${deploy.id}" when="greater" length="15"/>
+			</and>
+		</condition>
+		<fail unless="${isValid}" message="배포ID가 유효하지 않습니다." />
+		
+		<!-- <antcall target="manual_accept"/> -->
+		
+		<!-- 배포ID 저장(파라미터용) -->
+		<record name="${param.prop}" emacsmode="true" action="start" />
+			<echo>DEPLOY_ID=${deploy.id}</echo>
+			<echo>COMM_DEPLOY_ID=${comm.deploy.id}</echo>
+		<record name="${param.prop}" emacsmode="true" action="stop" />	
+		
+		<antcall target="add_count"/>
+	</target>
+	
+	<target name="auto" if="${isAuto}">
+		<!-- auto isAuto==true -->
+		<!-- auto-accept -->
+		<!-- 배포ID 제공되지 않음. 지정된 시간에 1회만 사용 -->
+		<!-- 실행 이력이 있으면 reaccept로 넘어가고, 실행 이력이 없으면 실행(접수처리)하고 실행 이력을 properties에 기록 후 다음 step으로 넘어감 -->
+		<antcall target="first_accept"/>
+		<!-- auto-reaccept -->
+		<!-- 배포ID 제공되지 않음. -->
+		<!-- properties에 실행 이력이 있으면 실행(재접수처리) 후 다음 step으로 넘어감 -->
+		<antcall target="reaccept"/>
+	</target>
+	
+	<target name="first_accept" unless="${existAcceptProp}">
+		<!-- 신규 접수처리 -->
+		<java jvm="${java.home.dir}/bin/java" fork="yes"
+		      failonerror="false"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar"
+			  errorproperty="acceptError">
+			<arg value="${project.name}"/>
+			<arg value="NONE"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="accept"/>
+		</java>
+		<!-- 접수처리 결과 -->
+		<condition property="isAcceptError">
+			<length string="${acceptError}" when="greater" length="0" />
+		</condition>
+		<fail if="${isAcceptError}" message="접수오류" />
+		<!-- 접수처리 성공시, 일반 배포ID를 properties 파일에 저장 -->
+		<java jvm="${java.home.dir}/bin/java" fork="yes"
+		      failonerror="false"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar"
+			  errorproperty="getidError">
+			<arg value="${project.name}"/>
+			<arg value="NONE"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="getid"/>
+		</java>
+		<condition property="isGetidError">
+			<length string="${getidError}" when="greater" length="0" />
+		</condition>
+		<fail if="${isGetidError}" message="." />
+		<!-- 접수처리 성공시, 공통 배포ID를 properties 파일에 저장 -->
+		<antcall target="set_common_id"/>
+		<!-- 모든 접수 처리 후 접수이력 저장 -->
+		<antcall target="set_id_and_add_count"/>
+	</target>
+	
+	<target name="reaccept" if="${existAcceptProp}">
+		<!-- 재접수처리 -->
+		<java jvm="${java.home.dir}/bin/java" fork="yes"
+		      failonerror="false"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar"
+			  errorproperty="reacceptError">
+			<arg value="${project.name}"/>
+			<arg value="NONE"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="reaccept"/>
+		</java>
+		<!-- 재접수처리 결과 -->
+		<condition property="isReAcceptError">
+			<length string="${reacceptError}" when="greater" length="0" />
+		</condition>
+		<fail if="${isReAcceptError}" message="재접수오류" />
+		<!-- 접수처리 성공시, 일반 배포ID를 properties 파일에 저장 -->
+		<java jvm="${java.home.dir}/bin/java" fork="yes"
+		      failonerror="false"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar"
+			  errorproperty="getidError">
+			<arg value="${project.name}"/>
+			<arg value="NONE"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="getid"/>
+		</java>
+		<condition property="isGetidError">
+			<length string="${getidError}" when="greater" length="0" />
+		</condition>
+		<fail if="${isGetidError}" message="." />
+		<!-- 접수처리 성공시, 공통 배포ID를 properties 파일에 저장 -->
+		<antcall target="set_common_id"/>
+		<!-- 모든 접수 처리 후 접수이력 저장 -->
+		<antcall target="set_id_and_add_count"/>
+	</target>
+	
+	<target name="manual_accept">
+		<!-- 재접수처리 -->
+		<java jvm="${java.home.dir}/bin/java" fork="yes"
+		      failonerror="false"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar"
+			  errorproperty="manualAcceptError">
+			<arg value="${project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="receipt"/>
+		</java>
+		<!-- 재접수처리 결과 -->
+		<condition property="isManualAcceptError">
+			<length string="${manualAcceptError}" when="greater" length="0" />
+		</condition>
+		<fail if="${isManualAcceptError}" message="재접수오류" />
+		<!-- 접수처리 성공시, 공통 배포ID를 properties 파일에 저장 -->
+		<antcall target="set_common_id"/>
+		<!-- 모든 접수 처리 후 접수이력 저장 -->
+		<antcall target="set_id_and_add_count"/>
+	</target>
+	
+	<target name="add_count" depends="check_id" if="${isValidId}">
+		<propertyfile file="${workspace.dir}/${deploy.id}_accept.properties">
+			<entry key="deploy_count" default="0" type="int" operation="+" />
+		</propertyfile>
+	</target>
+	
+	<target name="set_id_and_add_count" depends="set_id"> <!-- 자동인 경우에 배포ID를 파일에서 읽어와야 함. -->
+		<antcall target="add_count"/>
+	</target>
+	
+	<target name="accept_real">
+		<echo>■ 배포ID 유무 확인</echo>
+		<condition property="exsitMainId" value="true" else="false">
+			<length string="${main.deploy.id}" length="16"/>
+		</condition>
+		<echo>  - main : ${exsitMainId}</echo>
+		<condition property="exsitCommId" value="true" else="false">
+			<length string="${comm.deploy.id}" length="16"/>
+		</condition>
+		<echo>  - comm : ${exsitCommId}</echo>
+		<condition property="isAuto" value="true" else="false">
+			<and>
+				<isfalse value="${exsitMainId}"/>
+				<isfalse value="${exsitCommId}"/>
+			</and>
+		</condition>
+
+		<echo>■ 배포ID 체크</echo>
+		<echo>  - check ${main.deploy.id}</echo>
+		<condition property="deploy.id" value="${main.deploy.id}">
+			<and>
+				<contains string="${main.deploy.id}" substring="${deploy.id.prefix}_" casesensitive="true" />
+				<!-- <contains string="${main.deploy.id}" substring="_${rglrDepHhmm}"/> -->
+				<length   string="${main.deploy.id}" when="greater" length="15"/>
+			</and>
+		</condition>
+		<echo>  - check ${comm.deploy.id}</echo>
+		<condition property="deploy.id" value="${comm.deploy.id}">
+			<and>
+				<contains string="${comm.deploy.id}" substring="CM_" casesensitive="true" />
+				<!-- <contains string="${comm.deploy.id}" substring="_${rglrDepHhmm}"/> -->
+				<length   string="${comm.deploy.id}" when="greater" length="15"/>
+			</and>
+		</condition>
+		
+		<echo>■ 배포이력 유무 확인</echo>
+		<condition property="existAcceptProp" value="true" else="false">
+			<resourceexists>
+				<file file="${workspace.dir}/${deploy.id}_accept.properties"/>
+			</resourceexists>
+		</condition>
+		<echo>  - 배포이력 : ${existAcceptProp}</echo>
+		
+		<condition property="isValid" value="true" else="false">
+			<and>
+				<contains string="${deploy.id}" substring="${deploy.id.prefix}_" casesensitive="true"/>
+				<length string="${deploy.id}" when="greater" length="15"/>
+			</and>
+		</condition>
+		<fail unless="${isValid}" message="배포ID가 유효하지 않습니다." />
+		
+		<!-- 배포ID 저장(파라미터용) -->
+		<record name="${param.prop}" emacsmode="true" action="start" />
+			<echo>DEPLOY_ID=${deploy.id}</echo>
+			<echo>COMM_DEPLOY_ID=${comm.deploy.id}</echo>
+		<record name="${param.prop}" emacsmode="true" action="stop" />	
+		
+		<antcall target="add_count"/>
+	</target>	
+
+	
+<!-- **************************************************************** -->
+<!-- SET ID -->
+<!-- 접수 직후 다른 target으로 배포ID를 전달하기 위해 사용 -->
+<!-- **************************************************************** -->
+	<target name="set_id">
+		<echo>■ DEPLOY_ID를 다시 매핑합니다. 현재 DEPLOY_ID는 ${DEPLOY_ID} 입니다.</echo>
+		<var name="DEPLOY_ID" unset="true"/>
+		<property file="${param.prop}"/>
+		<property name="deploy.id" value="${DEPLOY_ID}"/>
+		<fail message="■ 배포ID가 유효하지 않습니다.">
+			<condition>
+				<not>
+					<and>
+						<contains string="${deploy.id}" substring="${deploy.id.prefix}_" casesensitive="true" />
+						<length   string="${deploy.id}" when="greater" length="15"/>
+					</and>
+				</not>
+			</condition>
+		</fail>
+		<echo>■ 다시 매핑된 DEPLOY_ID는 ${DEPLOY_ID} 입니다.</echo>
+	</target>
+	
+	<target name="set_common_id" depends="check_common_id" if="${isCommonDeployId}">
+		<record name="${param.prop}" emacsmode="true" action="start" append="yes"/>
+			<echo></echo>
+			<echo>COMM_DEPLOY_ID=${deploy.id}</echo>
+			<echo></echo>
+		<record name="${param.prop}" emacsmode="true" action="stop" />
+	</target>
+	
+	
+<!-- **************************************************************** -->	
+<!-- MERGE -->
+<!-- **************************************************************** -->
+	<target name="merge" depends="set_id">
+		<echo>소스 머지</echo>
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="merge"/>
+		</java> 
+	</target>
+	
+	
+<!-- **************************************************************** -->
+<!-- CLEAN -->
+<!-- **************************************************************** -->	
+	<target name="clean"/>
+	
+	
+<!-- **************************************************************** -->
+<!-- BUILD -->
+<!-- **************************************************************** -->
+	<target name="build"/>
+	
+	
+<!-- **************************************************************** -->
+<!-- PACK -->
+<!-- **************************************************************** -->	
+	<target name="pack" depends="set_id">
+		<property name="pack.real.path" value="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/${eclipseProjNm}" />
+		<echo>패키징</echo>
+		<delete dir="${pack.real.path}" />
+		<mkdir  dir="${pack.real.path}" />
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="pack"/>
+		</java>
+		
+		<antcall target="pack.jar"/>
+		<antcall target="pack.conf"/>
+	</target>
+	
+	<target name="pack.jar"/>
+	<target name="pack.conf"/>
+	
+<!-- **************************************************************** -->
+<!-- BACKUP -->
+<!-- **************************************************************** -->
+	<target name="backup" depends="set_id">
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="deploy"/>
+			<arg value="${host.ip}" />
+			<arg value="21" />
+			<arg value="${user.id}" />
+			<arg value="${user.pwd}" />
+		</java>
+	</target>
+
+	
+	
+<!-- **************************************************************** -->
+<!-- DEPLOY -->
+<!-- **************************************************************** -->
+	<target name="deploy_web">
+		<antcall target="init"/>
+		<antcall target="send_web"/>
+		<antcall target="copy"/>
+	</target>
+	
+	<target name="deploy_was">
+		<antcall target="init"/>
+		<antcall target="send_was"/>
+		<antcall target="copy"/>
+		<!--<antcall target="restart_jeus"/>-->
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- 2017.11.10 롯데닷컴 WEB/WAS 오픈소스 전환 및 JDK1.7 업그레이드 -->
+	<!-- 수정자 : 이진영-->
+	<!-- **************************************************************** -->
+	
+	<target name="deploy_tomcat">
+			<antcall target="init"/>
+			<antcall target="send_was"/>
+			<antcall target="wnsearch_properties"/>
+			<antcall target="copy"/>
+			<antcall target="shutdown_tomcat"/>
+			<antcall target="was_status_check"/>
+			<antcall target="start_tomcat"/>
+			<antcall target="was_status_check"/>
+		</target>
+	
+	<target name="deploy">
+		<antcall target="init"/>
+		<antcall target="send"/>
+	</target>	
+	
+	<target name="init">
+		<sshexec host="${host.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${log.path}/${deploy.id}_REMOTEWORK.log"
+			command="cd deploy;./${init.cmd} ${deploy.id}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${log.path}/${deploy.id}_REMOTEWORK.log" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />			
+	</target>
+	
+	<target name="wnsearch_properties"/>
+	
+	<target name="send_web"/>
+	
+	<target name="send_was"/>
+	
+	<target name="send"/>
+	
+	<target name="copy">
+		<sshexec host="${host.ip}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" output="${log.path}/${deploy.id}_REMOTEWORK.log"
+			command="cd deploy;./${copy.cmd} ${deploy.id}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${log.path}/${deploy.id}_REMOTEWORK.log" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />		
+	</target>
+	
+	<target name="restart_jeus">
+		<antcall target="check_alive"/>
+		<sshexec host="${host.ip}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" output="${log.path}/${deploy.id}_REMOTEWORK.log"
+			command="${restart.cmd}" />
+		<condition property="isSuccess">
+			<and>
+				<resourcecontains resource="${log.path}/${deploy.id}_REMOTEWORK.log" substring="Succeeded to start" casesensitive="true" />
+				<not>
+					<resourcecontains resource="${log.path}/${deploy.id}_REMOTEWORK.log" substring="failed" casesensitive="false" />
+				</not>
+			</and>
+		</condition>
+		<antcall target="check_remote_work" />
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- 2017.11.10 롯데닷컴 WEB/WAS 오픈소스 전환 및 JDK1.7 업그레이드 -->
+	<!-- 수정자 : 이진영-->
+	<!-- **************************************************************** -->
+		
+	<target name="shutdown_tomcat"> 
+		<sshexec host="${host.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${was.work.log}"
+				command="${tomcat.down.cmd} sleep 3" />
+		<sleep seconds="3"/>
+	</target>
+
+	<target name="start_tomcat"> 
+		<sshexec host="${host.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${was.work.log}"
+			command="${tomcat.start.cmd}" />
+	</target>
+				
+	<target name="was_status_check"> 
+		<sshexec host="${host.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${was.work.log}"
+				command="${tomcat.check}" />
+	</target>
+	
+	
+	
+<!-- **************************************************************** -->
+<!-- ROLLBACK -->
+<!-- **************************************************************** -->
+	<target name="rollback_web">
+		<antcall target="rollback"/>
+	</target>
+	
+	<target name="rollback_was">
+		<antcall target="rollback"/>
+		<!--<antcall target="restart_jeus"/>-->
+	</target>
+	
+	<target name="rollback">
+		<sshexec host="${host.ip}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" output="${log.path}/${deploy.id}_REMOTEWORK.log"
+			command="cd deploy;./${rollback.cmd} ${deploy.id}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${log.path}/${deploy.id}_REMOTEWORK.log" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />		
+	</target>	
+	
+	
+		
+<!-- **************************************************************** -->
+<!-- NOTICE FAIL -->
+<!-- **************************************************************** -->	
+	<target name="notice_fail" if="${isBuildError}">
+		<echo>빌드 오류 메세지 전송</echo>
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="notice"/>
+			<arg value="FAIL"/>
+		</java>
+	</target>
+
+	
+	
+<!-- **************************************************************** -->
+<!-- NOTICE SUCCESS -->
+<!-- **************************************************************** -->
+	<target name="notice_success">
+		<echo>시험배포 완료 메세지 전송</echo>
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="notice"/>
+			<arg value="SUCCESS"/>
+		</java> 
+	</target>
+	
+
+	
+<!-- **************************************************************** -->
+<!-- RECORD -->
+<!-- **************************************************************** -->	
+	<target name="record">
+		<echo>처리상태 변경</echo>
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="record"/>
+		</java> 
+	</target>		
+	
+	
+	
+<!-- **************************************************************** -->
+<!-- SYNC : 각 sync용 script 사용 -->
+<!-- **************************************************************** -->
+	
+</project>

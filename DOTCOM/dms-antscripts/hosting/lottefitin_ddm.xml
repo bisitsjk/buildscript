@@ -1,0 +1,212 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottefitin_ddm">
+	<!-- param -->
+	<property name="deploy.id" value="${DEPLOY_ID}"/>
+	<!-- properties -->
+	<property name="java16.home"     value="C:/Program Files (x86)/Java/jdk1.6.0_25"/>
+	<property name="java15.home"     value="C:/Program Files (x86)/Java/jdk1.5.0_12"/>
+	<property name="deployer.home"   value="D:/deployer"/>
+	
+	<property file="${deployer.home}/scripts/${ant.project.name}.properties"/>	
+	
+	<property name="user.id"   value="xclass"/>
+	<property name="user.pwd"  value="aLPd%BgT1)Pl"/>
+	
+	<property name="req.dir"         value="${workspace}${requestPath}/${deploy.id}"/>
+	
+	<property name="src.home"        value="${workspace}${releasePath}"/>
+	<property name="java.src.dir"    value="${src.home}${srcPath}"/>
+	<property name="java.lib.dir"    value="${src.home}${libPath}"/>
+	<property name="pack.dir"        value="${workspace}${packPath}/${deploy.id}"/>
+	
+	<property name="dst.class.dir"   value="${src.home}/${ant.project.name}${svrClassPath}"/>
+	<property name="dst.lib.dir"     value="${src.home}/${ant.project.name}${svrLibPath}"/>
+	
+	<property name="java.dyna.src.dir"    value="${src.home}${srcDynaPath}"/>
+	<property name="dst.dyna.class.dir"   value="${src.home}/${ant.project.name}${svrDynaClassPath}"/>	
+	
+	<property name="remote.home.dir" value="${docRoot}"/>
+	
+	<!-- validation -->
+	<target name="param_check">
+		<condition property="isValid">
+			<and>
+			    <contains string="${deploy.id}" substring="FD_" casesensitive="true" />
+				<length string="${deploy.id}" when="greater" length="12"/>
+				<resourceexists>
+					<file file="${req.dir}"/>
+				</resourceexists>
+			</and>
+		</condition>
+	</target>
+	<target name="param_check_fail" unless="isValid">
+		<echo>${req.dir}</echo>
+		<fail message="DEPLOY_ID가 유효하지 않습니다."/>
+	</target>
+	<target name="param_check_file">
+		<condition property="isWebContent">
+			<resourceexists>
+				<file file="${pack.dir}/${ant.project.name}/WebContent"/>
+			</resourceexists>
+		</condition>
+	</target>
+	
+	<!-- merge -->
+	<path id="deployerclasspath">
+		<fileset dir="${deployer.home}/lib">
+			<include name="*.jar" />
+		</fileset>
+	</path>	
+	
+	<target name="merge" depends="param_check">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="param_check_fail"/>
+		<antcall target="exec_merge"/>
+	</target>
+	<target name="exec_merge" if="isValid">
+		<java jar="${deployer.home}/bin/deployer1.1.3.jar"
+		      fork="true" failonerror="true" >
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="merge"/>			
+		</java> 
+	</target>
+	
+	<!-- build -->
+	<path id="classpath">
+		<fileset dir="${java.lib.dir}">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="${java15.home}/jre/lib">
+			<include name="rt.jar" />
+		</fileset>
+		<fileset dir="C:/TmaxSoft/JEUS5.0/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		
+		<dirset dir="${dst.class.dir}" />
+		<dirset dir="${dst.dyna.class.dir}" />		
+	</path>
+	<target name="build">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="compile"/>
+	</target>
+	<target name="compile">
+		<javac srcdir="${java.src.dir}"
+		       destdir="${dst.class.dir}"
+		       fork="no"
+		       classpathref="classpath" 
+		       nowarn="yes"
+		       source="1.5"
+		       target="1.5"
+		       compiler="javac1.5"
+			   encoding="utf-8"
+		/>
+		<javac srcdir="${java.dyna.src.dir}"
+		       destdir="${dst.dyna.class.dir}"
+		       fork="no"
+		       classpathref="classpath" 
+		       nowarn="yes"
+		       source="1.5"
+		       target="1.5"
+		       compiler="javac1.5"
+			   encoding="utf-8"
+		/>		
+		<copy todir="${dst.class.dir}">
+			<fileset dir="${java.src.dir}">
+				<include name="**/*.properties"/>
+				<include name="**/*.xml"/>
+			</fileset>
+		</copy>
+		<copy todir="${dst.dyna.class.dir}">
+			<fileset dir="${java.dyna.src.dir}">
+				<include name="**/*.properties"/>
+				<include name="**/*.xml"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<!-- pack -->
+	<target name="pack" depends="param_check">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="param_check_fail"/>
+		<antcall target="exec_pack"/>
+		<antcall target="exec_rename"/>
+	</target>
+	<target name="exec_pack" if="isValid">
+		<delete dir="${pack.dir}" />
+		<java jar="${deployer.home}/bin/deployer1.1.3.jar"
+		      fork="true" failonerror="true" >
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="pack"/>
+		</java> 
+	</target>
+	<target name="exec_rename" depends="param_check_file" if="isWebContent">
+		<rename dest="${pack.dir}/${ant.project.name}/WebContent" src="${pack.dir}/${ant.project.name}${svrJspPath}" />
+	</target>
+	
+	
+	<!-- backup -->
+	<target name="backup" depends="param_check">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="param_check_fail"/>
+		<antcall target="exec_backup"/>
+	</target>
+	<target name="exec_backup" if="isValid">
+		<java jar="${deployer.home}/bin/deployer1.1.3.jar"
+		      fork="true" failonerror="true" >
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="backup"/>
+			<arg value="${host.ip}"/>
+			<arg value="${user.id}"/>
+			<arg value="${user.pwd}"/>
+		</java>
+	</target>
+
+	<!-- deploy -->
+	<target name="deploy" depends="param_check">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="param_check_fail"/>
+		<antcall target="exec_scp"/>
+	</target>
+	<target name="exec_scp" if="isValid">
+		<!--<ftp server="${host.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${remote.home.dir}" passive="yes"
+		     action="put">
+			<fileset dir="${pack.dir}/${ant.project.name}" 
+			         includes="**/*"/>
+		</ftp>-->
+		<rename dest="${pack.dir}/ddm" src="${pack.dir}/${ant.project.name}" />
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${remote.home.dir}" trust="true">
+			<fileset dir="${pack.dir}/ddm" 
+		         includes="**/*"/>
+		</scp>
+	</target>
+	
+	<!-- rollback -->
+	<target name="rollback" depends="param_check">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="param_check_fail"/>
+		<antcall target="exec_rollback"/>
+	</target>
+	<target name="exec_rollback" if="isValid">
+		<!--<ftp server="${host.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${remote.home.dir}" passive="yes"
+		     action="put">
+			<fileset dir="${pack.dir}_backup/${ant.project.name}" 
+			         includes="**/*"/>
+		</ftp>-->
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${remote.home.dir}" trust="true">
+			<fileset dir="${pack.dir}_backup/ddm" 
+		         includes="**/*"/>
+		</scp>
+	</target>
+</project>

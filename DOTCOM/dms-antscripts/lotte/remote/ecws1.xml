@@ -1,0 +1,361 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="ecws1">
+<!-- ================================================== -->
+<!-- 공통 -->
+<!-- ================================================== -->
+	<property name="dep.id" value="${DEPLOY_ID}" />	
+	<property name="source.dir" value="/ncontents/src/${dep.id}" />
+	<property name="java5.home"  value="/usr/java1.5" />
+	<property name="java.home"  value="/usr/java1.6" />
+	<property name="ant.home"   value="/ncontents/src/apache-ant-1.8.2" />
+	<property name="deployer.home" value="/ncontents/src/deployer" />
+	<property name="docroot"    value="/h2010" />
+	<property name="user.id"    value="jeus" />
+	<property file="user_pwd.properties" />
+
+	
+<!-- ================================================== -->
+<!-- GL  -->
+<!-- ================================================== -->
+	
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->
+	<target name="gl.checkValid">
+		<condition property="gl.isValid" value="true" else="false">
+			<and>
+				<or>
+		            <contains string="${hostname}" substring="ecweb"/>
+		            <contains string="${hostname}" substring="ecws"/>
+				</or>
+				<contains string="${dep.id}" substring="GL_20" casesensitive="true" />
+			</and>
+		</condition>
+		<echo>hostname `${hostname}` is ${gl.isValid}</echo>
+	</target>
+	
+	<target name="gl.goFail" depends="gl.checkValid" unless="${gl.isValid}">
+		<fail message="Hostname or deploy ID is wrong."/>
+	</target>
+			
+	<target name="gl.checkExist">
+		<condition property="gl.isWebHost" value="true" else="false">
+			<or>
+				<contains string="${hostname}" substring="www"/>
+	            <contains string="${hostname}" substring="ecweb"/>
+	            <contains string="${hostname}" substring="ecevtweb"/>
+	            <contains string="${hostname}" substring="ecmo1"/>
+				<contains string="${hostname}" substring="ecmo2"/>
+				<contains string="${hostname}" substring="ecmo3"/>
+				<contains string="${hostname}" substring="ecmo4"/>
+				<contains string="${hostname}" substring="ecmo5"/>
+			</or>
+		</condition>
+		<condition property="gl.isWasHost" value="true" else="false">
+			<or>
+				<contains string="${hostname}" substring="hercules"/>
+	            <contains string="${hostname}" substring="ecws"/>
+	            <contains string="${hostname}" substring="ecevtwas"/>
+	            <contains string="${hostname}" substring="ecmows"/>
+			</or>
+		</condition>
+		<condition property="gl.isExistWebroot" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/gl/webroot"/>
+				</resourceexists>
+				<istrue value="${gl.isWebHost}"/>
+			</and>
+		</condition>
+		<condition property="gl.isExistWebapp" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/gl/webapp"/>
+				</resourceexists>
+				<istrue value="${gl.isWasHost}"/>
+			</and>
+		</condition>
+		<condition property="gl.isExistAppinf" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/gl/APP-INF"/>
+				</resourceexists>
+				<istrue value="${gl.isWasHost}"/>
+			</and>
+		</condition>
+		<condition property="gl.isExistCommon" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/common/conf"/>
+				</resourceexists>
+				<istrue value="${gl.isWasHost}"/>
+			</and>
+		</condition>
+		<condition property="gl.isJspAndClass" value="true" else="false">
+			<and>
+				<istrue value="${gl.isExistWebapp}"/>
+				<istrue value="${gl.isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="gl.isJsp" value="true" else="false">
+			<and>
+				<istrue value="${gl.isExistWebapp}"/>
+				<isfalse value="${gl.isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="gl.isClass" value="true" else="false">
+			<and>
+				<isfalse value="${gl.isExistWebapp}"/>
+				<istrue value="${gl.isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="gl.isWeb" value="true" else="false">
+			<istrue value="${gl.isExistWebroot}"/>
+		</condition>
+		<condition property="gl.isWas" value="true" else="false">
+			<or>
+				<istrue value="${gl.isExistWebapp}"/>
+				<istrue value="${gl.isExistAppinf}"/>
+				<istrue value="${gl.isExistCommon}"/>
+			</or>
+		</condition>
+		<condition property="gl.isCommon" value="true" else="false">
+			<istrue value="${gl.isExistCommon}"/>
+		</condition>
+	</target>
+			
+	<!-- ================================================== -->
+	<!-- init -->
+	<!-- ================================================== -->
+	<target name="gl.init" depends="gl.goFail">
+		<delete dir="${source.dir}/gl" />
+		<mkdir dir="${source.dir}" />
+	</target>
+		
+	<!-- ================================================== -->
+	<!-- backup -->
+	<!-- ================================================== -->
+	<target name="gl.backupWeb" if="${gl.isWeb}">
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte15.jar">
+			<arg value="${source.dir}"/>
+			<arg value="/h2010"/>
+			<arg value="${source.dir}_backup"/>
+		</java>
+	</target>	
+	
+	<target name="gl.backupWas" if="${gl.isWas}">
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte.jar">
+			<arg value="${source.dir}"/>
+			<arg value="/h2010"/>
+			<arg value="${source.dir}_backup"/>
+		</java>
+	</target>		
+	
+	<target name="gl.backup">
+		<!-- check hostname -->
+        <condition property="gl.isWebHost">
+        	<or>
+            	<contains string="${hostname}" substring="ecweb1"/>
+            	<contains string="${hostname}" substring="ecweb2"/>
+        		<contains string="${hostname}" substring="ecweb3"/>
+        	</or>
+        </condition>
+        <condition property="gl.isWasHost">
+            <or>
+                <contains string="${hostname}" substring="ecws1"/>
+                <contains string="${hostname}" substring="ecws2"/>
+            	<contains string="${hostname}" substring="ecws3"/>
+            </or>
+        </condition>
+		<!-- check tar files -->
+        <condition property="gl.isProcWeb">
+        	<and>
+	        	<istrue value="${gl.isWebHost}"/>
+	        	<not>
+	            	<resourceexists><file file="${source.dir}/backup/gl/${dep.id}_WEB.tar"/></resourceexists>
+	        	</not>
+        	</and>
+        </condition>
+		<condition property="gl.isProcWas">
+			<and>
+				<istrue value="${gl.isWasHost}"/>
+				<not>
+            		<resourceexists><file file="${source.dir}/backup/gl/${dep.id}_WAS.tar"/></resourceexists>
+				</not>
+			</and>
+        </condition>
+		
+		<antcall target="gl.fullbackup_web"/>
+		<antcall target="gl.fullbackup_was"/>
+	</target>
+	
+	<target name="gl.fullbackup_web" if="${gl.isProcWeb}">
+        <mkdir dir="${source.dir}/backup/gl"/>
+        <tar longfile="gnu" destfile="${source.dir}/backup/gl/${dep.id}_WEB.tar">
+            <tarfileset dir="/h2010/gl" filemode="664" dirmode="775">
+                <exclude name="**/*.tar"/>
+                <exclude name="**/*.zip"/>
+            </tarfileset>
+        </tar>
+    </target>
+	
+    <target name="gl.fullbackup_was" if="${gl.isProcWas}">
+        <mkdir dir="${source.dir}/backup/gl"/>
+        <tar longfile="gnu" destfile="${source.dir}/backup/gl/${dep.id}_WAS.tar">
+            <tarfileset dir="/h2010/gl" filemode="664" dirmode="775">            	
+                <exclude name="**/*.tar"/>
+                <exclude name="**/*.zip"/>
+            </tarfileset>
+        </tar>
+    </target>	
+		
+	<!-- ================================================== -->
+	<!-- deploy -->
+	<!-- ================================================== -->
+	<target name="gl.deploy" depends="gl.goFail,gl.checkExist">
+		<tstamp><format property="gl.time1" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${gl.time1}] ==========</echo>
+		<antcall target="gl.logBeginWeb"/>
+		<antcall target="gl.backupWeb"/>
+		<antcall target="gl.copyWeb"/>
+		<antcall target="gl.logEndWeb"/>
+		<tstamp><format property="gl.time2" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${gl.time2}] ==========</echo>
+		<antcall target="gl.logBeginWas"/>
+		<antcall target="gl.backupWas"/>
+		<antcall target="gl.copyCommon"/>
+		<antcall target="gl.copyClass"/>
+		<antcall target="gl.copyJsp"/>
+		<antcall target="gl.logEndWas"/>
+		<tstamp><format property="gl.time3" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${gl.time3}] ==========</echo>
+	</target>
+
+	<target name="gl.copyWeb" if="${gl.isExistWebroot}">
+        <echo message=""/>
+        <copy todir="/h2010/gl/webroot" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/gl/webroot"
+                     includes="**/*"/>
+        </copy>
+	</target>
+	
+	<target name="gl.copyJsp" if="${gl.isExistWebapp}">
+        <echo message=""/>
+        <copy todir="/h2010/gl/webapp" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/gl/webapp"
+                     includes="**/*"/>
+        </copy>
+    </target>
+
+    <target name="gl.copyClass" if="${gl.isExistAppinf}">
+        <echo message=""/>
+        <copy todir="/h2010/gl/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/gl/APP-INF"
+                     includes="**/*"/>
+        </copy>
+    </target>
+
+    <target name="gl.copyCommon" if="${gl.isExistCommon}">
+		<echo message="========================================"/>
+		<copy todir="/h2010/common/conf" overwrite="yes" verbose="true">
+			<fileset dir="${source.dir}/common/conf" 
+			         includes="**/*"/>
+		</copy>
+    </target>
+	
+	<target name="gl.logBeginWeb" if="${gl.isWeb}">
+		<java jvm="${java.home}/bin/java" fork="true"
+	          failonerror="false" spawn="false"
+	          jar="${deployer.home}/bin/deploylog15.jar">
+	        <arg value="20101130_1"/>
+	        <arg value="${dep.id}"/>
+	        <arg value="${hostname}"/>
+	        <arg value="B"/>
+	    </java>
+	</target>
+	
+	<target name="gl.logEndWeb" if="${gl.isWeb}">
+		<java jvm="${java.home}/bin/java" fork="true"
+	          failonerror="false" spawn="false"
+	          jar="${deployer.home}/bin/deploylog15.jar">
+	        <arg value="20101130_1"/>
+	        <arg value="${dep.id}"/>
+	        <arg value="${hostname}"/>
+	        <arg value="E"/>
+	    </java>
+	</target>
+	
+	<target name="gl.logBeginWas" if="${gl.isWas}">
+		<java jvm="${java.home}/bin/java" fork="true"
+	          failonerror="false" spawn="false"
+	          jar="${deployer.home}/bin/deploylog.jar">
+	        <arg value="20101130_1"/>
+	        <arg value="${dep.id}"/>
+	        <arg value="${hostname}"/>
+	        <arg value="B"/>
+	    </java>
+	</target>
+	
+	<target name="gl.logEndWas" if="${gl.isWas}">
+		<java jvm="${java.home}/bin/java" fork="true"
+	          failonerror="false" spawn="false"
+	          jar="${deployer.home}/bin/deploylog.jar">
+	        <arg value="20101130_1"/>
+	        <arg value="${dep.id}"/>
+	        <arg value="${hostname}"/>
+	        <arg value="E"/>
+	    </java>
+	</target>	
+	
+	<!-- ================================================== -->
+	<!-- rollback -->
+	<!-- ================================================== -->
+	<target name="gl.rollback" depends="gl.goFail,gl.checkExist">
+		<tstamp><format property="gl.time4" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${gl.time4}] ==========</echo>
+		<antcall target="gl.rollbackWeb"/>
+		<tstamp><format property="gl.time5" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${gl.time5}] ==========</echo>
+		<antcall target="gl.rollbackCommon"/>
+		<antcall target="gl.rollbackClass"/>
+		<antcall target="gl.rollbackJsp"/>
+		<tstamp><format property="gl.time6" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${gl.time6}] ==========</echo>
+	</target>
+
+	<target name="gl.rollbackWeb" if="${gl.isExistWebroot}">
+        <echo message=""/>
+        <copy todir="/h2010/gl/webroot" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/gl/webroot"
+                     includes="**/*"/>
+        </copy>
+	</target>
+	
+	<target name="gl.rollbackJsp" if="${gl.isExistWebapp}">
+        <echo message=""/>
+        <copy todir="/h2010/gl/webapp" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/gl/webapp"
+                     includes="**/*"/>
+        </copy>
+    </target>
+
+    <target name="gl.rollbackClass" if="${gl.isExistAppinf}">
+        <echo message=""/>
+        <copy todir="/h2010/gl/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/gl/APP-INF"
+                     includes="**/*"/>
+        </copy>
+    </target>
+
+    <target name="gl.rollbackCommon" if="${gl.isExistCommon}">
+		<echo message="========================================"/>
+		<copy todir="/h2010/common/conf" overwrite="yes" verbose="true">
+			<fileset dir="${source.dir}_backup/common/conf" 
+			         includes="**/*"/>
+		</copy>
+    </target>	
+</project>

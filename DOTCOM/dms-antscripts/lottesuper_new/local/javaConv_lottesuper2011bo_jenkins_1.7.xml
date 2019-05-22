@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="javaConv_lottesuper2011bo_jenkins_1.7">
+    <!-- **************************************************************** -->
+	<!-- PROPERTY -->
+	<!-- **************************************************************** -->
+	 <taskdef resource="net/sf/antcontrib/antcontrib.properties" />
+	<property file="${deployer.home.dir}/scripts/${ant.project.name}.${deploy.phase}.properties"/>
+	<echo>Properties : ${deployer.home.dir}/scripts/${ant.project.name}.${deploy.phase}.properties</echo>
+	<property name="user.id" value="${svrUserId}" />
+	<property name="user.pwd" value="${svrUserPassword}" />
+
+		<!-- **************************************************************** -->
+	<!-- CHECK -->
+	<!-- **************************************************************** -->
+	
+	<target name="move_check">
+	<echo>echo move_check : ${deploy.phase}</echo>
+	  <condition property="move_deploy" value="move_test">
+	   		<equals arg1="${deploy.phase}" arg2="TEST" />
+	  </condition>
+	  <condition property="move_deploy" value="move_real">
+		   	<equals arg1="${deploy.phase}" arg2="REAL" />
+	  </condition>
+	</target>
+	
+	<target name="move_call" depends="move_check">
+		<antcall target="${move_deploy}"/>
+	</target>
+
+	<!-- **************************************************************** -->
+	<!-- BUILD -->
+	<!-- **************************************************************** -->
+	<target name="build">
+		<echo>공통소스 주소 = E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${cmtarget}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/lib</echo>
+		<path id="classpath">
+			<!-- C:/Program Files (x86)/Java/jdk1.7.0_80/jre/lib -->
+			<fileset dir="${java.home.dir}/jre/lib">
+				<include name="rt.jar" />
+			</fileset>
+
+			<!-- C:/TmaxSoft/JEUS7.0/lib/datasource -->
+			<fileset dir="${jeus.home.dir}/lib/datasource">
+				<include name="*.jar" />
+			</fileset>
+
+			<!-- C:/TmaxSoft/JEUS7.0/lib/system -->
+			
+			<fileset dir="${jeus.home.dir}/lib/system">
+				<include name="*.jar" />
+			</fileset>
+			
+
+			
+			<!-- 공통소스 1.6 을 참조했을경우 Start  -->
+			<!--
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_FB_0_1.6/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/lib">
+				<include name="*.jar" />
+			</fileset>
+
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_FB_0_1.6/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/dist">
+				<include name="*.jar" />
+			</fileset>
+			-->
+			<!-- 공통소스 1.6 을 참조했을경우 End   -->
+			
+			
+			
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${cmtarget}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/lib">
+				<include name="*.jar" />
+			</fileset>
+
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${cmtarget}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/dist">
+				<include name="*.jar" />
+			</fileset>
+			
+
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BACKOFFICE_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-bos/WebContent/WEB-INF/lib">
+				<include name="*.jar" />
+			</fileset>
+
+			<dirset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BACKOFFICE_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-bos/WebContent/WEB-INF/classes" />
+
+			<dirset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BACKOFFICE_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-bos/WebContent/WEB-INF/dynamic_classes" />
+		</path>
+		
+	    <!-- static -->
+		<!-- memoryMaximumSize="256m" 을  memoryMaximumSize="1G" 로 수정 -->
+	    <mkdir dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BACKOFFICE_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-bos/WebContent/WEB-INF/classes" />
+		<mkdir dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BACKOFFICE_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-bos/WebContent/WEB-INF/dynamic_classes" />
+			
+		<javac source="1.7" 
+			target="1.7" 
+			srcdir=" E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BACKOFFICE_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-bos/src"
+			classpathref="classpath"
+			destdir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BACKOFFICE_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-bos/WebContent/WEB-INF/classes"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			memoryMaximumSize="1G"
+			includeantruntime="false"/>
+			
+		<!-- dynamic -->
+		<!-- memoryMaximumSize="256m" 을  memoryMaximumSize="1G" 로 수정 -->
+
+		<javac source="1.7"
+			target="1.7"
+			srcdir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BACKOFFICE_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-bos/src_dynamic"
+			classpathref="classpath"
+			destdir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BACKOFFICE_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-bos/WebContent/WEB-INF/dynamic_classes"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			memoryMaximumSize="1G"
+			includeantruntime="false"/>
+
+		<copy todir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BACKOFFICE_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-bos/WebContent/WEB-INF/dynamic_classes">
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BACKOFFICE_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-bos/src_dynamic">
+				<include name="**/**/*.xml"/>
+		    </fileset>
+		</copy>
+		
+		<!--<record name="${init.build.log}" action="stop"/>-->
+		<!--<antcall target="zip"/>-->
+		<antcall target="zip"/>
+	</target>
+
+	<target name="zip">
+	<delete file="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BACKOFFICE_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/pack/PROJECT/classes_1.7.zip"/>
+	<zip destfile="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BACKOFFICE_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/pack/PROJECT/classes_1.7.zip"
+	    basedir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BACKOFFICE_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-bos/WebContent/WEB-INF"
+		includes="classes/** , dynamic_classes/**"
+		/>
+	<antcall target="move_call" />
+	</target>
+
+	
+	<target name="move_test">
+		<echo>move_deploy : move_test</echo>
+		<echo>host : ${host}</echo>
+	</target>
+	
+	<target name="move_real">
+		<echo>move_deploy : move_real</echo>
+		<echo>host : ${host}</echo>
+</target>
+
+	
+<!-- ###################### Java Test Class Send Start ######################### -->
+<!--	
+	<target name="move_test">
+		<echo>move_deploy : move_test</echo>
+		<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" command="cd /esuper/project/back/WEB-INF;find . -name classes_1.7.zip | xargs rm -f " />
+		<antcall target="move1_test" />
+   </target>
+	
+	<target name="move1_test">
+		<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" command="cd /esuper/project/partner/WEB-INF;find . -name classes_1.7.zip | xargs rm -f " />
+			<antcall target="move2_test" />
+	</target>
+
+	<target name="move2_test">
+		<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" command="cd /esuper/project/mback/WEB-INF;find . -name classes_1.7.zip | xargs rm -f " />
+		<antcall target="send_test" />
+	</target>
+
+
+	<target name="send_test">
+	<scp todir="${user.id}:${user.pwd}@${host}:/esuper/project/back/WEB-INF" trust="true">
+		<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BACKOFFICE_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/pack/PROJECT">
+			<include name="classes_1.7.zip"></include>
+		</fileset>
+	</scp>
+	<antcall target="send1_test" />
+</target>	
+
+<target name="send1_test">
+	<scp todir="${user.id}:${user.pwd}@${host}:/esuper/project/partner/WEB-INF" trust="true">
+		<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BACKOFFICE_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/pack/PROJECT">
+			<include name="classes_1.7.zip"></include>
+		</fileset>
+	</scp>
+	<antcall target="send2_test" />
+</target>	
+
+<target name="send2_test">
+	<scp todir="${user.id}:${user.pwd}@${host}:/esuper/project/mback/WEB-INF" trust="true">
+		<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BACKOFFICE_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/pack/PROJECT">
+		<include name="classes_1.7.zip"></include>
+		</fileset>
+	</scp>
+<antcall target="unzip_test" />
+</target>
+					
+					
+<target name="unzip_test">
+	<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+		trust="true" verbose="false" command="cd /esuper/project/back/WEB-INF;unzip -o -q  ./classes_1.7.zip" />
+	<antcall target="unzip1_test" />
+</target>
+
+<target name="unzip1_test">
+		<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" command="cd /esuper/project/partner/WEB-INF;unzip -o -q  ./classes_1.7.zip" />
+	<antcall target="unzip2_test" />
+	</target>
+
+<target name="unzip2_test">
+		<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" command="cd /esuper/project/mback/WEB-INF;unzip -o -q  ./classes_1.7.zip" />
+</target>
+-->
+
+<!-- ###################### Java Test Class Send End ######################### -->
+	
+	
+	
+<!-- ###################### Java Real Class Send Start ######################### -->
+<!--
+<target name="move_real">
+		<echo>move_deploy : move_real</echo>
+		<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" command="cd /esuper/project/back/WEB-INF;find . -name classes_1.7.zip | xargs rm -f " />
+		<antcall target="move1_real" />
+  </target>
+	
+<target name="move1_real">
+		<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" command="cd /esuper/project/partner/WEB-INF;find . -name classes_1.7.zip | xargs rm -f " />
+			<antcall target="move2_real" />
+</target>
+
+<target name="move2_real">
+		<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" command="cd /esuper/project/mback/WEB-INF;find . -name classes_1.7.zip | xargs rm -f " />
+		<antcall target="send_real" />
+</target>
+
+
+<target name="send_real">
+		<scp todir="${user.id}:${user.pwd}@${host}:/esuper/project/back/WEB-INF" trust="true">
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BACKOFFICE_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/pack/PROJECT">
+				<include name="classes_1.7.zip"></include>
+			</fileset>
+		</scp>
+		<antcall target="send1_real" />
+</target>	
+
+<target name="send1_real">
+		<scp todir="${user.id}:${user.pwd}@${host}:/esuper/project/partner/WEB-INF" trust="true">
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BACKOFFICE_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/pack/PROJECT">
+				<include name="classes_1.7.zip"></include>
+			</fileset>
+		</scp>
+		<antcall target="send2_real" />
+</target>	
+
+<target name="send2_real">
+		<scp todir="${user.id}:${user.pwd}@${host}:/esuper/project/mback/WEB-INF" trust="true">
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BACKOFFICE_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/pack/PROJECT">
+			<include name="classes_1.7.zip"></include>
+			</fileset>
+		</scp>
+	<antcall target="unzip_real" />
+</target>
+						
+						
+<target name="unzip_real">
+		<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" command="cd /esuper/project/back/WEB-INF;unzip -o -q  ./classes_1.7.zip" />
+		<antcall target="unzip1_real" />
+</target>
+
+<target name="unzip1_real">
+		<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+				trust="true" verbose="false" command="cd /esuper/project/partner/WEB-INF;unzip -o -q  ./classes_1.7.zip" />
+		<antcall target="unzip2_real" />
+</target>
+
+<target name="unzip2_real">
+		<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+				trust="true" verbose="false" command="cd /esuper/project/mback/WEB-INF;unzip -o -q  ./classes_1.7.zip" />
+</target>
+-->
+	
+<!-- ###################### Java Real Class Send End ######################### -->
+	
+	
+<target name="ssh_back_precompile">
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" command="cd deploy;./ssh_backjspcompile" />
+</target>
+
+<target name="ssh_mback_precompile">
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" command="cd deploy;./ssh_mbackjspcompile" />
+</target>
+				
+<target name="ssh_partner_precompile">
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" command="cd deploy;./ssh_partnerjspcompile" />
+</target>
+	
+</project>

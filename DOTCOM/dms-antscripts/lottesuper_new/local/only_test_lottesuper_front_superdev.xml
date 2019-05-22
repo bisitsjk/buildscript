@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="test_lottesuper_front_dev">
+	<!-- ================================================== -->
+	<!-- properties -->
+	<!-- ================================================== -->
+	
+	<!-- test server info -->
+	<property name="dev.web.ip" value="210.93.129.84"/>
+	<property name="dev.was.ip" value="210.93.129.84"/>
+	<property name="dev.user.id" value="jeus"/>
+	<property name="dev.user.pwd" value="w&uch6raDa*r"/>
+	
+	<!-- system path -->
+	<property name="java.dir" value="C:/Program Files/Java/jdk1.6.0_25"/>
+	<property name="jeus.dir" value="C:/TmaxSoft/JEUS6.0"/>
+	
+	<!-- local path -->
+	<property name="workspace.dir" value="E:/hudson-lottesuper/jobs/ONLY_TEST_LOTTESUPER_FRONT_superdev/workspace"/>
+	<property name="source.dir"  value="${workspace.dir}/branches/PROJECT/wac/lotte-super-front"/>
+	<property name="common.dir"  value="${workspace.dir}/branches/PROJECT/wac/lotte-super-commons"/>
+	<property name="pack.dir"    value="${workspace.dir}/pack/PROJECT/wac/project"/>
+	
+	<!-- remote path -->
+	<property name="service.dir" value="/esuper/project"/>
+
+	<!-- remote command and parameter -->
+	<property name="dep.cmd"  value="fodeploy"/>
+	<tstamp>
+		<format property="today" pattern="yyyyMMdd"/>
+	</tstamp>
+	
+	<!-- remote container -->
+	<property name="container"     value="superdev_dev"/>
+	
+	<!-- log file for remote work on telnet -->
+	<property name="dep.was.log"  value="../logs/${dep.id}_DEP_WAS.log"/>
+		
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->		
+	<target name="check_remote_work" unless="isSuccess">
+		<fail message="원격지 작업이 실패하였습니다..." />
+	</target>
+	
+	<!-- ================================================== -->
+	<!-- default target -->
+	<!-- ================================================== -->	
+	<target name="run">
+		<antcall target="build.common"/>
+		<antcall target="build.front"/>
+		<antcall target="copy.front"/>
+		<antcall target="copy.common"/>
+		<antcall target="config_xml"/>       
+		<antcall target="jeuswebdd_xml"/>
+		<antcall target="x2config_xml"/>
+		<antcall target="log4jconfig_xml"/>
+		<antcall target="mall_conf"/>
+		<antcall target="smpi_properties"/>
+		<antcall target="pmpi_properties"/>
+		<antcall target="tar.all"/>
+		<antcall target="transfer"/>	
+	</target>
+	
+	<!-- ================================================== -->
+	<!-- build -->
+	<!-- ================================================== -->	
+	<target name="build.common">		
+		<path id="common.classpath">
+			<fileset dir="${java.dir}/jre/lib">
+				<include name="rt.jar" />
+			</fileset>
+			<fileset dir="${jeus.dir}/lib/datasource">
+				<include name="*.jar" />
+			</fileset>
+			<fileset dir="${jeus.dir}/lib/system">
+				<include name="*.jar" />
+			</fileset>
+			<fileset dir="${common.dir}/lib">
+				<include name="*.jar" />
+			</fileset>
+		</path>
+		
+		<!-- commons build -->
+		<mkdir dir="${common.dir}/build" />
+		<delete includeemptydirs="true">
+			<fileset dir="${common.dir}/build" includes="**/*"/>
+    	</delete>
+		<javac source="1.6" 
+			target="1.6" 
+			srcdir="${common.dir}/src"
+			classpathref="common.classpath"
+			destdir="${common.dir}/build"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			fork="true" 
+			memoryMaximumSize="256m" />
+			
+		<copy todir="${common.dir}/build">
+			<fileset dir="${common.dir}/src">
+				<include name="**/**/*.xml" />
+		    </fileset>
+		</copy>
+		
+		<!-- common jar -->
+		<mkdir dir="${common.dir}/dist" />
+		<delete includeemptydirs="true">
+			<fileset dir="${common.dir}/dist" includes="**/*"/>
+    	</delete>
+		<jar encoding="UTF-8" destfile="${common.dir}/dist/lottesuper-commons.jar">
+			<fileset dir="${common.dir}/build" />
+			<fileset dir="${common.dir}/src">
+				<include name="**/**/*.java" />
+				<include name="**/**/*.xml" />
+			</fileset>
+		</jar>
+	</target>
+	
+	<target name="build.front">
+		<mkdir dir="${pack.dir}/front/WEB-INF/classes" />
+		<mkdir dir="${pack.dir}/front/WEB-INF/dynamic_classes" />
+		
+		<path id="front.classpath">
+			<fileset dir="${java.dir}/jre/lib">
+				<include name="rt.jar" />
+			</fileset>
+			<fileset dir="${jeus.dir}/lib/datasource">
+				<include name="*.jar" />
+			</fileset>
+			<fileset dir="${jeus.dir}/lib/system">
+				<include name="*.jar" />
+			</fileset>
+			<fileset dir="${common.dir}/lib">
+				<include name="*.jar" />
+			</fileset>
+			<fileset dir="${common.dir}/dist">
+				<include name="lottesuper-commons.jar" />
+			</fileset>
+			<fileset dir="${source.dir}/WebContent/WEB-INF/lib">
+				<include name="*.jar" />
+			</fileset>
+			<dirset dir="${pack.dir}/front/WEB-INF/classes" />
+			<dirset dir="${pack.dir}/front/WEB-INF/dynamic_classes" />
+		</path>
+		
+		<!-- static -->
+		<javac source="1.6" 
+			target="1.6" 
+			srcdir="${source.dir}/src"
+			classpathref="front.classpath"
+			destdir="${pack.dir}/front/WEB-INF/classes"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			fork="true" 
+			memoryMaximumSize="256m" />
+			
+		<!-- dynamic -->		
+		<javac source="1.6"
+			target="1.6"
+			srcdir="${source.dir}/src_dynamic"
+			classpathref="front.classpath"
+			destdir="${pack.dir}/front/WEB-INF/dynamic_classes"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			fork="true"
+			memoryMaximumSize="256m" />  
+			
+		<copy todir="${pack.dir}/front/WEB-INF/dynamic_classes">
+			<fileset dir="${source.dir}/src_dynamic">
+				<include name="**/**/*.xml"/>
+		    </fileset>
+		</copy>
+	</target>
+	
+	<!-- ================================================== -->
+	<!-- pack(copy, replace, tar) -->
+	<!-- ================================================== -->	
+	<target name="copy.front">
+		<copy todir="${pack.dir}/front">
+			<fileset dir="${source.dir}/WebContent">
+				<include name="**/*"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="copy.common">
+		<copy todir="${pack.dir}/front/WEB-INF/lib">
+			<fileset dir="${common.dir}">
+				<include name="lib/*.jar"/>
+				<include name="dist/lottesuper-commons.jar"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<!-- replace -->
+	<target name="config_xml">
+		<move file="${pack.dir}/front/WEB-INF/config-dev.xml" 
+			tofile="${pack.dir}/front/WEB-INF/config.xml" overwrite="true" verbose="true" />
+	</target>
+	<target name="jeuswebdd_xml">
+		<move file="${pack.dir}/front/WEB-INF/jeus-web-dd-dev.xml" 
+			tofile="${pack.dir}/front/WEB-INF/jeus-web-dd.xml" overwrite="true" verbose="true" />
+	</target>
+	<target name="x2config_xml">
+		<move file="${pack.dir}/front/WEB-INF/x2config/x2config-dev.xml" 
+			tofile="${pack.dir}/front/WEB-INF/x2config/x2config.xml" overwrite="true" verbose="true" />
+	</target>
+	<target name="log4jconfig_xml">
+		<move file="${pack.dir}/front/WEB-INF/x2config/log4jconfig-dev.xml" 
+		    tofile="${pack.dir}/front/WEB-INF/x2config/log4jconfig.xml" overwrite="true" verbose="true" />
+	</target>			  	
+	<target name="mall_conf">
+		<move file="${pack.dir}/front/WEB-INF/x2config/lgdacom/conf/mall-dev.conf" 
+			tofile="${pack.dir}/front/WEB-INF/x2config/lgdacom/conf/mall.conf" overwrite="true" verbose="true" />
+	</target>
+	<target name="smpi_properties">
+		<move file="${pack.dir}/front/WEB-INF/x2config/smpi/smpi-dev.properties" 
+			tofile="${pack.dir}/front/WEB-INF/x2config/smpi/smpi.properties" overwrite="true" verbose="true" />
+	</target>
+	<target name="pmpi_properties">
+		<move file="${pack.dir}/front/WEB-INF/x2config/pmpi/pmpi-dev.properties" 
+			tofile="${pack.dir}/front/WEB-INF/x2config/pmpi/pmpi.properties" overwrite="true" verbose="true" />
+	</target>
+	
+	<target name="replace_domain"> <!-- 필요없다하여 실제 수행하지 않는 target임!!! -->
+		<replace dir="${pack.dir}/front" value="www.lottesuper.co.kr">
+			<include name="static-root/js/**/*.js"/>
+			<replacetoken>local.lottesuper.co.kr</replacetoken>
+		</replace>
+	</target>
+	
+	<target name="tar.all">
+		<tar longfile="gnu"
+			 destfile="${workspace.dir}/pack/PROJECT/wac/front_${today}.tar" 
+			 basedir="${pack.dir}"
+			 excludes="front/WEB-INF/config-*.xml, 
+			           front/WEB-INF/jeus-web-dd-*.xml, 
+			           front/WEB-INF/x2config/x2config-*.xml,
+			           front/WEB-INF/x2config/log4jconfig-*.xml,
+			           front/WEB-INF/x2config/lgdacom/conf/mall-*.conf,
+			           front/WEB-INF/x2config/smpi/smpi-*.properties,
+			           front/WEB-INF/x2config/pmpi/pmpi-*.properties"/>
+	</target>
+	
+	<!-- ================================================== -->
+	<!-- transfer -->
+	<!-- ================================================== -->	
+	<target name="transfer">
+		<echo>=================================================================================== Web/WAS transfer sources 시작 ==========</echo>
+		<ftp server="${dev.was.ip}" userid="${dev.user.id}" password="${dev.user.pwd}"
+		     remotedir="${service.dir}"
+		     action="put"
+			 passive="yes">
+			<fileset dir="${workspace.dir}/pack/PROJECT/wac">
+				<include name="front_${today}.tar"/>
+			</fileset>
+		</ftp>
+		<echo>=================================================================================== Web/WAS transfer sources 종료 ==========</echo>
+	</target>
+
+	<!-- ================================================== -->
+	<!-- deploy(remote untar) -->
+	<!-- ================================================== -->
+	<target name="deploy">
+		<echo>=================================================================================== Web/WAS 배포 시작 ==========</echo>
+		<tstamp>
+			<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>소스를 배포합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+		<echo>${dev.was.ip} 접속을 시작합니다... [${conn_time}]</echo>
+		<record name="${dep.was.log}" action="start"/>
+		<telnet server="${dev.was.ip}" userid="${dev.user.id}" password="${dev.user.pwd}">
+			<read>superdev [jeus:/usr1/home/jeus]%</read>
+			<write>cd deploy</write>
+			<read>/deploy]%</read>
+			<write>./${dep.cmd} ${today}</write>
+			<read>/deploy]%</read>
+			<write>ja downcon ${container}</write>
+			<read>/deploy]%</read>
+			<write>ja startcon ${container}</write>
+			<read>/deploy]%</read>
+			<write>exit</write>
+		</telnet>
+		<record name="${dep.was.log}" action="stop"/>
+		<tstamp>
+			<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${dev.was.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<resourcecontains resource="${dep.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>원격지 작업이 잘 수행되었습니다...</echo>
+		<echo>=================================================================================== Web/WAS 배포 종료 ==========</echo>
+	</target>
+</project>

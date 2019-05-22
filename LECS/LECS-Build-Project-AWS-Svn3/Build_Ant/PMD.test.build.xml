@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="PMD" basedir=".">
+	
+	<property name="pmd.home" value="C:/pmd-4.3.0" />
+
+	<path id="pmd.classpath">
+	       <pathelement location="${pmd.home}" />
+	       <fileset dir="${pmd.home}/lib" includes="*.jar" />
+	</path>
+
+	<!-- pmd Ant 실행 파일 설정 -->
+
+	<!-- pmd Ant Target 설정 Target 명=pmd로 설정. -->
+	 <target name="pmd">
+		 <taskdef name="pmd" classname="net.sourceforge.pmd.ant.PMDTask" classpathref="pmd.classpath"/>
+	 	<mkdir dir="E:/hudson-lecs2/jobs/PMD.TEST/report/pmd"/>
+	   <!-- 소스코드를 검사할 PMD 규칙이 설정된 파일 지정 -->
+		<pmd>
+			<ruleset>c:/pmd-4.3.0/rulesets/lotte_ruleset.xml</ruleset>
+	   <!--  분석결과 파일 저장 위치 지정 -->
+	  <formatter type="xml" toFile="E:/hudson-lecs2/jobs/PMD.TEST/workspace/pmd_report.xml"/>
+		  <fileset dir="../../src/LECS-Store-Kiehls/src">
+		  	<include name="**/*.java"/> 
+		  </fileset>
+	  </pmd>
+	 </target>
+
+</project>

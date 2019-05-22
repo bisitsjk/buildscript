@@ -1,0 +1,826 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lecs20.deploy" basedir="."><!-- Global Param: ${target} -->
+	
+	<property file="pwd.properties" />
+	
+	<tstamp>
+		<format property="DATETIMESTAMP" pattern="yyyyMMddHHmm" />
+	</tstamp>
+	
+	<tstamp>
+		<format property="DATETIMESTAMP2" pattern="yyyyMMdd" />
+	</tstamp>
+
+	<taskdef resource="net/sf/antcontrib/antlib.xml" />
+	
+	<target name="CLEAN_DEV">
+		<delete dir="E:\hudson-lecs2\jobs\2.UPDATE_DEV\workspace\src\LECS-Batch"/>
+		<delete dir="E:\hudson-lecs2\jobs\2.UPDATE_DEV\workspace\src\app"/>				
+	</target>
+	
+	<target name="CLEAN_TST">
+		<delete dir="E:\hudson-lecs2\jobs\03.UPDATE_TST\workspace\src\LECS-Batch"/>
+		<delete dir="E:\hudson-lecs2\jobs\03.UPDATE_TST\workspace\src\app"/>
+	</target>
+	
+	<target name="CLEAN_PRD">
+		<delete dir="E:\hudson-lecs2\jobs\03.UPDATE_PRD\workspace\src\LECS-Batch"/>
+		<delete dir="E:\hudson-lecs2\jobs\03.UPDATE_PRD\workspace\src\app"/>
+	</target>
+	
+	<target name="RESTART.SERVERS.FO">
+		<telnet server="${fo.server.ip}" userid="jeus" password="${jeuspwd}" port="23">
+			<write>jdown</write>
+			<read>jeusexit successful</read>
+			<write>jboot</write>
+			<read>virtual host name of this manager : </read>
+		</telnet>
+	</target>
+	
+	<target name="DR.SSH.RESTART.SERVERS">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jdown" trust="true" verbose="false"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jboot;\n" trust="true" verbose="false"/>
+	</target>
+	
+	
+	<target name="TEST.SSH">
+		<sshexec host="10.149.139.5" username="jeus" password="${jeuspwd}" command="ls" trust="true" verbose="false"/>
+	</target>
+	
+	<target name="DR.SSH.START.SERVERS">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="cd /usr2/jeus6/bin;./jboot;sleep 5" trust="true" verbose="false" timeout="20000" failonerror="false"/>
+	</target>
+	
+	<target name="PROJ.SSH.START.SERVERS">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="/usr2/jeus6/bin/jboot;sleep 5" trust="true" verbose="false" timeout="20000" failonerror="false"/>
+	</target>
+	
+	<target name="TELNET.TAIL">
+		<telnet userid="jeus" password="${jeuspwd}" server="${fo.server.ip}" timeout="10000">
+			<write>cd /usr2/jeus-log/`hostname`</write>
+			<read>/usr2/jeus-log/`hostname`</read>
+		</telnet>
+	</target>
+	
+	<target name="SSH.RESTART.CONS">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin downcon" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin startcon" trust="true"/>
+	</target>
+	
+	<target name="SSH.DOWNCON">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="sh ~/scripts/downcon.sh" trust="true" verbose="false"/>
+	</target>
+	
+	<target name="PROJ.SSH.DOWNCON">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="sh /usr1/home/jeus/scripts/downcon.sh" trust="true" verbose="false"/>
+	</target>
+			
+	<target name="TST1.SSH.CON.RESTART">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin downcon lecs20stg1_bo" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin startcon lecs20stg1_bo" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin downcon lecs20stg1_lps" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin startcon lecs20stg1_lps" trust="true"/>
+	</target>
+			
+	<target name="TST2.SSH.CON.RESTART">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin downcon lecs20stg2_muji" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin startcon lecs20stg2_muji" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin downcon lecs20stg2_nf" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin startcon lecs20stg2_nf" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin downcon lecs20stg2_nike" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin startcon lecs20stg2_nike" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin downcon lecs20stg2_mnf" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin startcon lecs20stg2_mnf" trust="true"/>
+	</target>
+	
+	<target name="TST3.SSH.CON.RESTART">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin downcon lecs20stg2_kiehls" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin startcon lecs20stg2_kiehls" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin downcon lecs20stg2_uniqlo" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin startcon lecs20stg2_uniqlo" trust="true"/>
+	</target>	
+	
+	<target name="DISK_CLEAN">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}"
+		command="sh ~/scripts/diskclean.sh" trust="true"/>
+	</target>
+	
+	<target name="TMP.DELETE">
+		<delete dir="E:\usr3\lecs20\mergeTool\merge"/>
+	</target>
+
+	<target name="TMP.DELETE.SVN3">
+		<delete dir="/usr3/lecs20/mergeTool/merge"/>
+	</target>
+	
+	<target name="TELNET.JBOOT">
+		<telnet userid="jeus" password="${jeuspwd}" server="${fo.server.ip}" timeout="20">
+			<write>jboot</write>
+			<read>virtual host name of this manager :</read>
+		</telnet>
+	</target>
+	
+	<target name="TST2.TELNET.JBOOT">
+		<telnet userid="jeus" password="${jeuspwd}" server="${fo.server.ip}" timeout="10000">
+			<write>jboot</write>
+			<read>virtual host name of this manager :</read>
+		</telnet>
+	</target>
+	
+	<target name="TST2.SSH.DOWNCON">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin downcon lecs20stg2_yo" trust="true"/>
+	</target>
+
+	<!-- AWS -->	
+
+	<target name="DEV.AWS.TEMP.DIR.DELETE">
+		<delete dir="E:/hudson-lecs2/jobs/NIKE.AWS.DEV/workspace/AWSWAR"/>
+		<mkdir dir="E:/hudson-lecs2/jobs/NIKE.AWS.DEV/workspace/AWSWAR"/>
+		<delete dir="E:/hudson-lecs2/jobs/NIKE.AWS.DEV/workspace/AWSWEB"/>
+		<mkdir dir="E:/hudson-lecs2/jobs/NIKE.AWS.DEV/workspace/AWSWEB"/>
+	</target>
+
+	<target name="RDEV.AWS.TEMP.DIR.DELETE">
+		<delete dir="E:/hudson-lecs2/jobs/3.NIKE.AWS.DEV/workspace/AWSWAR"/>
+		<mkdir dir="E:/hudson-lecs2/jobs/3.NIKE.AWS.DEV/workspace/AWSWAR"/>
+		<delete dir="E:/hudson-lecs2/jobs/3.NIKE.AWS.DEV/workspace/AWSWEB"/>
+		<mkdir dir="E:/hudson-lecs2/jobs/3.NIKE.AWS.DEV/workspace/AWSWEB"/>
+		<delete dir="E:/hudson-lecs2/jobs/3.NIKE.AWS.DEV/workspace/AWSIMG"/>
+		<mkdir dir="E:/hudson-lecs2/jobs/3.NIKE.AWS.DEV/workspace/AWSIMG"/>
+	</target>
+
+	<target name="JK.RDEV.AWS.TEMP.DIR.DELETE">
+		<delete dir="E:/jenkins-lecs2jenkins/jobs/3.JK.NIKE.AWS.DEV/workspace/AWSWAR"/>
+		<mkdir dir="E:/jenkins-lecs2jenkins/jobs/3.JK.NIKE.AWS.DEV/workspace/AWSWAR"/>
+		<delete dir="E:/jenkins-lecs2jenkins/jobs/3.JK.NIKE.AWS.DEV/workspace/AWSWEB"/>
+		<mkdir dir="E:/jenkins-lecs2jenkins/jobs/3.JK.NIKE.AWS.DEV/workspace/AWSWEB"/>
+		<delete dir="E:/jenkins-lecs2jenkins/jobs/3.JK.NIKE.AWS.DEV/workspace/AWSIMG"/>
+		<mkdir dir="E:/jenkins-lecs2jenkins/jobs/3.JK.NIKE.AWS.DEV/workspace/AWSIMG"/>
+	</target>
+
+	<target name="TST.AWS.TEMP.DIR.DELETE">
+		<delete dir="E:/hudson-lecs2/jobs/NIKE.AWS.TST/workspace/AWSWAR"/>
+		<mkdir dir="E:/hudson-lecs2/jobs/NIKE.AWS.TST/workspace/AWSWAR"/>
+		<delete dir="E:/hudson-lecs2/jobs/NIKE.AWS.TST/workspace/AWSWEB"/>
+		<mkdir dir="E:/hudson-lecs2/jobs/NIKE.AWS.TST/workspace/AWSWEB"/>
+	</target>
+
+	<target name="RTST.AWS.TEMP.DIR.DELETE">
+		<delete dir="E:/hudson-lecs2/jobs/04.NIKE.AWS.TST/workspace/AWSWAR"/>
+		<mkdir dir="E:/hudson-lecs2/jobs/04.NIKE.AWS.TST/workspace/AWSWAR"/>
+		<delete dir="E:/hudson-lecs2/jobs/04.NIKE.AWS.TST/workspace/AWSWEB"/>
+		<mkdir dir="E:/hudson-lecs2/jobs/04.NIKE.AWS.TST/workspace/AWSWEB"/>
+		<delete dir="E:/hudson-lecs2/jobs/04.NIKE.AWS.TST/workspace/AWSIMG"/>
+		<mkdir dir="E:/hudson-lecs2/jobs/04.NIKE.AWS.TST/workspace/AWSIMG"/>
+	</target>
+
+	<target name="JK.RTST.AWS.TEMP.DIR.DELETE">
+		<delete dir="E:/jenkins-lecs2jenkins/jobs/04.JK.NIKE.AWS.TST/workspace/AWSWAR"/>
+		<mkdir dir="E:/jenkins-lecs2jenkins/jobs/04.JK.NIKE.AWS.TST/workspace/AWSWAR"/>
+		<delete dir="E:/jenkins-lecs2jenkins/jobs/04.JK.NIKE.AWS.TST/workspace/AWSWEB"/>
+		<mkdir dir="E:/jenkins-lecs2jenkins/jobs/04.JK.NIKE.AWS.TST/workspace/AWSWEB"/>
+		<delete dir="E:/jenkins-lecs2jenkins/jobs/04.JK.NIKE.AWS.TST/workspace/AWSIMG"/>
+		<mkdir dir="E:/jenkins-lecs2jenkins/jobs/04.JK.NIKE.AWS.TST/workspace/AWSIMG"/>
+	</target>
+
+	<target name="TST.UNIQLO.AWS.TEMP.DIR.DELETE">
+		<delete dir="E:/jenkins-lecs2jenkins/jobs/04.UNIQLO.AWS.TST/workspace/AWSWAR"/>
+		<mkdir dir="E:/jenkins-lecs2jenkins/jobs/04.UNIQLO.AWS.TST/workspace/AWSWAR"/>
+		<delete dir="E:/jenkins-lecs2jenkins/jobs/04.UNIQLO.AWS.TST/workspace/AWSWEB"/>
+		<mkdir dir="E:/jenkins-lecs2jenkins/jobs/04.UNIQLO.AWS.TST/workspace/AWSWEB"/>
+		<delete dir="E:/jenkins-lecs2jenkins/jobs/04.UNIQLO.AWS.TST/workspace/AWSIMG"/>
+		<mkdir dir="E:/jenkins-lecs2jenkins/jobs/04.UNIQLO.AWS.TST/workspace/AWSIMG"/>
+	</target>
+
+	<target name="TST.TEMP.DIR.DELETE">
+		<delete dir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/AWSWAR"/>
+		<mkdir dir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/AWSWAR"/>
+		<delete dir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/AWSWEB"/>
+		<mkdir dir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/AWSWEB"/>
+		<delete dir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/AWSIMG"/>
+		<mkdir dir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/AWSIMG"/>
+	</target>
+
+	<target name="TST.UQAPI.AWS.TEMP.DIR.DELETE">
+		<delete dir="E:/jenkins-lecs2jenkins/jobs/04.UQAPI.AWS.TST/workspace/AWSWAR"/>
+		<mkdir dir="E:/jenkins-lecs2jenkins/jobs/04.UQAPI.AWS.TST/workspace/AWSWAR"/>
+		<delete dir="E:/jenkins-lecs2jenkins/jobs/04.UQAPI.AWS.TST/workspace/AWSWEB"/>
+		<mkdir dir="E:/jenkins-lecs2jenkins/jobs/04.UQAPI.AWS.TST/workspace/AWSWEB"/>
+		<delete dir="E:/jenkins-lecs2jenkins/jobs/04.UQAPI.AWS.TST/workspace/AWSIMG"/>
+		<mkdir dir="E:/jenkins-lecs2jenkins/jobs/04.UQAPI.AWS.TST/workspace/AWSIMG"/>
+	</target>
+	
+	<target name="REL.AWS.TEMP.DIR.DELETE">
+		<delete dir="E:/hudson-lecs2/jobs/04.NIKE.AWS.REL/workspace/AWSWAR"/>
+		<mkdir dir="E:/hudson-lecs2/jobs/04.NIKE.AWS.REL/workspace/AWSWAR"/>
+		<delete dir="E:/hudson-lecs2/jobs/04.NIKE.AWS.REL/workspace/AWSWEB"/>
+		<mkdir dir="E:/hudson-lecs2/jobs/04.NIKE.AWS.REL/workspace/AWSWEB"/>
+		<delete dir="E:/hudson-lecs2/jobs/04.NIKE.AWS.REL/workspace/AWSIMG"/>
+		<mkdir dir="E:/hudson-lecs2/jobs/04.NIKE.AWS.REL/workspace/AWSIMG"/>
+	</target>
+
+	<target name="JK.REL.AWS.TEMP.DIR.DELETE">
+		<delete dir="E:/jenkins-lecs2jenkins/jobs/04.JK.NIKE.AWS.REL/workspace/AWSWAR"/>
+		<mkdir dir="E:/jenkins-lecs2jenkins/jobs/04.JK.NIKE.AWS.REL/workspace/AWSWAR"/>
+		<delete dir="E:/jenkins-lecs2jenkins/jobs/04.JK.NIKE.AWS.REL/workspace/AWSWEB"/>
+		<mkdir dir="E:/jenkins-lecs2jenkins/jobs/04.JK.NIKE.AWS.REL/workspace/AWSWEB"/>
+		<delete dir="E:/jenkins-lecs2jenkins/jobs/04.JK.NIKE.AWS.REL/workspace/AWSIMG"/>
+		<mkdir dir="E:/jenkins-lecs2jenkins/jobs/04.JK.NIKE.AWS.REL/workspace/AWSIMG"/>
+	</target>
+	
+	<target name="DEV.NIKE.AWS.WAR.FILECOPY">	
+		<copy todir="E:\hudson-lecs2\jobs\NIKE.AWS.DEV\workspace\AWSWAR">
+			<fileset dir="E:\hudson-lecs2\jobs\NIKE.AWS.DEV\workspace\build\build\LECS-Store-Nike">
+				<include name="LECS-Store-Nike-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="RDEV.NIKE.AWS.WAR.FILECOPY">	
+		<copy todir="E:\hudson-lecs2\jobs\3.NIKE.AWS.DEV\workspace\AWSWAR">
+			<fileset dir="E:\hudson-lecs2\jobs\3.NIKE.AWS.DEV\workspace\build\build\LECS-Store-Nike">
+				<include name="LECS-Store-Nike-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="JK.RDEV.NIKE.AWS.WAR.FILECOPY">	
+		<copy todir="E:\jenkins-lecs2jenkins\jobs\3.JK.NIKE.AWS.DEV\workspace\AWSWAR">
+			<fileset dir="E:\jenkins-lecs2jenkins\jobs\3.JK.NIKE.AWS.DEV\workspace\build\build\LECS-Store-Nike">
+				<include name="LECS-Store-Nike-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="RDEV.NIKE.AWS.IMG.FILECOPY">	
+		<copy todir="E:\hudson-lecs2\jobs\3.NIKE.AWS.DEV\workspace\AWSIMG">
+			<fileset dir="E:\hudson-lecs2\jobs\3.NIKE.AWS.DEV\workspace\build\build\LECS-Store-Nike">
+				<include name="LECS-Store-Nike-IMAGE*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="JK.RDEV.NIKE.AWS.IMG.FILECOPY">	
+		<copy todir="E:\jenkins-lecs2jenkins\jobs\3.JK.NIKE.AWS.DEV\workspace\AWSIMG">
+			<fileset dir="E:\jenkins-lecs2jenkins\jobs\3.JK.NIKE.AWS.DEV\workspace\build\build\LECS-Store-Nike">
+				<include name="LECS-Store-Nike-IMAGE*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="TST.NIKE.AWS.WAR.FILECOPY">	
+		<copy todir="E:\hudson-lecs2\jobs\NIKE.AWS.TST\workspace\AWSWAR">
+			<fileset dir="E:\hudson-lecs2\jobs\NIKE.AWS.TST\workspace\build\build\LECS-Store-Nike">
+				<include name="LECS-Store-Nike-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="RTST.NIKE.AWS.WAR.FILECOPY">	
+		<copy todir="E:\hudson-lecs2\jobs\04.NIKE.AWS.TST\workspace\AWSWAR">
+			<fileset dir="E:\hudson-lecs2\jobs\04.NIKE.AWS.TST\workspace\build\build\LECS-Store-Nike">
+				<include name="LECS-Store-Nike-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="JK.RTST.NIKE.AWS.IMG.FILECOPY">	
+		<copy todir="E:\jenkins-lecs2jenkins\jobs\04.JK.NIKE.AWS.TST\workspace\AWSIMG">
+			<fileset dir="E:\jenkins-lecs2jenkins\jobs\04.JK.NIKE.AWS.TST\workspace\build\build\LECS-Store-Nike">
+				<include name="LECS-Store-Nike-IMAGE*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="TST.UNIQLO.AWS.IMG.FILECOPY">	
+		<copy tofile="E:\jenkins-lecs2jenkins\jobs\04.UNIQLO.AWS.TST\workspace\AWSIMG\uniqlo_image_tst.zip">
+			<fileset dir="E:\jenkins-lecs2jenkins\jobs\04.UNIQLO.AWS.TST\workspace\build\build\LECS-Store-Uniqlo">
+				<include name="LECS-Store-Uniqlo-IMAGE*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="TST.New.UNIQLO.AWS.IMG.FILECOPY">	
+		<copy tofile="E:\jenkins-lecs2jenkins\jobs\${JOB_NAME}\workspace\AWSIMG\new_uniqlo_image_tst.zip">
+			<fileset dir="E:\jenkins-lecs2jenkins\jobs\${JOB_NAME}\workspace\build\build\LECS-Store-New-Uniqlo">
+				<include name="LECS-Store-New-Uniqlo-IMAGE*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="JK.RTST.NIKE.AWS.WAR.FILECOPY">	
+		<copy todir="E:\jenkins-lecs2jenkins\jobs\04.JK.NIKE.AWS.TST\workspace\AWSWAR">
+			<fileset dir="E:\jenkins-lecs2jenkins\jobs\04.JK.NIKE.AWS.TST\workspace\build\build\LECS-Store-Nike">
+				<include name="LECS-Store-Nike-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="TST.UNIQLO.AWS.WAR.FILECOPY">	
+		<copy tofile="E:\jenkins-lecs2jenkins\jobs\04.UNIQLO.AWS.TST\workspace\AWSWAR\ROOT.war">
+			<fileset dir="E:\jenkins-lecs2jenkins\jobs\04.UNIQLO.AWS.TST\workspace\build\build\LECS-Store-Uniqlo">
+				<include name="LECS-Store-Uniqlo-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="TST.New.UNIQLO.AWS.WAR.FILECOPY">	
+		<copy tofile="E:\jenkins-lecs2jenkins\jobs\${JOB_NAME}\workspace\AWSWAR\ROOT.war">
+			<fileset dir="E:\jenkins-lecs2jenkins\jobs\${JOB_NAME}\workspace\build\build\LECS-Store-New-Uniqlo">
+				<include name="LECS-Store-New-Uniqlo-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="TST.UQAPI.AWS.WAR.FILECOPY">	
+		<copy tofile="E:\jenkins-lecs2jenkins\jobs\04.UQAPI.AWS.TST\workspace\AWSWAR\ROOT.war">
+			<fileset dir="E:\jenkins-lecs2jenkins\jobs\04.UQAPI.AWS.TST\workspace\build\build\LECS-Store-Uniqlo-FR-API">
+				<include name="LECS-Store-Uniqlo-FR-API-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="TST.New.UQAPI.AWS.WAR.FILECOPY">	
+		<copy tofile="E:\jenkins-lecs2jenkins\jobs\${JOB_NAME}\workspace\AWSWAR\ROOT.war">
+			<fileset dir="E:\jenkins-lecs2jenkins\jobs\${JOB_NAME}\workspace\build\build\LECS-Store-New-Uniqlo-FR-API">
+				<include name="LECS-Store-New-Uniqlo-FR-API-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="RTST.NIKE.AWS.IMG.FILECOPY">	
+		<copy todir="E:\hudson-lecs2\jobs\04.NIKE.AWS.TST\workspace\AWSIMG">
+			<fileset dir="E:\hudson-lecs2\jobs\04.NIKE.AWS.TST\workspace\build\build\LECS-Store-Nike">
+				<include name="LECS-Store-Nike-IMAGE*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="REL.NIKE.AWS.WAR.FILECOPY">	
+		<copy todir="E:\hudson-lecs2\jobs\04.NIKE.AWS.REL\workspace\AWSWAR">
+			<fileset dir="E:\hudson-lecs2\jobs\04.NIKE.AWS.REL\workspace\build\build\LECS-Store-Nike">
+				<include name="LECS-Store-Nike-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="JK.REL.NIKE.AWS.WAR.FILECOPY">	
+		<copy todir="E:\jenkins-lecs2jenkins\jobs\04.JK.NIKE.AWS.REL\workspace\AWSWAR">
+			<fileset dir="E:\jenkins-lecs2jenkins\jobs\04.JK.NIKE.AWS.REL\workspace\build\build\LECS-Store-Nike">
+				<include name="LECS-Store-Nike-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="REL.NIKE.AWS.IMG.FILECOPY">	
+		<copy todir="E:\hudson-lecs2\jobs\04.NIKE.AWS.REL\workspace\AWSIMG">
+			<fileset dir="E:\hudson-lecs2\jobs\04.NIKE.AWS.REL\workspace\build\build\LECS-Store-Nike">
+				<include name="LECS-Store-Nike-IMAGE*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="JK.REL.NIKE.AWS.IMG.FILECOPY">	
+		<copy todir="E:\jenkins-lecs2jenkins\jobs\04.JK.NIKE.AWS.REL\workspace\AWSIMG">
+			<fileset dir="E:\jenkins-lecs2jenkins\jobs\04.JK.NIKE.AWS.REL\workspace\build\build\LECS-Store-Nike">
+				<include name="LECS-Store-Nike-IMAGE*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="DEV.NIKE.AWS.WEB.FILECOPY">	
+		<copy todir="E:\hudson-lecs2\jobs\NIKE.AWS.DEV\workspace\AWSWEB">
+			<fileset dir="E:\hudson-lecs2\jobs\NIKE.AWS.DEV\workspace\build\build\LECS-Store-Nike">
+				<include name="LECS-Store-Nike-CONTENT*.tar"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="RDEV.NIKE.AWS.WEB.FILECOPY">	
+		<copy todir="E:\hudson-lecs2\jobs\3.NIKE.AWS.DEV\workspace\AWSWEB">
+			<fileset dir="E:\hudson-lecs2\jobs\3.NIKE.AWS.DEV\workspace\build\build\LECS-Store-Nike">
+				<include name="LECS-Store-Nike-CONTENT*.tar"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="JK.RDEV.NIKE.AWS.WEB.FILECOPY">	
+		<copy todir="E:\jenkins-lecs2jenkins\jobs\3.JK.NIKE.AWS.DEV\workspace\AWSWEB">
+			<fileset dir="E:\jenkins-lecs2jenkins\jobs\3.JK.NIKE.AWS.DEV\workspace\build\build\LECS-Store-Nike">
+				<include name="LECS-Store-Nike-CONTENT*.tar"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="TST.NIKE.AWS.WEB.FILECOPY">	
+		<copy todir="E:\hudson-lecs2\jobs\NIKE.AWS.TST\workspace\AWSWEB">
+			<fileset dir="E:\hudson-lecs2\jobs\NIKE.AWS.TST\workspace\build\build\LECS-Store-Nike">
+				<include name="LECS-Store-Nike-CONTENT*.tar"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="RTST.NIKE.AWS.WEB.FILECOPY">	
+		<copy todir="E:\hudson-lecs2\jobs\04.NIKE.AWS.TST\workspace\AWSWEB">
+			<fileset dir="E:\hudson-lecs2\jobs\04.NIKE.AWS.TST\workspace\build\build\LECS-Store-Nike">
+				<include name="LECS-Store-Nike-CONTENT*.tar"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="JK.RTST.NIKE.AWS.WEB.FILECOPY">	
+		<copy todir="E:\jenkins-lecs2jenkins\jobs\04.JK.NIKE.AWS.TST\workspace\AWSWEB">
+			<fileset dir="E:\jenkins-lecs2jenkins\jobs\04.JK.NIKE.AWS.TST\workspace\build\build\LECS-Store-Nike">
+				<include name="LECS-Store-Nike-CONTENT*.tar"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="TST.UNIQLO.AWS.WEB.FILECOPY">	
+		<copy tofile="E:\jenkins-lecs2jenkins\jobs\04.UNIQLO.AWS.TST\workspace\AWSWEB\contents.tar">
+			<fileset dir="E:\jenkins-lecs2jenkins\jobs\04.UNIQLO.AWS.TST\workspace\build\build\LECS-Store-Uniqlo">
+				<include name="LECS-Store-Uniqlo-CONTENT*.tar"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="TST.New.UNIQLO.AWS.WEB.FILECOPY">	
+		<copy tofile="E:\jenkins-lecs2jenkins\jobs\${JOB_NAME}\workspace\AWSWEB\contents.tar">
+			<fileset dir="E:\jenkins-lecs2jenkins\jobs\${JOB_NAME}\workspace\build\build\LECS-Store-New-Uniqlo">
+				<include name="LECS-Store-New-Uniqlo-CONTENT*.tar"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="TST.UQAPI.AWS.WEB.FILECOPY">	
+		<copy tofile="E:\jenkins-lecs2jenkins\jobs\04.UQAPI.AWS.TST\workspace\AWSWEB\contents.tar">
+			<fileset dir="E:\jenkins-lecs2jenkins\jobs\04.UQAPI.AWS.TST\workspace\build\build\LECS-Store-Uniqlo-FR-API">
+				<include name="LECS-Store-Uniqlo-FR-API-CONTENT*.tar"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="TST.New.UQAPI.AWS.WEB.FILECOPY">	
+		<copy tofile="E:\jenkins-lecs2jenkins\jobs\${JOB_NAME}\workspace\AWSWEB\contents.tar">
+			<fileset dir="E:\jenkins-lecs2jenkins\jobs\${JOB_NAME}\workspace\build\build\LECS-Store-New-Uniqlo-FR-API">
+				<include name="LECS-Store-New-Uniqlo-FR-API-CONTENT*.tar"/>
+			</fileset>
+		</copy>
+	</target>
+		
+	<target name="REL.NIKE.AWS.WEB.FILECOPY">	
+		<copy todir="E:\hudson-lecs2\jobs\04.NIKE.AWS.REL\workspace\AWSWEB">
+			<fileset dir="E:\hudson-lecs2\jobs\04.NIKE.AWS.REL\workspace\build\build\LECS-Store-Nike">
+				<include name="LECS-Store-Nike-CONTENT*.tar"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="JK.REL.NIKE.AWS.WEB.FILECOPY">	
+		<copy todir="E:\jenkins-lecs2jenkins\jobs\04.JK.NIKE.AWS.REL\workspace\AWSWEB">
+			<fileset dir="E:\jenkins-lecs2jenkins\jobs\04.JK.NIKE.AWS.REL\workspace\build\build\LECS-Store-Nike">
+				<include name="LECS-Store-Nike-CONTENT*.tar"/>
+			</fileset>
+		</copy>
+	</target>
+
+	<!-- DEV -->
+	
+	<target name="DEV.UPLOAD.NIKE.IMG">
+<!--		<sshexec host="lecs20dev1" username="jeus" password="${jeuspwd}" command="mv /lotte/lecsDocs/temp/nike_image_dev.zip /lotte/lecsDocs/temp/nike_image_dev_${DATETIMESTAMP}.zip" trust="true"/> -->
+<!--		<sshexec host="10.149.187.70" username="jeus" password="${jeuspwd}" command="mv /lotte/lecsDocs/temp/nike_image_dev.zip /lotte/lecsDocs/temp/nike_image_dev_${DATETIMESTAMP}.zip" trust="true"/> -->
+		<scp file="E:\hudson-lecs2\jobs\3.NIKE.AWS.DEV\workspace\AWSIMG\nike_image_dev.zip" remoteTofile="jeus:${jeuspwd}@10.149.187.70:/lotte/lecsDocs/temp/nike_image_dev.zip" trust="true"/>
+	</target>
+	
+	<target name="JK.DEV.UPLOAD.NIKE.IMG">
+<!--		<sshexec host="lecs20dev1" username="jeus" password="${jeuspwd}" command="mv /lotte/lecsDocs/temp/nike_image_dev.zip /lotte/lecsDocs/temp/nike_image_dev_${DATETIMESTAMP}.zip" trust="true"/> -->
+<!--		<sshexec host="10.149.187.70" username="jeus" password="${jeuspwd}" command="mv /lotte/lecsDocs/temp/nike_image_dev.zip /lotte/lecsDocs/temp/nike_image_dev_${DATETIMESTAMP}.zip" trust="true"/> -->
+		<scp file="E:\jenkins-lecs2jenkins\jobs\3.JK.NIKE.AWS.DEV\workspace\AWSIMG\nike_image_dev.zip" remoteTofile="jeus:${jeuspwd}@10.149.187.70:/lotte/lecsDocs/temp/nike_image_dev.zip" trust="true"/>
+	</target>
+	
+	<target name="DEV.DEPLOY.NIKE.IMG">
+<!--		<sshexec host="lecs20dev1" username="jeus" password="${jeuspwd}" command="unzip -o -q /lotte/lecsDocs/temp/nike_image_dev.zip -d /lotte/lecsDocs/images/NKS1" trust="true"/> -->
+		<sshexec host="10.149.187.70" username="jeus" password="${jeuspwd}" command="unzip -o -q /lotte/lecsDocs/temp/nike_image_dev.zip -d /lotte/lecsDocs/images/NKS1" trust="true"/>
+	</target>	
+	
+	
+    <target name="DEV.AWS.UPLOAD.WAR">
+    	<sshexec host="10.129.242.5" username="jeus" password="${jeuspwd}" command="rm ~/deploy/dev/was/ROOT.war"  trust="true"/>
+   		<scp file="E:\hudson-lecs2\jobs\NIKE.AWS.DEV\workspace\AWSWAR\ROOT.war" remotetodir="jeus:${jeuspwd}@10.129.242.5:~/deploy/dev/was" passphrase="success" trust="true"/>
+    </target>
+	
+    <target name="RDEV.AWS.UPLOAD.WAR">
+<!--    <sshexec host="10.129.242.5" username="jeus" keyfile="E:\AWSTEST\lecs-jeus.pem" command="rm ~/deploy/dev/was/ROOT.war"  trust="true"/> -->
+   		<sshexec host="10.149.140.5" username="jeus" password="${jeuspwd}" command="rm ~/deploy/dev/was/ROOT.war"  trust="true"/>
+<!--	<scp file="E:\hudson-lecs2\jobs\3.NIKE.AWS.DEV\workspace\AWSWAR\ROOT.war" remotetodir="jeus:${jeuspwd}@10.129.242.5:~/deploy/dev/was" keyfile="E:\AWSTEST\lecs-jeus.pem" passphrase="success" trust="true"/> -->
+		<scp file="E:\hudson-lecs2\jobs\3.NIKE.AWS.DEV\workspace\AWSWAR\ROOT.war" remotetodir="jeus:${jeuspwd}@10.149.140.5:~/deploy/dev/was" passphrase="success" trust="true"/>
+    </target>
+	
+    <target name="JK.RDEV.AWS.UPLOAD.WAR">
+<!--    <sshexec host="10.129.242.5" username="jeus" keyfile="E:\AWSTEST\lecs-jeus.pem" command="rm ~/deploy/dev/was/ROOT.war"  trust="true"/> -->
+   		<sshexec host="10.149.140.5" username="jeus" password="${jeuspwd}" command="rm ~/deploy/dev/was/ROOT.war"  trust="true"/>
+<!--	<scp file="E:\hudson-lecs2\jobs\3.NIKE.AWS.DEV\workspace\AWSWAR\ROOT.war" remotetodir="jeus:${jeuspwd}@10.129.242.5:~/deploy/dev/was" keyfile="E:\AWSTEST\lecs-jeus.pem" passphrase="success" trust="true"/> -->
+		<scp file="E:\jenkins-lecs2jenkins\jobs\3.JK.NIKE.AWS.DEV\workspace\AWSWAR\ROOT.war" remotetodir="jeus:${jeuspwd}@10.149.140.5:~/deploy/dev/was" passphrase="success" trust="true"/>
+    </target>
+	
+    <target name="DEV.AWS.UPLOAD.WEB">
+    	<sshexec host="10.129.242.5" username="jeus"  password="${jeuspwd}" command="rm ~/deploy/dev/web/nike-contents.tar"  trust="true"/>
+   		<scp file="E:\hudson-lecs2\jobs\NIKE.AWS.DEV\workspace\AWSWEB\nike-contents.tar" remotetodir="jeus:${jeuspwd}@10.129.242.5:~/deploy/dev/web" passphrase="success" trust="true"/>
+    </target>
+	
+    <target name="RDEV.AWS.UPLOAD.WEB">
+<!--    <sshexec host="10.129.242.5" username="jeus" keyfile="E:\AWSTEST\lecs-jeus.pem" command="rm ~/deploy/dev/web/nike-contents.tar"  trust="true"/> -->
+   		<sshexec host="10.149.140.5" username="jeus" password="${jeuspwd}" command="rm ~/deploy/dev/web/nike-contents.tar"  trust="true"/>
+<!--	<scp file="E:\hudson-lecs2\jobs\3.NIKE.AWS.DEV\workspace\AWSWEB\nike-contents.tar" remotetodir="jeus:${jeuspwd}@10.129.242.5:~/deploy/dev/web" keyfile="E:\AWSTEST\lecs-jeus.pem" passphrase="success" trust="true"/> -->
+		<scp file="E:\hudson-lecs2\jobs\3.NIKE.AWS.DEV\workspace\AWSWEB\nike-contents.tar" remotetodir="jeus:${jeuspwd}@10.149.140.5:~/deploy/dev/web" passphrase="success" trust="true"/>
+    </target>
+	
+    <target name="JK.RDEV.AWS.UPLOAD.WEB">
+<!--    <sshexec host="10.129.242.5" username="jeus" keyfile="E:\AWSTEST\lecs-jeus.pem" command="rm ~/deploy/dev/web/nike-contents.tar"  trust="true"/> -->
+   		<sshexec host="10.149.140.5" username="jeus" password="${jeuspwd}" command="rm ~/deploy/dev/web/nike-contents.tar"  trust="true"/>
+<!--	<scp file="E:\hudson-lecs2\jobs\3.NIKE.AWS.DEV\workspace\AWSWEB\nike-contents.tar" remotetodir="jeus:${jeuspwd}@10.129.242.5:~/deploy/dev/web" keyfile="E:\AWSTEST\lecs-jeus.pem" passphrase="success" trust="true"/> -->
+		<scp file="E:\jenkins-lecs2jenkins\jobs\3.JK.NIKE.AWS.DEV\workspace\AWSWEB\nike-contents.tar" remotetodir="jeus:${jeuspwd}@10.149.140.5:~/deploy/dev/web" passphrase="success" trust="true"/>
+    </target>
+
+<!-- aws common.xml copy -->	
+	
+    <target name="DEV.AWS.COMMON.COPY">
+    	<copy file="E:\hudson-lecs2\jobs\NIKE.AWS.DEV\workspace\src\app\classes\config\spring\bean\common.xml.aws" tofile="E:\hudson-lecs2\jobs\NIKE.AWS.DEV\workspace\build\build\LECS-Store-Nike\app\WEB-INF\classes\config\spring\bean\common.xml" overwrite="true"/>
+    </target>
+
+    <target name="RDEV.AWS.COMMON.COPY">
+    	<copy file="E:\hudson-lecs2\jobs\2.UPDATE_DEV\workspace\src\app\classes\config\spring\bean\common.xml.aws" tofile="E:\hudson-lecs2\jobs\3.NIKE.AWS.DEV\workspace\build\build\LECS-Store-Nike\app\WEB-INF\classes\config\spring\bean\common.xml" overwrite="true"/>
+    </target>
+
+    <target name="JK.RDEV.AWS.COMMON.COPY">
+    	<copy file="E:\jenkins-lecs2jenkins\jobs\2.JK.UPDATE_DEV\workspace\src\app\classes\config\spring\bean\common.xml.aws" tofile="E:\jenkins-lecs2jenkins\jobs\3.JK.NIKE.AWS.DEV\workspace\build\build\LECS-Store-Nike\app\WEB-INF\classes\config\spring\bean\common.xml" overwrite="true"/>
+    </target>
+
+    <target name="TST.AWS.COMMON.COPY">
+    	<copy file="E:\hudson-lecs2\jobs\NIKE.AWS.TST\workspace\src\app\classes\config\spring\bean\common.xml.aws" tofile="E:\hudson-lecs2\jobs\NIKE.AWS.TST\workspace\build\build\LECS-Store-Nike\app\WEB-INF\classes\config\spring\bean\common.xml" overwrite="true"/>
+    </target>
+
+    <target name="RTST.AWS.COMMON.COPY">
+    	<copy file="E:\hudson-lecs2\jobs\03.UPDATE_TST\workspace\src\app\classes\config\spring\bean\common.xml.aws" tofile="E:\hudson-lecs2\jobs\04.NIKE.AWS.TST\workspace\build\build\LECS-Store-Nike\app\WEB-INF\classes\config\spring\bean\common.xml" overwrite="true"/>
+    </target>
+
+    <target name="JK.RTST.AWS.COMMON.COPY">
+    	<copy file="E:\jenkins-lecs2jenkins\jobs\03.JK.UPDATE_TST\workspace\src\app\classes\config\spring\bean\common.xml.aws" tofile="E:\jenkins-lecs2jenkins\jobs\04.JK.NIKE.AWS.TST\workspace\build\build\LECS-Store-Nike\app\WEB-INF\classes\config\spring\bean\common.xml" overwrite="true"/>
+    </target>
+
+    <target name="TST.UNIQLO.AWS.COMMON.COPY">
+    	<copy file="E:\jenkins-lecs2jenkins\jobs\03.JK.UPDATE_TST\workspace\src\app\classes\config\spring\bean\common.xml.aws" tofile="E:\jenkins-lecs2jenkins\jobs\04.UNIQLO.AWS.TST\workspace\build\build\LECS-Store-Uniqlo\app\WEB-INF\classes\config\spring\bean\common.xml" overwrite="true"/>
+    </target>
+
+    <target name="TST.New.UNIQLO.AWS.COMMON.COPY">
+    	<copy file="E:\jenkins-lecs2jenkins\jobs\03.JK.UPDATE_TST\workspace\src\app\classes\config\spring\bean\common.xml.aws" tofile="E:\jenkins-lecs2jenkins\jobs\${JOB_NAME}\workspace\build\build\LECS-Store-New-Uniqlo\app\WEB-INF\classes\config\spring\bean\common.xml" overwrite="true"/>
+    </target>
+
+    <target name="TST.UQAPI.AWS.COMMON.COPY">
+    	<copy file="E:\jenkins-lecs2jenkins\jobs\03.JK.UPDATE_TST\workspace\src\app\classes\config\spring\bean\common.xml.aws" tofile="E:\jenkins-lecs2jenkins\jobs\04.UQAPI.AWS.TST\workspace\build\build\LECS-Store-Uniqlo-FR-API\app\WEB-INF\classes\config\spring\bean\common.xml" overwrite="true"/>
+    </target>
+
+    <target name="TST.New.UQAPI.AWS.COMMON.COPY">
+    	<copy file="E:\jenkins-lecs2jenkins\jobs\03.JK.UPDATE_TST\workspace\src\app\classes\config\spring\bean\common.xml.aws" tofile="E:\jenkins-lecs2jenkins\jobs\${JOB_NAME}\workspace\build\build\LECS-Store-New-Uniqlo-FR-API\app\WEB-INF\classes\config\spring\bean\common.xml" overwrite="true"/>
+    </target>
+
+    <target name="REL.AWS.COMMON.COPY">
+    	<copy file="E:\hudson-lecs2\jobs\03.UPDATE_PRD\workspace\src\app\classes\config\spring\bean\common.xml.aws" tofile="E:\hudson-lecs2\jobs\04.NIKE.AWS.REL\workspace\build\build\LECS-Store-Nike\app\WEB-INF\classes\config\spring\bean\common.xml" overwrite="true"/>
+    </target>
+
+    <target name="JK.REL.AWS.COMMON.COPY">
+    	<copy file="E:\jenkins-lecs2jenkins\jobs\03.JK.UPDATE_PRD\workspace\src\app\classes\config\spring\bean\common.xml.aws" tofile="E:\jenkins-lecs2jenkins\jobs\04.JK.NIKE.AWS.REL\workspace\build\build\LECS-Store-Nike\app\WEB-INF\classes\config\spring\bean\common.xml" overwrite="true"/>
+    </target>
+	
+	<!-- TST -->
+
+	<target name="TST.UPLOAD.NIKE.IMG">
+<!--		<sshexec host="10.149.187.70" username="jeus" password="${jeuspwd}" command="mv /lotte/lecsDocs/temp/nike_image_tst.zip /lotte/lecsDocs/temp/nike_image_tst_${DATETIMESTAMP}.zip" trust="true"/> -->
+		<scp file="E:\hudson-lecs2\jobs\04.NIKE.AWS.TST\workspace\AWSIMG\nike_image_tst.zip" remoteTofile="jeus:${jeuspwd}@10.149.195.31:/lotte/lecsDocs/temp/nike_image_tst.zip" trust="true"/>
+	</target>
+	
+	<target name="JK.TST.UPLOAD.NIKE.IMG">
+		<scp file="E:\jenkins-lecs2jenkins\jobs\04.JK.NIKE.AWS.TST\workspace\AWSIMG\nike_image_tst.zip" remoteTofile="jeus:${jeuspwd}@10.149.195.31:/lotte/lecsDocs/temp/nike_image_tst.zip" trust="true"/>
+	</target>
+	
+	<target name="TST.UPLOAD.UNIQLO.IMG">
+		<scp file="E:\jenkins-lecs2jenkins\jobs\04.UNIQLO.AWS.TST\workspace\AWSIMG\uniqlo_image_tst.zip" remoteTofile="jeus:${jeuspwd}@10.149.195.31:/lotte/lecsDocs/temp/uniqlo_image_tst.zip" trust="true"/>
+	</target>
+	
+	<target name="TST.New.UPLOAD.UNIQLO.IMG">
+		<scp file="E:\jenkins-lecs2jenkins\jobs\${JOB_NAME}\workspace\AWSIMG\new_uniqlo_image_tst.zip" remoteTofile="jeus:${jeuspwd}@10.149.195.31:/lotte/lecsDocs/temp/new_uniqlo_image_tst.zip" trust="true"/>
+	</target>
+	
+	<target name="TST.DEPLOY.NIKE.IMG">
+		<sshexec host="10.149.195.31" username="jeus" password="${jeuspwd}" command="unzip -o -q /lotte/lecsDocs/temp/nike_image_tst.zip -d /lotte/lecsDocs/images/NKS1" trust="true"/>
+	</target>
+	
+	<target name="TST.DEPLOY.UNIQLO.IMG">
+		<sshexec host="10.149.195.31" username="jeus" password="${jeuspwd}" command="unzip -o -q /lotte/lecsDocs/temp/uniqlo_image_tst.zip -d /lotte/lecsDocs/images/UQS1" trust="true"/>
+	</target>
+	
+	<target name="TST.New.DEPLOY.UNIQLO.IMG">
+		<sshexec host="10.149.195.31" username="jeus" password="${jeuspwd}" command="unzip -o -q /lotte/lecsDocs/temp/new_uniqlo_image_tst.zip -d /lotte/lecsDocs/images/NQS1" trust="true"/>
+	</target>
+	
+	
+    <target name="TST.AWS.UPLOAD.WAR">
+    	<sshexec host="10.129.242.5" username="jeus" password="${jeuspwd}" command="rm ~/deploy/test/was/ROOT.war"  trust="true"/>
+   		<scp file="E:\hudson-lecs2\jobs\NIKE.AWS.TST\workspace\AWSWAR\ROOT.war" remotetodir="jeus:${jeuspwd}@10.129.242.5:~/deploy/test/was" passphrase="success" trust="true"/>
+    </target>
+
+    <target name="RTST.AWS.UPLOAD.WAR">
+<!--	<sshexec host="10.129.242.5" username="jeus" keyfile="E:\AWSTEST\lecs-jeus.pem" command="rm ~/deploy/test/was/ROOT.war"  trust="true"/> -->
+   		<sshexec host="10.149.140.5" username="jeus" password="${jeuspwd}"  command="rm ~/deploy/test/was/ROOT.war"  trust="true"/>
+<!--   	<scp file="E:\hudson-lecs2\jobs\04.NIKE.AWS.TST\workspace\AWSWAR\ROOT.war" remotetodir="jeus:${jeuspwd}@10.129.242.5:~/deploy/test/was" keyfile="E:\AWSTEST\lecs-jeus.pem" passphrase="success" trust="true"/> -->
+   		<scp file="E:\hudson-lecs2\jobs\04.NIKE.AWS.TST\workspace\AWSWAR\ROOT.war" remotetodir="jeus:${jeuspwd}@10.149.140.5:~/deploy/test/was" passphrase="success" trust="true"/>
+    </target>
+	
+    <target name="JK.RTST.AWS.UPLOAD.WAR">
+   		<sshexec host="10.149.140.5" username="jeus" password="${jeuspwd}"  command="rm -fr ~/deploy/nike/test/was/ROOT.war"  trust="true"/>
+		<scp file="E:\jenkins-lecs2jenkins\jobs\04.JK.NIKE.AWS.TST\workspace\AWSWAR\ROOT.war" remotetodir="jeus:${jeuspwd}@10.149.140.5:~/deploy/nike/test/was" passphrase="success" trust="true"/>
+    </target>
+	
+    <target name="JK.RTST.AWS.PERF.UPLOAD.WAR">
+   		<sshexec host="10.149.140.5" username="jeus" password="${jeuspwd}"  command="rm -fr ~/deploy/nike/perf-prj-nike/was/ROOT.war"  trust="true"/>
+		<scp file="E:\jenkins-lecs2jenkins\jobs\04.JK.NIKE.AWS.TST\workspace\AWSWAR\ROOT.war" remotetodir="jeus:${jeuspwd}@10.149.140.5:~/deploy/nike/perf-prj-nike/was" passphrase="success" trust="true"/>
+    </target>
+	
+    <target name="TST.UNIQLO.AWS.UPLOAD.WAR">
+   		<sshexec host="10.149.140.5" username="jeus" password="${jeuspwd}"  command="rm -fr ~/deploy/uniqlo/test/was/ROOT.war"  trust="true"/>
+		<scp file="E:\jenkins-lecs2jenkins\jobs\04.UNIQLO.AWS.TST\workspace\AWSWAR\ROOT.war" remotetodir="jeus:${jeuspwd}@10.149.140.5:~/deploy/uniqlo/test/was" passphrase="success" trust="true"/>
+    </target>
+	
+    <target name="TST.New.UNIQLO.AWS.UPLOAD.WAR">
+   		<sshexec host="10.149.140.5" username="jeus" password="${jeuspwd}"  command="rm -fr ~/deploy/nuniqlo/test/was/ROOT.war"  trust="true"/>
+		<scp file="E:\jenkins-lecs2jenkins\jobs\${JOB_NAME}\workspace\AWSWAR\ROOT.war" remotetodir="jeus:${jeuspwd}@10.149.140.5:~/deploy/nuniqlo/test/was" passphrase="success" trust="true"/>
+    </target>
+	
+    <target name="TST.UQAPI.AWS.UPLOAD.WAR">
+   		<sshexec host="10.149.140.5" username="jeus" password="${jeuspwd}"  command="rm -fr ~/deploy/uqoa/test/was/ROOT.war"  trust="true"/>
+		<scp file="E:\jenkins-lecs2jenkins\jobs\04.UQAPI.AWS.TST\workspace\AWSWAR\ROOT.war" remotetodir="jeus:${jeuspwd}@10.149.140.5:~/deploy/uqoa/test/was" passphrase="success" trust="true"/>
+    </target>
+	
+    <target name="TST.New.UQAPI.AWS.UPLOAD.WAR">
+   		<sshexec host="10.149.140.5" username="jeus" password="${jeuspwd}"  command="rm -fr ~/deploy/nqoa/test/was/ROOT.war"  trust="true"/>
+		<scp file="E:\jenkins-lecs2jenkins\jobs\${JOB_NAME}\workspace\AWSWAR\ROOT.war" remotetodir="jeus:${jeuspwd}@10.149.140.5:~/deploy/nqoa/test/was" passphrase="success" trust="true"/>
+    </target>
+	
+    <target name="TST.AWS.UPLOAD.WEB">
+   		<sshexec host="10.129.242.5" username="jeus" password="${jeuspwd}"  command="rm ~/deploy/test/web/nike-contents.tar"  trust="true"/>
+  		<scp file="E:\hudson-lecs2\jobs\NIKE.AWS.TST\workspace\AWSWEB\nike-contents.tar" remotetodir="jeus:${jeuspwd}@10.129.242.5:~/deploy/test/web" passphrase="success" trust="true"/>
+    </target>
+	
+    <target name="RTST.AWS.UPLOAD.WEB">
+<!--   	<sshexec host="10.129.242.5" username="jeus" keyfile="E:\AWSTEST\lecs-jeus.pem" command="rm ~/deploy/test/web/nike-contents.tar"  trust="true"/> -->
+		<sshexec host="10.149.140.5" username="jeus" password="${jeuspwd}"  command="rm ~/deploy/test/web/nike-contents.tar"  trust="true"/>
+<!--	<scp file="E:\hudson-lecs2\jobs\04.NIKE.AWS.TST\workspace\AWSWEB\nike-contents.tar" remotetodir="jeus:${jeuspwd}@10.129.242.5:~/deploy/test/web" keyfile="E:\AWSTEST\lecs-jeus.pem" passphrase="success" trust="true"/> -->
+		<scp file="E:\hudson-lecs2\jobs\04.NIKE.AWS.TST\workspace\AWSWEB\nike-contents.tar" remotetodir="jeus:${jeuspwd}@10.149.140.5:~/deploy/test/web" passphrase="success" trust="true"/>
+    </target>
+	
+    <target name="JK.RTST.AWS.UPLOAD.WEB">
+   		<sshexec host="10.149.140.5" username="jeus" password="${jeuspwd}"  command="rm ~/deploy/nike/test/web/contents.tar"  trust="true"/>
+		<scp file="E:\jenkins-lecs2jenkins\jobs\04.JK.NIKE.AWS.TST\workspace\AWSWEB\contents.tar" remotetodir="jeus:${jeuspwd}@10.149.140.5:~/deploy/nike/test/web" passphrase="success" trust="true"/>
+    </target>
+	
+    <target name="JK.RTST.AWS.PERF.UPLOAD.WEB">
+   		<sshexec host="10.149.140.5" username="jeus" password="${jeuspwd}"  command="rm ~/deploy/nike/perf-prj-nike/web/contents.tar"  trust="true"/>
+		<scp file="E:\jenkins-lecs2jenkins\jobs\04.JK.NIKE.AWS.TST\workspace\AWSWEB\contents.tar" remotetodir="jeus:${jeuspwd}@10.149.140.5:~/deploy/nike/perf-prj-nike/web" passphrase="success" trust="true"/>
+    </target>
+	
+    <target name="TST.UNIQLO.AWS.UPLOAD.WEB">
+   		<sshexec host="10.149.140.5" username="jeus" password="${jeuspwd}"  command="rm ~/deploy/UQS1/test/web/contents.tar"  trust="true"/>
+		<scp file="E:\jenkins-lecs2jenkins\jobs\04.UNIQLO.AWS.TST\workspace\AWSWEB\contents.tar" remotetodir="jeus:${jeuspwd}@10.149.140.5:~/deploy/UQS1/test/web" passphrase="success" trust="true"/>
+    </target>
+	
+    <target name="TST.New.UNIQLO.AWS.UPLOAD.WEB">
+   		<sshexec host="10.149.140.5" username="jeus" password="${jeuspwd}"  command="rm ~/deploy/nuniqlo/test/web/contents.tar"  trust="true"/>
+		<scp file="E:\jenkins-lecs2jenkins\jobs\${JOB_NAME}\workspace\AWSWEB\contents.tar" remotetodir="jeus:${jeuspwd}@10.149.140.5:~/deploy/nuniqlo/test/web" passphrase="success" trust="true"/>
+    </target>
+	
+    <target name="TST.UQAPI.AWS.UPLOAD.WEB">
+   		<sshexec host="10.149.140.5" username="jeus" password="${jeuspwd}"  command="rm ~/deploy/uqoa/test/web/contents.tar"  trust="true"/>
+		<scp file="E:\jenkins-lecs2jenkins\jobs\04.UQAPI.AWS.TST\workspace\AWSWEB\contents.tar" remotetodir="jeus:${jeuspwd}@10.149.140.5:~/deploy/uqoa/test/web" passphrase="success" trust="true"/>
+    </target>
+	
+    <target name="TST.New.UQAPI.AWS.UPLOAD.WEB">
+   		<sshexec host="10.149.140.5" username="jeus" password="${jeuspwd}"  command="rm ~/deploy/nqoa/test/web/contents.tar"  trust="true"/>
+		<scp file="E:\jenkins-lecs2jenkins\jobs\${JOB_NAME}\workspace\AWSWEB\contents.tar" remotetodir="jeus:${jeuspwd}@10.149.140.5:~/deploy/nqoa/test/web" passphrase="success" trust="true"/>
+    </target>
+
+	<!-- REL -->
+	
+	<target name="REL.UPLOAD.NIKE.IMG">
+		<sshexec host="10.149.146.39" username="jeus" password="${jeuspwd}" command="mv /lotte/lecsDocs/temp/nike_image_rel.zip /lotte/lecsDocs/temp/nike_image_rel_${DATETIMESTAMP}.zip" trust="true"/>
+		<scp file="E:\hudson-lecs2\jobs\04.NIKE.AWS.REL\workspace\AWSIMG\nike_image_rel.zip" remoteTofile="jeus:${jeuspwd}@10.149.146.39:/lotte/lecsDocs/temp/nike_image_rel.zip" trust="true"/>
+	</target>
+	
+	<target name="JK.REL.UPLOAD.NIKE.IMG">
+		<sshexec host="10.149.146.39" username="jeus" password="${jeuspwd}" command="mv /lotte/lecsDocs/temp/nike_image_rel.zip /lotte/lecsDocs/temp/nike_image_rel_${DATETIMESTAMP}.zip" trust="true"/>
+		<scp file="E:\jenkins-lecs2jenkins\jobs\04.JK.NIKE.AWS.REL\workspace\AWSIMG\nike_image_rel.zip" remoteTofile="jeus:${jeuspwd}@10.149.146.39:/lotte/lecsDocs/temp/nike_image_rel.zip" trust="true"/>
+	</target>
+	
+	<target name="REL.DEPLOY.NIKE.IMG">
+		<sshexec host="10.149.146.39" username="jeus" password="${jeuspwd}" command="unzip -o -q /lotte/lecsDocs/temp/nike_image_rel.zip -d /lotte/lecsDocs/images/NKS1" trust="true"/>
+	</target>
+			
+    <target name="REL.AWS.UPLOAD.WAR">
+<!--    	<sshexec host="10.149.141.5" username="jeus" keyfile="E:\AWSKEY\real-nike-jeus.pem" command="rm ~/deploy/stg/was/ROOT.war"  trust="true"/> -->
+    	<sshexec host="10.149.141.5" username="jeus" password="${jeuspwd}" command="rm ~/deploy/stg/was/ROOT.war"  trust="true"/>
+<!--   		<scp file="E:\hudson-lecs2\jobs\04.NIKE.AWS.REL\workspace\AWSWAR\ROOT.war" remotetodir="jeus:${jeuspwd}@10.149.141.5:~/deploy/stg/was" keyfile="E:\AWSKEY\real-nike-jeus.pem" passphrase="success" trust="true"/> -->
+   		<scp file="E:\hudson-lecs2\jobs\04.NIKE.AWS.REL\workspace\AWSWAR\ROOT.war" remoteTofile="jeus:${jeuspwd}@10.149.141.5:~/deploy/stg/was/ROOT.war" trust="true"/>
+    </target>
+			
+    <target name="REL.AWS.UPLOAD.WAR.SEOUL">
+    	<sshexec host="10.149.139.5" username="jeus" password="${jeuspwd}" command="rm ~/deploy/stg/was/ROOT.war"  trust="true"/>
+   		<scp file="E:\hudson-lecs2\jobs\04.NIKE.AWS.REL\workspace\AWSWAR\ROOT.war" remoteTofile="jeus:${jeuspwd}@10.149.139.5:~/deploy/stg/was/ROOT.war" trust="true"/>
+    </target>
+			
+    <target name="JK.REL.AWS.UPLOAD.WAR.SEOUL">
+    	<sshexec host="10.149.139.5" username="jeus" password="${jeuspwd}" command="rm ~/deploy/stg/was/ROOT.war"  trust="true"/>
+   		<scp file="E:\jenkins-lecs2jenkins\jobs\04.JK.NIKE.AWS.REL\workspace\AWSWAR\ROOT.war" remoteTofile="jeus:${jeuspwd}@10.149.139.5:~/deploy/stg/was/ROOT.war" trust="true"/>
+    </target>
+	
+    <target name="REL.AWS.UPLOAD.WEB">
+<!--    	<sshexec host="10.149.141.5" username="jeus" keyfile="E:\AWSKEY\real-nike-jeus.pem" command="rm ~/deploy/stg/web/nike-contents.tar"  trust="true"/> -->
+    	<sshexec host="10.149.141.5" username="jeus" password="${jeuspwd}" command="rm ~/deploy/stg/web/nike-contents.tar"  trust="true"/>
+<!--   		<scp file="E:\hudson-lecs2\jobs\04.NIKE.AWS.REL\workspace\AWSWEB\nike-contents.tar" remotetodir="jeus:${jeuspwd}@10.149.141.5:~/deploy/stg/web" keyfile="E:\AWSKEY\real-nike-jeus.pem" passphrase="success" trust="true"/> -->
+   		<scp file="E:\hudson-lecs2\jobs\04.NIKE.AWS.REL\workspace\AWSWEB\nike-contents.tar" remoteTofile="jeus:${jeuspwd}@10.149.141.5:~/deploy/stg/web/nike-contents.tar" trust="true"/>
+    </target>
+	
+    <target name="REL.AWS.UPLOAD.WEB.SEOUL">
+    	<sshexec host="10.149.139.5" username="jeus" password="${jeuspwd}" command="rm ~/deploy/stg/web/nike-contents.tar"  trust="true"/>
+   		<scp file="E:\hudson-lecs2\jobs\04.NIKE.AWS.REL\workspace\AWSWEB\nike-contents.tar" remoteTofile="jeus:${jeuspwd}@10.149.139.5:~/deploy/stg/web/nike-contents.tar" trust="true"/>
+    </target>
+	
+    <target name="JK.REL.AWS.UPLOAD.WEB.SEOUL">
+    	<sshexec host="10.149.139.5" username="jeus" password="${jeuspwd}" command="rm ~/deploy/stg/web/nike-contents.tar"  trust="true"/>
+   		<scp file="E:\jenkins-lecs2jenkins\jobs\04.JK.NIKE.AWS.REL\workspace\AWSWEB\nike-contents.tar" remoteTofile="jeus:${jeuspwd}@10.149.139.5:~/deploy/stg/web/nike-contents.tar" trust="true"/>
+    </target>
+
+    <target name="AWS.DEPIMG.REL.WAS">
+<!--    	<sshexec host="10.149.141.5" username="jeus" keyfile="E:\AWSKEY\real-nike-jeus.pem" command="~/deploy_real was"  trust="true"/> -->
+    	<sshexec host="10.149.141.5" username="jeus" password="${jeuspwd}" command="~/deploy_real was"  trust="true"/>
+    </target>
+
+    <target name="AWS.DEPIMG.REL.WEB">
+<!--    	<sshexec host="10.149.141.5" username="jeus" keyfile="E:\AWSKEY\real-nike-jeus.pem" command="~/deploy_real web"  trust="true"/> -->
+    	<sshexec host="10.149.141.5" username="jeus" password="${jeuspwd}" command="~/deploy_real web"  trust="true"/>
+    </target>
+
+    <target name="AWS.DEPIMG.REL.WAS.SEOUL">
+    	<sshexec host="10.149.139.5" username="jeus" password="${jeuspwd}" command="~/deploy_real was"  trust="true"/>
+    </target>
+
+    <target name="AWS.DEPIMG.REL.WEB.SEOUL">
+    	<sshexec host="10.149.139.5" username="jeus" password="${jeuspwd}" command="~/deploy_real web"  trust="true"/>
+    </target>
+	
+	<target name="CHECK.FILE">
+		<sshexec host="10.129.242.5" username="jeus" password="${jeuspwd}"  failonerror="false" resultproperty="Result" command="ls ~/deploy/test/web/nike-contents.tar" trust="true"/>
+	    <echo message="Result=${Result}" />
+	    <echo message="ok=${ok}" />
+	    <if>
+	        <equals arg1="${Result}" arg2="${ok}" />
+	        <then>
+	            <echo message="nike-contents.tar on server"/>
+	        </then>
+	        <else>
+	            <echo message="nike-contents.tar not on server"/>
+	        </else>
+	    </if>
+	</target>
+
+	<target name="AV.CHECK.FILE">
+		<sshexec host="10.129.242.5" username="jeus" password="${jeuspwd}" trust="true" command="ls ~/deploy/test/web/nike-contents.tar" failonerror="false" resultproperty="Result">
+			<exec executable="cmd" resultproperty="Result" failonerror="false">
+			    <arg value="ls ~/deploy/test/web/nike-contents.tar"/>
+			</exec>
+		    <echo message="Result=${Result}" />
+		</sshexec>
+	    <if>
+	        <equals arg1="${ok}" arg2="ok" />
+	        <then>
+	            <echo message="nike-contents.tar on server"/>
+	        </then>
+	        <else>
+	            <echo message="nike-contents.tar not on server"/>
+	        </else>
+	    </if>
+	</target>
+	
+	<target name="TEST.AWS.TELNET">
+		<telnet server="10.149.141.5" port="22">
+		</telnet>
+	</target>
+	
+	<target name="TEST.TELNET">
+		<telnet server="211.115.120.31" port="80">
+		</telnet>
+	</target>
+	
+	<target name="DIFF.BATCH">
+		<sshexec host="121.254.239.38" username="jeus" password="${jeuspwd}" command="diff -unr /lotte/lecs/batch_before_${DATETIMESTAMP2}* /lotte/lecs/batch" trust="true"/>
+	</target>
+	
+</project>

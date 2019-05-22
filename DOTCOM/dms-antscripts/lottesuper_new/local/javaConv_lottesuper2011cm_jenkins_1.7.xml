@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="JAVACONV_lottesuper2011cm_jenkins_1.7">
+    <!-- **************************************************************** -->
+	<!-- PROPERTY -->
+	<!-- **************************************************************** -->
+    <taskdef resource="net/sf/antcontrib/antcontrib.properties" />
+	<property name="user.id" value="${svrUserId}" />
+	<property name="user.pwd" value="${svrUserPassword}" />
+	<!--<property name="target" value="${target}"/>-->
+
+	<!--
+	<target name="send_check">
+	<echo>echo send_check : ${deploy.phase}</echo>
+	  <condition property="send_deploy" value="send_test">
+	   		<equals arg1="${deploy.phase}" arg2="TEST" />
+	  </condition>
+	  <condition property="send_deploy" value="send_real">
+		   	<equals arg1="${deploy.phase}" arg2="REAL" />
+	  </condition>
+	</target>
+	-->
+	
+	<!--
+	<target name="send_call" depends="send_check">
+		<antcall target="${send_deploy}"/>
+	</target>
+	-->
+
+	<!--
+	<target name="jar_send">
+		<antcall target="send_back_jar" />
+		<antcall target="send_partner_jar" />
+		<antcall target="send_mback_jar" />
+		<antcall target="send_front_jar" />
+		<antcall target="send_mobile_jar" />
+		<antcall target="send_company_jar" />
+		<antcall target="send_winwin_jar" />
+	</target>
+	-->
+
+	<!-- 테스트서버에서 Company 는 FrontOffice -->
+	<target name="send_test">
+		<echo>send_test</echo>
+		<echo>fohost : ${fohost}</echo>
+		<echo>bohost : ${bohost}</echo>
+		<!--
+			<antcall target="send_test_back_jar" />
+			<antcall target="send_test_partner_jar" />
+			<antcall target="send_test_mback_jar" />
+			<antcall target="send_test_front_jar" />
+			<antcall target="send_test_mobile_jar" />
+			<antcall target="send_test_company_jar" />
+			<antcall target="send_test_winwin_jar" />
+		-->
+		<!--<antcall target="send_test_batch_jar" />-->
+	</target>
+	
+	<!-- 운영서버에서 Company 는 BackOffice -->
+	<target name="send_bo_real">
+		<echo>send_bo_real</echo>
+		<echo>bohost : ${bohost}</echo>
+		<!--
+			<antcall target="send_real_back_jar" />
+			<antcall target="send_real_partner_jar" />
+			<antcall target="send_real_mback_jar" />
+		    <antcall target="send_real_company_jar" />
+		  -->	
+			<!--  batch 는 언제 배포할것인가? -->
+		<!--<antcall target="send_real_batch_jar" />-->
+	</target>
+	
+	
+	<target name="send_fo_real">
+		<echo>send_fo_real</echo>
+		<echo>fohost : ${fohost}</echo>
+		<!--
+			<antcall target="send_real_front_jar" />
+			<antcall target="send_real_mobile_jar" />
+			<antcall target="send_real_winwin_jar" />
+		-->
+	</target>
+
+
+	<!-- ###################### Java Test Class Send Start ######################### -->
+	<!-- [BackOffice] -->
+	<target name="send_test_back_jar">
+		<scp todir="${user.id}:${user.pwd}@${bohost}:/esuper/project/back/WEB-INF/lib" trust="true">
+		<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/dist">
+			<include name="lottesuper-commons.jar"></include>
+		</fileset>
+	</scp>
+	</target>	
+	
+	<target name="send_test_partner_jar">
+		<scp todir="${user.id}:${user.pwd}@${bohost}:/esuper/project/partner/WEB-INF/lib" trust="true">
+		<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/dist">
+			<include name="lottesuper-commons.jar"></include>
+		</fileset>
+	</scp>
+	</target>	
+
+	<target name="send_test_mback_jar">
+				<scp todir="${user.id}:${user.pwd}@${bohost}:/esuper/project/mback/WEB-INF/lib" trust="true">
+				<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/dist">
+					<include name="lottesuper-commons.jar"></include>
+				</fileset>
+			</scp>
+	</target>	
+	
+	
+	<!-- 배치는 어떻게 할것인지? -->
+	<target name="send_test_batch_jar">
+		<scp todir="${user.id}:${user.pwd}@${bohost}:/esuper/project/batch/lib" trust="true">
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/dist">
+					<include name="lottesuper-commons.jar"></include>
+			</fileset>
+		</scp>
+	</target>
+
+	
+	
+	<!-- [ FrontOffice ] -->
+	<target name="send_test_front_jar">
+		<scp todir="${user.id}:${user.pwd}@${fohost}:/esuper/project/front/WEB-INF/lib" trust="true">
+		<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/dist">
+			<include name="lottesuper-commons.jar"></include>
+		</fileset>
+	</scp>
+	</target>	
+	
+	<target name="send_test_mobile_jar">
+		<scp todir="${user.id}:${user.pwd}@${fohost}:/esuper/project/mobile/WEB-INF/lib" trust="true">
+		<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/dist">
+			<include name="lottesuper-commons.jar"></include>
+		</fileset>
+	</scp>
+	</target>	
+
+	<target name="send_test_company_jar">
+				<scp todir="${user.id}:${user.pwd}@${fohost}:/esuper/project/company/WEB-INF/lib" trust="true">
+				<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/dist">
+					<include name="lottesuper-commons.jar"></include>
+				</fileset>
+			</scp>
+	</target>	
+	
+	<target name="send_test_winwin_jar">
+				<scp todir="${user.id}:${user.pwd}@${fohost}:/esuper/project/winwin/WEB-INF/lib" trust="true">
+				<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/dist">
+					<include name="lottesuper-commons.jar"></include>
+				</fileset>
+			</scp>
+	</target>	
+
+	<!-- ###################### Java Test Class Send End ######################### -->
+	
+	
+	<!-- ###################### Java Real Class Send Start ######################### -->
+	<!-- [ BackOffice ] -->
+	<target name="send_real_back_jar">
+		<scp todir="${user.id}:${user.pwd}@${bohost}:/esuper/project/back/WEB-INF/lib" trust="true">
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/dist">
+				<include name="lottesuper-commons.jar"></include>
+			</fileset>
+	</scp>
+	</target>	
+	
+	<target name="send_real_partner_jar">
+		<scp todir="${user.id}:${user.pwd}@${bohost}:/esuper/project/partner/WEB-INF/lib" trust="true">
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/dist">
+				<include name="lottesuper-commons.jar"></include>
+			</fileset>
+	</scp>
+	</target>	
+
+	<target name="send_real_mback_jar">
+		<scp todir="${user.id}:${user.pwd}@${bohost}:/esuper/project/mback/WEB-INF/lib" trust="true">
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/dist">
+				<include name="lottesuper-commons.jar"></include>
+			</fileset>
+		</scp>
+	</target>	
+
+	
+	<target name="send_real_company_jar">
+		<scp todir="${user.id}:${user.pwd}@${bohost}:/esuper/project/company/WEB-INF/lib" trust="true">
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/dist">
+					<include name="lottesuper-commons.jar"></include>
+			</fileset>
+		</scp>
+	</target>
+	
+
+	<!-- 배치는 어떻게 할것인지? -->
+	<!--
+	<target name="send_real_batch_jar">
+		<scp todir="${user.id}:${user.pwd}@${bohost}:/esuper/project/batch/lib" trust="true">
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/dist">
+					<include name="lottesuper-commons.jar"></include>
+			</fileset>
+		</scp>
+	</target>
+	-->
+	
+	<!-- [ FrontOffice ] -->
+	<target name="send_real_front_jar">
+		<scp todir="${user.id}:${user.pwd}@${fohost}:/esuper/project/front/WEB-INF/lib" trust="true">
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/dist">
+				<include name="lottesuper-commons.jar"></include>
+			</fileset>
+		</scp>
+	</target>	
+	
+	<target name="send_real_mobile_jar">
+		<scp todir="${user.id}:${user.pwd}@${fohost}:/esuper/project/mobile/WEB-INF/lib" trust="true">
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/dist">
+				<include name="lottesuper-commons.jar"></include>
+			</fileset>
+		</scp>
+	</target>	
+	
+	<target name="send_real_winwin_jar">
+		<scp todir="${user.id}:${user.pwd}@${fohost}:/esuper/project/winwin/WEB-INF/lib" trust="true">
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/dist">
+					<include name="lottesuper-commons.jar"></include>
+			</fileset>
+		</scp>
+	</target>	
+
+	<!-- ###################### Java Real Class Send End ######################### -->
+
+
+	<!-- **************************************************************** -->
+	<!-- BUILD -->
+	<!-- **************************************************************** -->
+	<path id="classpath">
+		<fileset dir="${java.home.dir}/jre/lib">
+			<include name="rt.jar" />
+		</fileset>
+		
+
+		<fileset dir="${jeus.home.dir}/lib/datasource">
+			<include name="*.jar" />
+		</fileset>
+		
+		<fileset dir="${jeus.home.dir}/lib/system">
+			<include name="*.jar" />
+		</fileset>
+
+		
+
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/lib">
+			<include name="*.jar" />
+		</fileset>
+	</path>
+	
+
+		<target name="build">
+			<antcall target="compile" />
+			<antcall target="jar" />
+	</target>	
+	
+	<target name="compile">
+		
+		<mkdir dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/build" />
+
+		<delete includeemptydirs="true">
+		<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/build" includes="**/*"/>
+		</delete>
+		
+		<javac source="1.7" 
+			target="1.7" 
+			srcdir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/src"
+			classpathref="classpath"
+			destdir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/build"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			fork="true" 
+			memoryMaximumSize="256m"
+			includeantruntime="false"/>
+			
+		<copy todir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/build">
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/src">
+				<include name="**/**/*.xml" />
+		    </fileset>
+		</copy>
+	</target>
+	
+	<target name="jar">
+		<mkdir dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/dist" />
+		<delete includeemptydirs="true">
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/dist" includes="**/*"/>
+    	</delete>
+		<jar encoding="UTF-8" destfile="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/dist/lottesuper-commons.jar">
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/build" />
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/src">
+				<include name="**/**/*.java" />
+				<include name="**/**/*.xml" />
+			</fileset>
+		</jar>
+	
+		<!-- ★★★★★★★★★★★★★★★ Antcontrib Smaple Start  ★★★★★★★★★★★★★★★ -->
+					<!-- 
+			    	<if> 
+			           <equals arg1="${status}" arg2="false" /> 
+			           <then> 
+			               <echo message="The value of property status is false" /> 
+			           </then> 
+			           <else> 
+			               <echo message="The value of property status is not false" /> 
+			           </else> 
+			       </if> 
+			       <echo message="the status is ${status}" />
+			       
+			       
+			       <if>
+			    		<equals arg1="${condition}" arg2="true"/>
+			    	<then>
+			        	<copy file="${some.dir}/file" todir="${another.dir}"/>
+			    	</then>
+			    
+			    	<elseif>
+			        	<equals arg1="${condition}" arg2="false"/>
+			        <then>
+			            <copy file="${some.dir}/differentFile" todir="${another.dir}"/>
+			        </then>
+			    	</elseif>
+			    	
+			    	<else>
+			        <echo message="Condition was neither true nor false"/>
+			    	</else>
+				
+				</if>
+       -->
+		<!-- ★★★★★★★★★★★★★★★ Antcontrib Smaple End  ★★★★★★★★★★★★★★★ -->
+
+
+		<if> 
+				<and>
+	    	       <equals arg1="${deploy.phase}" arg2="REAL" />
+				   <equals arg1="${target}" arg2="FO" />
+				</and>
+	    	<then>
+	           		<echo message="The deploy.phase is ${deploy.phase} , The target status is ${target} " />
+					<antcall target="send_fo_real" />
+	    	</then> 
+		
+		<elseif>
+				<and>
+					<equals arg1="${deploy.phase}" arg2="REAL" />
+					<equals arg1="${target}" arg2="BO" />
+				</and>
+			<then>
+					<echo message="The deploy.phase is ${deploy.phase} , The target status is ${target} " />
+					<antcall target="send_bo_real" />
+			</then>
+		</elseif>
+			
+		<elseif>
+				<and>
+					<equals arg1="${deploy.phase}" arg2="TEST" />
+		          	<equals arg1="${target}" arg2="FB" />
+				</and>
+			<then>
+					<echo message="The deploy.phase is ${deploy.phase} , The target status is ${target} " />
+					<antcall target="send_test" />
+			</then>
+		</elseif>
+	</if> 
+
+	</target>
+
+</project>

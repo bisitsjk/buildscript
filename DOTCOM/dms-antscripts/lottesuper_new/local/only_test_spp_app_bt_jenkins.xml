@@ -1,0 +1,441 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="spp2014appbt_jenkins_test" basedir=".">
+    <!-- **************************************************************** -->
+	<!-- PROPERTY -->
+	<!-- **************************************************************** -->
+	<property name="java.home"   value="c:/Program Files (x86)/Java/jdk1.6.0_25" />
+	<property name="hudson.home" value="e:/hudson-spp" />
+	
+	<property name="job.name"    value="ONLY_TEST_SPP_APP_BT" />
+	<property name="workspace"   value="${hudson.home}/jobs/${job.name}/workspace" />
+	<property name="project.bt"  value="spp-app-bt" />
+	<property name="project.cm"  value="spp-app-cm" />
+	
+	<property name="src.dir"      value="src/main" />
+	<property name="docroot"      value="/lotte/spp_platform/servers" />
+	<property name="service.name" value="server_bt" />
+	
+	<property name="docroot.real"      value="/usr1/home/xclass/SPP_BATCH" />
+	<property name="service.name.real" value="JAVA_APP" />
+		
+	<property name="cm.java.dir"          value="spp-app-common-lib/${src.dir}/java" />
+	<property name="cm.clib.dir"          value="spp-app-common-lib/LIB-INF/common-lib" />
+	<property name="cm.dlib.dir"          value="spp-app-common-lib/LIB-INF/daemon-lib" />
+	<property name="cm.class.dir"         value="spp-app-common-lib/classes" />
+	<property name="cm.jar.dir"           value="spp-app-common-lib/jar" />
+	<property name="cm.jar.name"          value="spp-app-common-lib.1.6.jar" />
+	
+	<property name="bt.java.dir"          value="${src.dir}/java" />
+	<property name="bt.resource.original" value="${src.dir}/resources" />
+	<property name="bt.properties"        value="deploy/${PARAM1}" />
+	<property name="bt.shell"             value="deploy/${PARAM1}/shell" />
+	<property name="bt.class.dir"         value="classes" />
+	<property name="bt.resources.dir"     value="resources" />
+	<property name="bt.bin.dir"           value="bin" />
+	<!-- 
+	<property name="bt.jar.dir"           value="jar" />
+	<property name="bt.jar.name"          value="com.lotte.spp.platform.bt.jar" />
+	<property name="main.class" value="com.lotte.spp.platform.batch.CouponSendBTServer" />
+	-->
+	<property name="package.dir"  value="${workspace}/spp-bt-package" />
+	<property name="package.name" value="spp-app-bt.tar" />
+	<property name="package.name.real" value="spp-app-bt-real.tar" />
+	
+	<property name="server.ip" value="${PARAM2}" />
+	<property name="user.id"   value="xclass" />
+	<property name="user.pwd"  value="s7uxEDRe#8R=" />
+	
+	
+		
+	
+	<!-- **************************************************************** -->
+	<!-- CHECK -->
+	<!-- **************************************************************** -->
+	<target name="check_remote_work" unless="isSuccess">
+		<fail message="connect fails..." />
+	</target>
+	
+	<target name="check_real">
+		<condition property="isReal">
+			<equals arg1="${PARAM1}" arg2="real" />
+		</condition>
+	</target>
+	
+	
+	<!-- **************************************************************** -->
+	<!-- BUILD -->
+	<!-- **************************************************************** -->
+	<target name="build_cm">
+		<path id="cm.classpath">
+			<fileset dir="${java.home}/lib">
+				<include name="*.jar" />
+			</fileset>
+			<fileset dir="${workspace}/${project.cm}/${cm.clib.dir}">
+				<include name="*.jar"/>
+			</fileset>
+			<fileset dir="${workspace}/${project.cm}/${cm.dlib.dir}">
+				<include name="*.jar"/>
+			</fileset>			
+		</path>
+		
+		<!-- compile common -->
+		<echo>clean class path</echo>
+		<mkdir dir="${workspace}/${project.cm}/${cm.class.dir}" />
+		<delete includeemptydirs="true">
+			<fileset dir="${workspace}/${project.cm}/${cm.class.dir}" includes="**/*"/>
+    	</delete>
+		<echo>compile common sources</echo>
+		<javac 
+			srcdir="${workspace}/${project.cm}/${cm.java.dir}" 
+			destdir="${workspace}/${project.cm}/${cm.class.dir}"
+			classpathref="cm.classpath"
+			nowarn="true" 
+			deprecation="true"
+			debug="true"
+			listfiles="false" 
+			failonerror="true" 
+			optimize="false" 
+			includeantruntime="false"
+			target="1.6"
+			encoding="UTF-8">
+			<include name="**/*.java" />
+			<exclude name="**/spp/platform/common/utils/FileUtil.java" />
+		</javac>
+		
+		<!-- jar common -->
+		<echo>delete jar file</echo>
+		<mkdir dir="${workspace}/${project.cm}/${cm.jar.dir}" />
+		<delete includeemptydirs="true">
+			<fileset dir="${workspace}/${project.cm}/${cm.jar.dir}" includes="**/*"/>
+    	</delete>
+		<echo>create jar file</echo>
+		<jar encoding="UTF-8" 
+			 destfile="${workspace}/${project.cm}/${cm.jar.dir}/${cm.jar.name}">
+			<fileset dir="${workspace}/${project.cm}/${cm.class.dir}" />
+			<manifest>
+				<attribute name="Built-By" value="owner"/>
+				<attribute name="Main-Class" value="com.lotte.spp.platform.frm.Config"/>
+				<attribute name="Class-Path" value=".
+					aopalliance-1.0.jar
+					aspectjrt-1.6.8.jar
+					aspectjweaver-1.6.8.jar
+					barbecue-1.0.6c.jar
+					bcprov-jdk16-145.jar
+					commons-beanutils-1.8.0.jar
+					commons-collections-3.2.jar
+					commons-dbcp-1.2.2.jar
+					commons-lang-2.2.jar
+					commons-logging-1.1.1.jar
+					commons-net-1.4.1.jar
+					commons-pool-1.5.3.jar
+					ibatis-2.3.4.726.jar
+					jai_codec.jar
+					jai_core.jar
+					jdom.jar
+					javax.inject-1.jar
+					junit-4.9.jar
+					log4j-1.2.15.jar
+					log4j-1.2.8.jar
+					ojdbc5.jar
+					poi-3.6-20091214.jar
+					servlet-api.jar
+					spring-aop-3.1.1.RELEASE.jar
+					spring-asm-3.1.1.RELEASE.jar
+					spring-beans-3.1.1.RELEASE.jar
+					spring-context-3.1.1.RELEASE.jar
+					spring-core-3.1.1.RELEASE.jar
+					spring-expression-3.1.1.RELEASE.jar
+					spring-jdbc-3.1.1.RELEASE.jar
+					spring-orm-3.0.6.RELEASE.jar
+					spring-test-3.1.1.RELEASE.jar
+					spring-tx-3.1.1.RELEASE.jar
+					spring-web-3.1.1.RELEASE.jar
+					spring-webmvc-3.1.1.RELEASE.jar
+				"/>
+			</manifest>				
+		</jar>
+	</target>
+	
+	<target name="build_bt">
+		<path id="bt.classpath">
+			<fileset dir="${java.home}/lib">
+				<include name="*.jar" />
+			</fileset>
+			<fileset dir="${workspace}/${project.cm}/${cm.clib.dir}">
+				<include name="*.jar"/>
+			</fileset>
+			<fileset dir="${workspace}/${project.cm}/${cm.dlib.dir}">
+				<include name="*.jar"/>
+			</fileset>
+			<fileset dir="${workspace}/${project.cm}/${cm.jar.dir}">
+				<include name="${cm.jar.name}"/>
+			</fileset>				
+		</path>
+
+		<!-- compile batch -->
+		<echo>clean class path</echo>
+		<mkdir dir="${workspace}/${project.bt}/${bt.class.dir}" />
+		<delete includeemptydirs="true">
+			<fileset dir="${workspace}/${project.bt}/${bt.class.dir}" includes="**/*"/>
+    	</delete>
+		<echo>compile web application sources</echo>
+		<javac 
+			srcdir="${workspace}/${project.bt}/${bt.java.dir}" 
+			destdir="${workspace}/${project.bt}/${bt.class.dir}"
+			classpathref="bt.classpath"
+			nowarn="true" 
+			deprecation="true"
+			debug="true"
+			listfiles="false" 
+			failonerror="true" 
+			optimize="false" 
+			includeantruntime="false"
+			target="1.6"
+			encoding="UTF-8" />
+		
+		<!-- resource batch 
+		<echo>copy resources</echo>
+		<copy todir="${workspace}/${project.bt}/${bt.resources.dir}" verbose="true" overwrite="true">
+			<fileset dir="${workspace}/${project.bt}/${bt.resource.original}">
+				<include name="**/*"/>
+				<exclude name="**/.svn/**"/>
+		    </fileset>
+		</copy>
+		<echo>copy properties</echo>
+		<copy todir="${workspace}/${project.bt}/${bt.resources.dir}" verbose="true" overwrite="true">
+			<fileset dir="${workspace}/${project.bt}/${bt.properties}">
+				<include name="*.properties"/>
+				<exclude name="**/.svn/**"/>
+		    </fileset>
+		</copy>
+		<echo>copy shell</echo>
+		<copy todir="${workspace}/${project.bt}" verbose="true" overwrite="true">
+			<fileset dir="${workspace}/${project.bt}/${bt.shell}">
+				<include name="**/*"/>
+				<exclude name="**/.svn/**"/>
+		    </fileset>
+		</copy>		-->
+		
+		<!-- jar batch 
+		<echo>delete jar file</echo>
+		<mkdir dir="${workspace}/${project.bt}/${bt.jar.dir}" />
+		<delete includeemptydirs="true">
+			<fileset dir="${workspace}/${project.bt}/${bt.jar.dir}" includes="**/*"/>
+    	</delete>
+		<echo>create jar file</echo>
+		<jar encoding="UTF-8" 
+			 destfile="${workspace}/${project.bt}/${bt.jar.dir}/${bt.jar.name}">
+			<fileset dir="${workspace}/${project.bt}/${bt.class.dir}" />
+			<manifest>
+				<attribute name="Built-By" value="owner"/>
+				<attribute name="Main-Class" value="${main.class}"/>
+				<attribute name="Class-Path" value=".
+					lib/aopalliance-1.0.jar
+					lib/aspectjrt-1.6.8.jar
+					lib/aspectjweaver-1.6.8.jar
+					lib/barbecue-1.0.6c.jar
+					lib/bcprov-jdk16-145.jar
+					lib/commons-beanutils-1.8.0.jar
+					lib/commons-collections-3.2.jar
+					lib/commons-dbcp-1.2.2.jar
+					lib/commons-lang-2.2.jar
+					lib/commons-logging-1.1.1.jar
+					lib/commons-net-1.4.1.jar
+					lib/commons-pool-1.5.3.jar
+					lib/ibatis-2.3.4.726.jar
+					lib/jai_codec.jar
+					lib/jai_core.jar
+					lib/jdom.jar
+					lib/javax.inject-1.jar
+					lib/junit-4.9.jar
+					lib/log4j-1.2.15.jar
+					lib/log4j-1.2.8.jar
+					lib/ojdbc5.jar
+					lib/poi-3.6-20091214.jar
+					lib/servlet-api.jar
+					lib/spring-aop-3.1.1.RELEASE.jar
+					lib/spring-asm-3.1.1.RELEASE.jar
+					lib/spring-beans-3.1.1.RELEASE.jar
+					lib/spring-context-3.1.1.RELEASE.jar
+					lib/spring-core-3.1.1.RELEASE.jar
+					lib/spring-expression-3.1.1.RELEASE.jar
+					lib/spring-jdbc-3.1.1.RELEASE.jar
+					lib/spring-orm-3.0.6.RELEASE.jar
+					lib/spring-test-3.1.1.RELEASE.jar
+					lib/spring-tx-3.1.1.RELEASE.jar
+					lib/spring-web-3.1.1.RELEASE.jar
+					lib/spring-webmvc-3.1.1.RELEASE.jar
+					lib/spp-app-common-lib.1.6.jar
+				"/>
+			</manifest>		
+		</jar>		-->
+		
+		<!-- tar -->
+		<echo>clean package path</echo>
+		<mkdir dir="${package.dir}" />
+		<delete includeemptydirs="true">
+			<fileset dir="${package.dir}" includes="**/*"/>
+    	</delete>
+		<echo>package spp batch</echo>
+		<tar destfile="${package.dir}/${package.name}" longfile="gnu">
+			<tarfileset dir="${workspace}/${project.bt}"
+				prefix="${docroot}/${service.name}"
+				preserveLeadingSlashes="true">
+				<include name="${bt.class.dir}/**"/>
+			</tarfileset>
+			<tarfileset dir="${workspace}/${project.bt}/${bt.properties}"
+				prefix="${docroot}/${service.name}/${bt.resources.dir}"
+				preserveLeadingSlashes="true">
+				<include name="*.properties"/>
+			</tarfileset>
+			<tarfileset dir="${workspace}/${project.bt}/${bt.resource.original}"
+				prefix="${docroot}/${service.name}/${bt.resources.dir}"
+				preserveLeadingSlashes="true">
+				<include name="**"/>
+				<exclude name="*.properties"/>
+			</tarfileset>			
+			<tarfileset dir="${workspace}/${project.cm}/${cm.clib.dir}"
+				prefix="${docroot}/${service.name}/lib"
+				preserveLeadingSlashes="true">
+				<include name="*.jar"/>
+			</tarfileset>
+			<tarfileset dir="${workspace}/${project.cm}/${cm.dlib.dir}"
+				prefix="${docroot}/${service.name}/lib"
+				preserveLeadingSlashes="true">
+				<include name="javax.inject-1.jar"/>
+			</tarfileset>			
+			<tarfileset dir="${workspace}/${project.cm}/${cm.jar.dir}"
+				prefix="${docroot}/${service.name}/lib"
+				preserveLeadingSlashes="true">
+				<include name="${cm.jar.name}"/>
+			</tarfileset>			
+		</tar>
+		 
+		<tar destfile="${package.dir}/${package.name.real}" longfile="gnu">
+			<tarfileset dir="${workspace}/${project.bt}"
+				prefix="${docroot.real}/${service.name.real}"
+				preserveLeadingSlashes="true">
+				<include name="${bt.class.dir}/**"/>
+			</tarfileset> <!--
+			<tarfileset dir="${workspace}/${project.bt}/${bt.shell}"
+				prefix="${docroot.real}/${service.name.real}"
+				preserveLeadingSlashes="true">
+				<include name="**"/>
+			</tarfileset> -->
+			<tarfileset dir="${workspace}/${project.bt}/${bt.properties}"
+				prefix="${docroot.real}/${service.name.real}/${bt.resources.dir}"
+				preserveLeadingSlashes="true">
+				<include name="*.properties"/>
+			</tarfileset>
+			<tarfileset dir="${workspace}/${project.bt}/${bt.resource.original}"
+				prefix="${docroot.real}/${service.name.real}/${bt.resources.dir}"
+				preserveLeadingSlashes="true">
+				<include name="**"/>
+				<exclude name="*.properties"/>
+			</tarfileset>			
+			<tarfileset dir="${workspace}/${project.cm}/${cm.clib.dir}"
+				prefix="${docroot.real}/${service.name.real}/lib"
+				preserveLeadingSlashes="true">
+				<include name="*.jar"/>
+			</tarfileset>
+			<tarfileset dir="${workspace}/${project.cm}/${cm.dlib.dir}"
+				prefix="${docroot.real}/${service.name.real}/lib"
+				preserveLeadingSlashes="true">
+				<include name="javax.inject-1.jar"/>
+			</tarfileset>			
+			<tarfileset dir="${workspace}/${project.cm}/${cm.jar.dir}"
+				prefix="${docroot.real}/${service.name.real}/lib"
+				preserveLeadingSlashes="true">
+				<include name="${cm.jar.name}"/>
+			</tarfileset>			
+		</tar>		
+	</target>
+	
+	
+	<!-- **************************************************************** -->
+	<!-- DEPLOY -->
+	<!-- **************************************************************** -->	
+	<target name="send">
+		<scp todir="${user.id}:${user.pwd}@${server.ip}:${docroot}" port="22" verbose="yes" trust="yes">
+			<fileset dir="${package.dir}">
+				<include name="${package.name}"></include>
+			</fileset>
+		
+		</scp>
+	</target>
+	
+	<target name="deploy">
+		<property name="deploy.log.file"    value="../logs/${ant.project.name}/deploy_smarttst.log" />
+		<tstamp>
+			<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>remote cotrol...</echo>
+		<echo>${server.ip} connect start... [${conn_time}]</echo>
+		<record name="${deploy.log.file}" action="start"/>
+		<sshexec host="${server.ip}" username="${user.id}" password="${user.pwd}" trust="true" verbose="false"
+			command="cd ${docroot};
+			ls -al ${package.name};
+			\rm -rf z_${service.name};
+			cp -f -R ${service.name} z_${service.name};
+			./build ${package.name};
+			exit" />
+		<record name="${deploy.log.file}" action="stop"/>
+		<tstamp>
+			<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${server.ip} connect end... [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<resourcecontains resource="${deploy.log.file}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>trans ended...</echo>		
+	</target>	
+	
+	<!-- **************************************************************** -->
+	<!-- DEPLOY for REAL -->
+	<!-- **************************************************************** -->	
+	<target name="send_ocean" depends="check_real" if="${isReal}">
+		<ftp server="${server.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${docroot.real}" verbose="yes"
+		     action="put"
+			 passive="yes">
+			<fileset dir="${package.dir}">
+				<include name="${package.name.real}"></include>
+			</fileset>
+		</ftp>
+	</target>
+	
+	<target name="deploy_ocean" depends="check_real" if="${isReal}">
+		<property name="deploy.log.file"    value="../logs/${ant.project.name}/deploy_smarttst.log" />
+		<tstamp>
+			<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>connect end...</echo>
+		<echo>${server.ip} connect start... [${conn_time}]</echo>
+		<record name="${deploy.log.file}" action="start"/>		
+		<telnet server="${server.ip}" userid="${user.id}" password="${user.pwd}">
+			<read>/xclass]#</read>
+			<write>cd ${docroot.real}</write>
+			<read>${docroot.real}]#</read>
+			<write>ls -al ${package.name.real}</write>
+			<read>${docroot.real}]#</read>
+			<write>\rm -rf z_${service.name.real}</write>
+			<read>${docroot.real}]#</read>
+			<write>cp -f -R ${service.name.real} z_${service.name.real}</write>
+			<read>${docroot.real}]#</read>
+			<write>./build ${package.name.real}</write>
+			<read>${docroot.real}]#</read>
+			<write>exit</write>
+		</telnet>
+		<record name="${deploy.log.file}" action="stop"/>
+		<tstamp>
+			<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${server.ip} connect end... [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<resourcecontains resource="${deploy.log.file}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>trans ended...</echo>		
+	</target>		
+</project>

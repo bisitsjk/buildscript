@@ -1,0 +1,9 @@
+version: 0.0
+os: linux
+files:
+
+hooks:
+  ApplicationStart:
+   - location: scripts/Start.sh
+     timeout: 900
+     

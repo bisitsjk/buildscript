@@ -1,0 +1,626 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="spp2014appcs_jenkins">
+    <!-- **************************************************************** -->
+	<!-- PROPERTY -->
+	<!-- **************************************************************** -->
+	<echo>PROPERTY FILE : ${ant.project.name}.${DEPLOY_PHASE}.properties</echo>
+	<!-- system path -->
+	<property name="java.home.dir"     value="C:/Program Files (x86)/Java/jdk1.7.0_45" />
+	<property name="jeus.home.dir"     value="C:/TmaxSoft/JEUS6.0" />
+	<property name="hudson.home.dir"   value="E:/jenkins-smartpick" />
+	<property name="deployer.home.dir" value="D:/deployer" />
+	<!-- parameters -->
+	<!-- CS_20160628_1400 -->
+	<property name="deploy.id"         value="${DEPLOY_ID}"/>
+	<!-- CM_20160628_1400 -->
+	<property name="comm.deploy.id"    value="${COMM_DEPLOY_ID}"/>
+	<property name="deploy.phase"      value="${DEPLOY_PHASE}"/>
+	<property name="was.ip"            value="${WAS_IP}"/>
+	<property name="nas.dir"           value="${NAS_DIR}"/>
+	<!-- properties -->
+	<!-- ./spp2014appcs_jenkins.real.properties -->
+	<property file="./${ant.project.name}.${deploy.phase}.properties"/>
+	<!-- commons path -->
+	<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CM_1_TEST_BUILD/workspace -->
+	<property name="comm.wrksp.path" value="${hudson.home.dir}/jobs/SPP2014APP_CM_1_TEST_BUILD/workspace" />
+	<!-- spp2014 -->
+	<property name="comm.svn.repos.name" value="${svnReposNm}" />
+	<property name="comm.clib.path"  value="spp-app-cm/spp-app-common-lib/LIB-INF/common-lib" />
+	<property name="comm.dlib.path"  value="spp-app-cm/spp-app-common-lib/LIB-INF/daemon-lib" />
+	<property name="comm.cmm.path"   value="spp-app-cm/spp-app-common-lib/jar" />
+	<property name="comm.srv.path"   value="spp-app-cm/spp-app-service-lib/jar" />
+	<property name="comm.cm6.jar"    value="spp-app-common-lib.1.6.jar" />
+	<property name="comm.cm7.jar"    value="spp-app-common-lib.1.7.jar" />
+	<property name="comm.srv.jar"    value="spp-app-service-lib.jar" />
+	<!-- etc path and name -->
+	<property name="srv.name"       value="server_cs" />
+	<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CS_1_TEST_BUILD/workspace/spp2014/pack/REAL/CS_20160628_1400/server_cs -->
+	<property name="pack.real.path" value="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/${srv.name}" />
+	<property name="main.path"      value="spp-app-cs/jar" />
+	<property name="main.jar"       value="com.lotte.spp.platform.cs.jar" /> <!-- 수정 필요 --> 
+	<property name="main.class"     value="com.lotte.spp.platform.server.CouponCSIFServer" /><!-- 수정 필요 -->
+	<!-- 시험배포 자동화 용 -->
+	<tstamp><format property="deploy.date" pattern="yyyyMMdd"/></tstamp>
+	<!-- CS_20160628_1400 -->
+	<property name="rglr.dep.id" value="CS_${deploy.date}_${rglrDepHhmm}"/>
+	<!-- 첫 접수시 0건이면, 다음 접수시 지각한 건 접수하지 않도록 하기위함 -->
+	<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CS_1_LOCK/workspace -->
+	<property name="lock.workspace" value="${hdsnLockWrkSpPath}" />
+	<!-- log files -->
+	<echo>init.build.log 은 ../logs/${ant.project.name}/${deploy.id}_BUILD.log</echo>
+	<property name="init.build.log" value="../logs/${ant.project.name}/${deploy.id}_BUILD.log" />
+	<property name="init.was.log"   value="../logs/${ant.project.name}/${deploy.id}_INIT_WAS.log" />
+	<property name="dep.was.log"    value="../logs/${ant.project.name}/${deploy.id}_DEP_WAS.log" />
+	<!-- command -->
+	<property name="init.cmd"  value="sppinit" />
+	<property name="dep.cmd"   value="sppdeploy" />
+	<property name="start.cmd" value="spp.server.cs.start.sh" />
+	<property name="stop.cmd"  value="spp.server.cs.stop.sh" />
+	
+	<!-- **************************************************************** -->
+	<!-- CHECK -->
+	<!-- **************************************************************** -->
+	<target name="check">
+		<echo>♠ 공통 배포ID가 있는지 확인합니다. : ${comm.deploy.id}</echo>
+		<condition property="existCommon">
+			<and>
+				<contains string="${comm.deploy.id}" substring="CM_" casesensitive="true" />
+				<length string="${comm.deploy.id}" when="greater" length="15"/>
+			</and>
+		</condition>
+		<echo>♠ result : ${existCommon}</echo>
+		
+		<echo>♠ 배포할 공통 jar가 있는지 확인합니다.</echo><!-- 공통 Jar 배포시에 만들어진다 -->
+		<condition property="existLibJar"><!-- 공통 소스 배포요청건이 있을때만 빌드시에 Jar가 만들어진다 -->
+			<and>
+				<istrue value="${existCommon}"/><!-- 공통 배포ID 가 있는지 확인 -->
+				<resourcecount when="greater" count="0">
+					<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CM_1_TEST_BUILD/workspace/spp2014/pack/REAL -->
+					<fileset dir="${comm.wrksp.path}/${comm.svn.repos.name}/${hdsnPackPath}">
+						<!-- CM_20160628_1400/server_cs/lib/*.jar -->
+						<include name="${comm.deploy.id}/${svrLibPath}/*.jar" />
+					</fileset>
+				</resourcecount>
+			</and>
+		</condition>
+		<echo>♠ result : ${existLibJar}</echo>
+		
+		<echo>♠ 배포할 인증 jar가 있는지 확인합니다.</echo>
+		<condition property="existAtJar"><!-- 배치는 이부분이 막혀져 있다. -->
+			<resourcecount when="greater" count="0">
+				<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CS_1_TEST_BUILD/workspace/spp2014/pack/REAL/CS_20160628_1400 -->
+				<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}">
+					<!-- server_cs/classes/**/* -->
+				    <!-- server_cs/deploy/real/*.properties -->
+					<include name="${svrClassesPath}/**/*" />
+					<include name="${svrWebappPath}/*.properties" />
+				</fileset>
+			</resourcecount>		
+		</condition>
+		<echo>♠ result : ${existAtJar}</echo>
+		
+		<echo>♠ 배포할 쉘 스크립트가 있는지 확인합니다.</echo>
+		<condition property="existShell">
+			<resourcecount when="greater" count="0">
+				<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CS_1_TEST_BUILD/workspace/spp2014/pack/REAL/CS_20160628_1400 -->
+				<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}">
+					<!-- server_cs/deploy/real/*.sh -->
+					<include name="${svrWebappPath}/*.sh" />
+				</fileset>
+			</resourcecount>		
+		</condition>		
+		<echo>♠ result : ${existShell}</echo>
+	</target>
+	
+	<target name="check_remote_work" unless="isSuccess">
+		<fail message="원격지 작업이 실패하였습니다..." />
+	</target>
+	
+	<target name="check_lock_prop">
+		<condition property="existLockProp">
+			<resourceexists>
+				<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CS_1_LOCK/workspace -->
+				<file file="${lock.workspace}/${rglr.dep.id}_lock.properties"/>
+			</resourceexists>
+		</condition>
+		<echo>${rglr.dep.id}_lock.properties / ${existLockProp}</echo>
+	</target>
+
+	<!-- **************************************************************** -->
+	<!-- ACCEPT, 접수 : 정기배포, 자동접수 시에만 사용 -->
+	<!-- **************************************************************** -->
+	<target name="accept" depends="check_lock_prop">
+		<echo>♠ ACCEPT ${deploy.id}</echo>
+		<antcall target="set_prop" />
+		<antcall target="exec_app" />
+	</target>	
+	
+	<target name="set_prop" unless="existLockProp">
+		<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CS_1_LOCK/workspace -->
+		<propertyfile file="${lock.workspace}/${rglr.dep.id}_lock.properties">
+			<entry key="deploy_count" type="int" value="0" />
+			<entry key="first_error" value="false" />
+		</propertyfile>
+	</target>
+		
+	<target name="exec_app">
+		<property file="${lock.workspace}/${rglr.dep.id}_lock.properties" />
+		
+		<condition property="isStop">
+			<equals arg1="${first_error}" arg2="true" trim="true" />
+		</condition>
+		<fail if="${isStop}" message="당일 접수한 배포 건이 없습니다." />		
+		
+		<java jvm="${java.home.dir}/bin/java" fork="yes"
+		      failonerror="false"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar"
+			  errorproperty="error">
+			<arg value="${ant.project.name}"/>
+			<arg value="${rglr.dep.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="accept"/>
+		</java>
+		
+		<condition property="isError">
+			<length string="${error}" when="greater" length="0" />
+		</condition>
+		
+		<condition property="isFirstError">
+			<and>
+				<istrue value="${isError}" />
+				<equals arg1="0" arg2="${deploy_count}" trim="true" />
+			</and>
+		</condition>
+		
+		<propertyfile file="${lock.workspace}/${rglr.dep.id}_lock.properties">
+			<entry key="deploy_count" default="0" type="int" operation="+" />
+			<entry key="first_error" value="${isFirstError}" />
+		</propertyfile>
+		
+		<fail if="${isError}" message="." />
+		
+		<!-- spp2014appcs_jenkins_param.properties -->
+		<record name="${ant.project.name}_param.properties" emacsmode="true" action="start" />
+		<echo>DEPLOY_ID=${rglr.dep.id}</echo>
+		<!-- spp2014appcs_jenkins_param.properties -->
+		<record name="${ant.project.name}_param.properties" emacsmode="true" action="stop" />
+	</target>
+	
+	<!-- **************************************************************** -->	
+	<!-- MERGE & BUILD & PACK -->
+	<!-- **************************************************************** -->	
+	<target name="run_build">
+		<echo>♠ BUILD ${deploy.id}</echo>
+		<antcall target="merge" />
+		<antcall target="build" />
+		<antcall target="pre_pack" />
+		<antcall target="pack" />
+	</target>	
+			
+	<!-- **************************************************************** -->	
+	<!-- MERGE -->
+	<!-- **************************************************************** -->
+	<target name="merge">
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="merge"/>
+		</java> 
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- COMPILE, JAR -->
+	<!-- **************************************************************** -->
+	<target name="build">
+		<record name="${init.build.log}" action="start"/>
+				
+		<path id="classpath">
+			<fileset dir="${java.home.dir}/jre/lib">
+				<include name="rt.jar" />
+			</fileset>
+			<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CM_1_TEST_BUILD/workspace/spp2014/branches/REAL/spp-app-cm/spp-app-common-lib/LIB-INF/common-lib/*.jar -->
+			<fileset dir="${comm.wrksp.path}/${comm.svn.repos.name}/${hdsnBranchPath}/${comm.clib.path}">
+				<include name="*.jar" />
+			<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CM_1_TEST_BUILD/workspace/spp2014/branches/REAL/spp-app-cm/spp-app-common-lib/LIB-INF/daemon-lib/*.jar -->
+			</fileset>
+			<fileset dir="${comm.wrksp.path}/${comm.svn.repos.name}/${hdsnBranchPath}/${comm.dlib.path}">
+				<include name="*.jar" />
+			</fileset>
+		    <!-- E:/jenkins-smartpick/jobs/SPP2014APP_CM_1_TEST_BUILD/workspace/spp2014/branches/REAL/spp-app-cm/spp-app-common-lib/jar/spp-app-common-lib.1.7.jar -->
+			<fileset dir="${comm.wrksp.path}/${comm.svn.repos.name}/${hdsnBranchPath}/${comm.cmm.path}">
+				<include name="${comm.cm7.jar}" />
+			</fileset>
+		    <!-- E:/jenkins-smartpick/jobs/SPP2014APP_CM_1_TEST_BUILD/workspace/spp2014/branches/REAL/spp-app-cm/spp-app-service-lib/jar/spp-app-service-lib.jar -->
+			<fileset dir="${comm.wrksp.path}/${comm.svn.repos.name}/${hdsnBranchPath}/${comm.srv.path}">
+				<include name="${comm.srv.jar}" />
+			</fileset>
+		</path>
+
+		<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CS_1_TEST_BUILD/workspace/branches/REAL/spp-app-cs/classes -->
+		<mkdir dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}" />
+		<delete includeemptydirs="true">
+			<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CS_1_TEST_BUILD/workspace/branches/REAL/spp-app-cs/classes/**/* -->
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}" includes="**/*"/>
+    	</delete>
+
+		<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CS_1_TEST_BUILD/workspace/spp2014/branches/REAL/spp-app-cs/src/main/java -->
+		<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CS_1_TEST_BUILD/workspace/spp2014/branches/REAL/spp-app-cs/classes -->
+		<javac classpathref="classpath" 
+			srcdir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcJavaPath}"
+			destdir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}"
+			target="1.7"
+			failonerror="on" debug="on"
+			encoding="utf-8" 
+			nowarn="on" 
+			deprecation="on"
+			includeantruntime="false" />
+		
+
+		<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CS_1_TEST_BUILD/workspace/branches/REAL/spp-app-cs/classes -->
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}" overwrite="true">
+			<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CS_1_TEST_BUILD/workspace/branches/REAL/spp-app-cs/src/main/resources/**/* -->
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcConfPath}"> <!-- resources -->
+				<include name="**/*"/>
+				<exclude name="**/.svn/**"/>
+		    </fileset>
+		</copy>	
+		
+		<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CS_1_TEST_BUILD/workspace/spp2014/branches/REAL/spp-app-cs/classes -->
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}" overwrite="true">
+			<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CS_1_TEST_BUILD/workspace/spp2014/branches/REAL/spp-app-cs/deploy/real/*.properties -->
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcWebappPath}"> <!-- deploy -->
+				<include name="*.properties"/>
+		    </fileset>
+		</copy>
+		    	
+		<!-- jar 가 생성될 폴더 생성 -->
+		<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CS_1_TEST_BUILD/workspace/spp2014/branches/REAL/spp-app-cs/jar -->
+		<mkdir dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${main.path}" />
+
+		<!-- jar 가 생성될 폴더를 Clear 시킨다 -->
+		<delete includeemptydirs="true">
+			<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CS_1_TEST_BUILD/workspace/spp2014/branches/REAL/spp-app-cs/jar/**/* -->
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${main.path}" includes="**/*"/>
+    	</delete>
+
+
+		<!-- Jar 파일 생성한다 -->
+		<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CS_1_TEST_BUILD/workspace/spp2014/branches/REAL/spp-app-cs/jar/com.lotte.spp.platform.cs.jar -->
+		<jar encoding="UTF-8" destfile="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${main.path}/${main.jar}">
+			<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CS_1_TEST_BUILD/workspace/spp2014/branches/REAL/spp-app-cs/classes -->
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}" />
+			<manifest>
+				<attribute name="Built-By" value="owner"/>
+				<attribute name="Main-Class" value="${main.class}"/><!-- com.lotte.spp.platform.server.CouponCsIFServer -->
+				<attribute name="Class-Path" value=".
+					lib/aopalliance-1.0.jar
+					lib/aspectjrt-1.6.8.jar
+					lib/aspectjweaver-1.6.8.jar
+					lib/barbecue-1.0.6c.jar
+					lib/bcprov-jdk16-145.jar
+					lib/commons-beanutils-1.8.0.jar
+					lib/commons-collections-3.2.jar
+					lib/commons-dbcp-1.2.2.jar
+					lib/commons-lang-2.2.jar
+					lib/commons-logging-1.1.1.jar
+					lib/commons-net-1.4.1.jar
+					lib/commons-pool-1.5.3.jar
+					lib/ibatis-2.3.4.726.jar
+					lib/jai_codec.jar
+					lib/jai_core.jar
+					lib/jdom.jar
+					lib/javax.inject-1.jar
+					lib/junit-4.9.jar
+					lib/log4j-1.2.15.jar
+					lib/log4j-1.2.8.jar
+					lib/ojdbc5.jar
+					lib/poi-3.6-20091214.jar
+					lib/servlet-api.jar
+					lib/spring-aop-3.1.1.RELEASE.jar
+					lib/spring-asm-3.1.1.RELEASE.jar
+					lib/spring-beans-3.1.1.RELEASE.jar
+					lib/spring-context-3.1.1.RELEASE.jar
+					lib/spring-core-3.1.1.RELEASE.jar
+					lib/spring-expression-3.1.1.RELEASE.jar
+					lib/spring-jdbc-3.1.1.RELEASE.jar
+					lib/spring-orm-3.0.6.RELEASE.jar
+					lib/spring-test-3.1.1.RELEASE.jar
+					lib/spring-tx-3.1.1.RELEASE.jar
+					lib/spring-web-3.1.1.RELEASE.jar
+					lib/spring-webmvc-3.1.1.RELEASE.jar
+					lib/spp-app-common-lib.1.7.jar
+					lib/spp-app-service-lib.jar
+					lib/commons-codec-1.9.jar
+					lib/imageTransfer.jar
+					lib/jettison-1.2.jar
+				"/>
+			</manifest>			
+		</jar>
+				
+		<record name="${init.build.log}" action="stop"/>
+	</target>
+		
+	<!-- **************************************************************** -->
+	<!-- PACK -->
+	<!-- **************************************************************** -->
+	<target name="pre_pack">
+
+		<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CS_1_TEST_BUILD/workspace/spp2014/pack/REAL/CS_20160628_1400/server_cs -->
+		<delete dir="${pack.real.path}" />
+		<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CS_1_TEST_BUILD/workspace/spp2014/pack/REAL/CS_20160628_1400/server_cs -->
+		<mkdir dir="${pack.real.path}" />
+
+		 <!--
+			 ##########################################################################################################
+			 Pack 은 배포요청 소스들을 가져와서 webapp, webroot, lib, classes 별로 소스들을 pack 한다. 
+			 java 파일들은 class 파일들로 치환하고 나머지 파일들은 .properties 파일들을 참조하여 src 를 svr 로 치환한다 
+		     ##########################################################################################################
+         -->  
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="pack"/>
+		</java>		
+	</target>	
+	<target name="pack" depends="check">
+		<antcall target="copy_commons" />
+		<antcall target="copy_jar" />
+		<antcall target="copy_shell" />
+	</target>
+	
+
+	<!-- 공통 소스 배포요청건이 있는지 확인 -->
+	<!-- pack 에 있는것들은 배포요청이 없으면 있을수가 없다 -->
+	<!-- 공통소스가 배포건이 있다면 데몬별 lib 폴더로 복사를 하였으므로 거기서 가져온다 -->
+    <!-- E:/jenkins-smartpick/jobs/SPP2014APP_CM_1_TEST_BUILD/workspace/spp2014/pack/REAL/CM_20160628_1400/server_cs/lib/*.jar 파일들이 있는지 확인 -->
+	
+		<target name="copy_commons" if="${existLibJar}">
+		<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CS_1_TEST_BUILD/workspace/spp2014/pack/REAL/CS_20160629_1400/server_cs/lib -->
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/${svrLibPath}" overwrite="true">
+			<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CM_1_TEST_BUILD/workspace/spp2014/pack/REAL/CM_20160628_1400/server_cs/lib/*.* -->
+			<fileset dir="${comm.wrksp.path}/${comm.svn.repos.name}/${hdsnPackPath}/${comm.deploy.id}/${svrLibPath}">
+				<include name="*.*"/>
+		    </fileset>
+		</copy>
+	</target>
+	
+	<target name="copy_jar" if="${existAtJar}"><!-- Branches 에 있는 jar 파일을 pack 폴더로 보낸다 -->
+		<!-- 아래 2개 파일이 있다면 branches 에서 jar 파일을 pack 폴더로 복사한다 -->
+		<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CS_1_TEST_BUILD/workspace/spp2014/pack/REAL/CS_20160628_1400/server_cs/classes/**/* -->
+		<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CS_1_TEST_BUILD/workspace/spp2014/pack/REAL/CS_20160628_1400/server_cs/deploy/real/*.properties -->
+
+		<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CS_1_TEST_BUILD/workspace/spp2014/pack/REAL/CS_20160628_1400/server_cs -->
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/${srv.name}" overwrite="true">
+			<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CS_1_TEST_BUILD/workspace/spp2014/branches/REAL/spp-app-cs/jar/com.lotte.spp.platform.cs.jar -->
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${main.path}">
+				<include name="${main.jar}"/>
+		    </fileset>
+		</copy>
+
+
+	</target>	
+	
+
+
+
+	<target name="copy_shell" if="${existShell}">
+		<!-- 아래 *.sh 파일들이 pack 폴더에 있다면  -->
+		<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CS_1_TEST_BUILD/workspace/spp2014/pack/REAL/CS_20160628_1400/server_cs/deploy/real/*.sh -->
+
+		<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CS_1_TEST_BUILD/workspace/spp2014/pack/REAL/CS_20160628_1400/server_cs -->
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/${srv.name}" overwrite="true">
+
+
+			<!-- ▶▶▶▶▶▶▶▶ 아래 폴더는 없음 ◀◀◀◀◀◀◀◀◀ -->
+			<!-- 서버에 안보낼려고 뺀거 같은데? -->
+			<!-- 
+
+				  E:/jenkins-smartpick/jobs/SPP2014APP_CS_1_TEST_BUILD/workspace/spp2014/pack/TEST/server_cs/deploy/real/*.sh 
+            ====> E:/jenkins-smartpick/jobs/SPP2014APP_CS_1_TEST_BUILD/workspace/spp2014/pack/TEST/CS_20160628_1400/server_cs/deploy/real/*.sh
+				  위의 경로가 아닌가??? pack 할때 만들어지는데 deploy_id 가 있어야할것으로 보임.  
+
+
+
+				  E:/jenkins-smartpick/jobs/SPP2014APP_CS_1_TEST_BUILD/workspace/spp2014/pack/REAL/server_cs/deploy/real/*.sh 
+            ====> E:/jenkins-smartpick/jobs/SPP2014APP_CS_1_TEST_BUILD/workspace/spp2014/pack/REAL/CS_20160628_1400/server_cs/deploy/real/*.sh
+				  위의 경로가 아닌가??? pack 할때 만들어지는데 deploy_id 가 있어야할것으로 보임.  
+			-->
+			<!-- <fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${svrWebappPath}"> -->
+				 <fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/${svrWebappPath}">
+				<include name="*.sh"/>
+		    </fileset>
+		</copy>
+	</target>	
+	
+	<!-- **************************************************************** -->
+	<!-- SEND -->
+	<!-- **************************************************************** -->	
+	<target name="send_plat">
+		<echo>♠ SEND ${deploy.id}</echo>
+		<antcall target="init" />
+		<antcall target="send_app_src" />
+	</target>
+	
+	<target name="init">
+		<tstamp>
+			<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>초기화 작업을 진행합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+		<echo>${was.ip} 접속을 시작합니다... [${conn_time}]</echo>
+		<record name="${init.was.log}" action="start"/>
+		<telnet server="${was.ip}" userid="${svrUserId}" password="${svrUserPassword}">
+			<read>/xclass]#</read>
+			<write>cd deploy</write>
+			<read>/xclass/deploy]#</read>
+			<write>./${init.cmd} ${deploy.id}</write>
+			<read>/xclass/deploy]#</read>
+			<write>exit</write>
+		</telnet>
+		<record name="${init.was.log}" action="stop"/>
+		<tstamp>
+			<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${was.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<resourcecontains resource="${init.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>초기화 작업이 완료되었습니다...</echo>
+	</target>
+		
+	<!-- NAS_DIR   = /usr1/home/xclass/deploy/src -->
+	<!-- remotedir = /usr1/home/xclass/deploy/src/CS_20160629_1400 -->
+	<target name="send_app_src">
+		<ftp server="${was.ip}" userid="${svrUserId}" password="${svrUserPassword}"
+		     remotedir="${nas.dir}/${deploy.id}"
+		     action="put" verbose="yes"
+			 passive="yes">
+			<!-- E:/jenkins-smartpick/jobs/SPP2014APP_CS_1_TEST_BUILD/workspace/spp2014/pack/REAL/CS_20160629_1400 -->
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}">
+				<!-- server_cs/**/*.jar -->
+				<!-- server_cs/*.sh / 여기서는 서버에 .sh 파일들을 보내는데 왜 서버 스크립트에서는 .jar 파일만 DocRoot로 복사하게 되어있는가? -->
+				<include name="${srv.name}/**/*.jar"></include>
+				<include name="${srv.name}/*.sh"></include>
+				<exclude name="${svrClassesPath}/**/*"></exclude>
+				<exclude name="${svrWebappPath}/**/*"></exclude>
+			</fileset>
+		</ftp>
+	</target>
+					
+	<!-- **************************************************************** -->
+	<!-- BACKUP & DEPLOY -->
+	<!-- **************************************************************** -->
+	<target name="deploy_plat">
+		<echo>♠ DEPLOY ${deploy.id}</echo>
+		<antcall target="backup" />
+		<antcall target="deploy_app" />
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- BACKUP -->
+	<!-- **************************************************************** -->
+	<target name="backup">
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="deploy"/>
+			<arg value="${was.ip}" />
+			<arg value="21" />
+			<arg value="${svrUserId}" />
+			<arg value="${svrUserPassword}" />
+		</java>
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- DEPLOY -->
+	<!-- **************************************************************** -->
+	<target name="deploy_app">
+		<tstamp>
+			<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>배포 작업을 진행합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+		<echo>${was.ip} 접속을 시작합니다... [${conn_time}]</echo>
+		<record name="${dep.was.log}" action="start"/>		
+		<telnet server="${was.ip}" userid="${svrUserId}" password="${svrUserPassword}">
+			<!-- dep.cmd = sppdeploy -->
+		    <!-- srv.name = server_cs -->
+			<!-- /lotte/spp_platform/servers/server_cs -->
+			<read>/xclass]#</read>
+			<write>cd ${svrDocRoot}/${srv.name}</write>
+			<read>/${srv.name}]#</read>
+			<write>sh ./${stop.cmd}</write>
+			<read>/${srv.name}]#</read>
+			<write>/usr1/home/xclass/deploy/${dep.cmd} ${deploy.id}</write>
+			<read>/${srv.name}]#</read>
+			<write>sh ./${start.cmd}</write>
+			<read>/${srv.name}]#</read>
+			<write>exit</write>
+		</telnet>
+		<record name="${dep.was.log}" action="stop"/>
+		<tstamp>
+			<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${was.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<resourcecontains resource="${dep.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>배포 작업이 완료되었습니다...</echo>
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- RECORD -->
+	<!-- **************************************************************** -->	
+	<target name="record">
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="record"/>
+		</java> 
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- NOTICE -->
+	<!-- **************************************************************** -->	
+	<target name="notice_fail">
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="notice"/>
+			<arg value="FAIL"/>
+		</java> 
+	</target>
+	
+	<target name="notice_success">
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="notice"/>
+			<arg value="SUCCESS"/>
+		</java> 
+	</target>	
+		
+	<!-- **************************************************************** -->
+	<!-- ROLLBACK FOR TEST SERVER -->
+	<!-- **************************************************************** -->		
+	<target name="run_rollback">
+		<echo>♠ ROLLBACK ${deploy.id}</echo>
+		<antcall target="rollback" />
+	</target>
+	
+	<target name="rollback">
+		<echo>was.ip : ${was.ip}</echo>
+		<echo>userid : ${svrUserId}</echo>
+		<echo>password : ${svrUserPassword}</echo>
+		<echo>svrDocRoot : ${svrDocRoot}</echo>
+		<echo>fileset dir = "${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}_backup</echo>
+		<echo>srv.name = ${srv.name}</echo>
+			
+		<ftp server="${was.ip}" userid="${svrUserId}" password="${svrUserPassword}"
+		     remotedir="${svrDocRoot}"
+		     action="put"
+			 passive="yes">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}_backup">
+				<include name="${srv.name}/**/*"></include>
+			</fileset>
+		</ftp>
+	</target>
+</project>

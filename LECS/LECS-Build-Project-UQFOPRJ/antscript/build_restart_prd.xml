@@ -1,0 +1,165 @@
+<project name="LECS_Build_Restart_PRD">
+	<target name="restart-bo-prd">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${bowas1}" />
+			<param name="container" value="bo-1" />
+		</antcall>
+		<antcall target="restart-container">
+			<param name="remote.address" value="${bowas2}" />
+			<param name="container" value="bo-2" />
+		</antcall>
+	</target>
+
+	<target name="restart-bo-prd-set1">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${bowas1}" />
+			<param name="container" value="bo-1" />
+		</antcall>
+	</target>
+
+	<target name="restart-bo-prd-set2">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${bowas2}" />
+			<param name="container" value="bo-2" />
+		</antcall>
+	</target>
+
+	<target name="restart-cc-prd">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${ccwas1}" />
+			<param name="container" value="cc-1" />
+		</antcall>
+		<antcall target="restart-container">
+			<param name="remote.address" value="${ccwas2}" />
+			<param name="container" value="cc-2" />
+		</antcall>
+	</target>
+
+	<target name="restart-cc-prd-set1">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${ccwas1}" />
+			<param name="container" value="cc-1" />
+		</antcall>
+	</target>
+
+	<target name="restart-cc-prd-set2">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${ccwas2}" />
+			<param name="container" value="cc-2" />
+		</antcall>
+	</target>
+
+	<target name="restart-po-prd">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${powas1}" />
+			<param name="container" value="po-1" />
+		</antcall>
+		<antcall target="restart-container">
+			<param name="remote.address" value="${powas2}" />
+			<param name="container" value="po-2" />
+		</antcall>
+	</target>
+
+	<target name="restart-po-prd-set1">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${powas1}" />
+			<param name="container" value="po-1" />
+		</antcall>
+	</target>
+
+	<target name="restart-po-prd-set2">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${powas2}" />
+			<param name="container" value="po-2" />
+		</antcall>
+	</target>
+	<target name="restart-lps-prd">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${lpswas1}" />
+			<param name="container" value="lps-1" />
+		</antcall>
+		<antcall target="restart-container">
+			<param name="remote.address" value="${lpswas2}" />
+			<param name="container" value="lps-2" />
+		</antcall>
+	</target>
+
+	<target name="restart-lps-prd-set1">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${lpswas1}" />
+			<param name="container" value="lps-1" />
+		</antcall>
+	</target>
+
+	<target name="restart-lps-prd-set2">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${lpswas2}" />
+			<param name="container" value="lps-2" />
+		</antcall>
+	</target>
+
+	<target name="restart-lpsnike-prd-set2">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${nikewas2}" />
+			<param name="container" value="lps-2" />
+		</antcall>
+	</target>
+
+
+	<target name="restart-lps-prd-new">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${lpswas1}" />
+			<param name="container" value="lps-1" />
+		</antcall>
+		<antcall target="restart-container">
+			<param name="remote.address" value="${lpswas2}" />
+			<param name="container" value="lps-2" />
+		</antcall>
+	</target>
+
+
+	<target name="restart-wms-prd">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${batchapp}" />
+			<param name="container" value="wms" />
+		</antcall>
+	</target>
+
+	<target name="restart-muji-prd">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${mujiwas1}" />
+			<param name="container" value="muji-1" />
+		</antcall>
+		<antcall target="restart-container">
+			<param name="remote.address" value="${mujiwas2}" />
+			<param name="container" value="muji-2" />
+		</antcall>
+	</target>
+
+	<target name="restart-muji-prd-set1">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${mujiwas1}" />
+			<param name="container" value="muji-1" />
+		</antcall>
+	</target>
+
+	<target name="restart-muji-prd-set2">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${mujiwas2}" />
+			<param name="container" value="muji-2" />
+		</antcall>
+	</target>
+
+	<target name="restart-nike-prd-set1">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${nikewas1}" />
+			<param name="container" value="nike-1" />
+		</antcall>
+	</target>
+	<target name="restart-nike-prd-set2">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${nikewas2}" />
+			<param name="container" value="nike-2" />
+		</antcall>
+	</target>
+</project>

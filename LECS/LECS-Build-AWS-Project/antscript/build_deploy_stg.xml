@@ -1,0 +1,165 @@
+<project name="LECS_Build_Deploy_STG">
+	<target name="deploy-bo-stg">
+		<antcall target="deploy-bo-webapp">
+			<param name="address" value="${stg1}" />
+		</antcall>
+		<antcall target="deploy-bo-contents">
+			<param name="address" value="${stg1}" />
+		</antcall>
+		<antcall target="deploy-bo-images">
+			<param name="address" value="${stg1}" />
+		</antcall>
+	</target>
+
+	<target name="deploy-bonike-stg">
+		<antcall target="deploy-bonike-webapp">
+			<param name="address" value="${stg1}" />
+		</antcall>
+		<antcall target="deploy-bonike-contents">
+			<param name="address" value="${stg1}" />
+		</antcall>
+		<antcall target="deploy-bonike-images">
+			<param name="address" value="${stg1}" />
+		</antcall>
+	</target>
+	<target name="deploy-cc-stg">
+		<antcall target="deploy-cc-webapp">
+			<param name="address" value="${ccwas1}" />
+		</antcall>
+	</target>
+
+
+	<target name="deploy-po-stg">
+		<antcall target="deploy-po-webapp">
+			<param name="address" value="${powas1}" />
+		</antcall>
+	</target>
+
+	<target name="deploy-lps-stg">
+		<antcall target="deploy-lps-webapp">
+			<param name="address" value="${stg1}" />
+			<param name="path" value="/lotte/lecs/webapp/lps/" />
+		</antcall>
+		<antcall target="deploy-lps-contents">
+			<param name="address" value="${stg1}" />
+			<param name="path" value="/lotte/lecsDocs/contents/lps/" />
+		</antcall>
+		<antcall target="deploy-lps-images">
+			<param name="address" value="${stg1}" />
+			<param name="path" value="/lotte/lecsDocs/contents/lps/" />
+		</antcall>
+	</target>
+
+	<target name="deploy-lpsnike-stg">
+		<antcall target="deploy-lps-webapp">
+			<param name="address" value="${stg1}" />
+			<param name="path" value="/lotte/lecs/webapp/lpsnike/" />
+		</antcall>
+		<antcall target="deploy-lps-contents">
+			<param name="address" value="${stg1}" />
+			<param name="path" value="/lotte/lecsDocs/contents/lpsnike/" />
+		</antcall>
+		<antcall target="deploy-lps-images">
+			<param name="address" value="${stg1}" />
+			<param name="path" value="/lotte/lecsDocs/contents/lpsnike/" />
+		</antcall>
+	</target>
+
+	<target name="deploy-muji-stg">
+		<antcall target="deploy-muji-webapp">
+			<param name="address" value="${stg2}" />
+		</antcall>
+		<antcall target="deploy-muji-contents">
+			<param name="address" value="${stg2}" />
+		</antcall>
+		<antcall target="deploy-muji-images">
+			<param name="address" value="${stg1}" />
+		</antcall>
+	</target>
+
+
+	<target name="deploy-nike-stg">
+		<antcall target="deploy-nike-webapp">
+			<param name="address" value="${stg2}" />
+		</antcall>
+		<antcall target="deploy-nike-contents">
+			<param name="address" value="${stg2}" />
+		</antcall>
+		<!-- 이미지 서버는  stg1 -->
+		<antcall target="deploy-nike-images">
+			<param name="address" value="${stg1}" />
+		</antcall>
+	</target>
+	
+	<target name="deploy-batch-nike-stg">
+		<!-- classes -->
+		<mkdir dir="build/batch/inf/classes" />
+		<copy todir="build/batch/inf/classes">
+			<fileset dir="build/LECS-Batch/WEB-INF/classes" />
+		</copy>
+
+		<!-- dependency libraries -->
+		<mkdir dir="build/batch/inf/lib" />
+		<copy todir="build/batch/inf/lib">
+			<fileset dir="build/LECS-Batch/WEB-INF/lib" />
+			<fileset dir="build/src/LECS-Batch/inf/lib" />
+		</copy>
+
+		<!-- shell programs -->
+		<mkdir dir="build/batch/bin" />
+		<copy todir="build/batch/bin">
+			<fileset dir="build/src/LECS-Batch/bin" />
+		</copy>
+
+		<zip basedir="build/batch/" destfile="build/batch_app.zip" />
+		<antcall target="deploy-target">
+			<param name="remote.address" value="${stg3}" />
+			<param name="deploy.material" value="batch_app.zip" />
+			<param name="deploy.path" value="/lotte/lecs/batch/" />
+			<param name="remove.old" value="yes" />
+		</antcall>
+		<sshexec host="${batchapp}" username="${remote.id}" password="${remote.password}"
+			command="chmod +x /lotte/lecs/batch/bin/*" trust="true" failonerror="false">
+		</sshexec>
+		<echo message="현재 IPOS는 컴파일에서 제외되어 있습니다. 주의 하시기 바랍니다 " />
+	</target>
+
+	<target name="deploy-batch-stg">
+		<!-- classes -->
+		<mkdir dir="build/batch/inf/classes" />
+		<copy todir="build/batch/inf/classes">
+			<fileset dir="build/LECS-Batch/WEB-INF/classes" />
+		</copy>
+
+		<!-- dependency libraries -->
+		<mkdir dir="build/batch/inf/lib" />
+		<copy todir="build/batch/inf/lib">
+			<fileset dir="build/LECS-Batch/WEB-INF/lib" />
+			<fileset dir="build/src/LECS-Batch/inf/lib" />
+		</copy>
+
+		<!-- shell programs -->
+		<mkdir dir="build/batch/bin" />
+		<copy todir="build/batch/bin">
+			<fileset dir="build/src/LECS-Batch/bin" />
+		</copy>
+
+		<zip basedir="build/batch/" destfile="build/batch_app.zip" />
+		<antcall target="deploy-target">
+			<param name="remote.address" value="${stg3}" />
+			<param name="deploy.material" value="batch_app.zip" />
+			<param name="deploy.path" value="/lotte/lecs/batch/" />
+			<param name="remove.old" value="yes" />
+		</antcall>
+		<sshexec host="${batchapp}" username="${remote.id}" password="${remote.password}"
+			command="chmod +x /lotte/lecs/batch/bin/*" trust="true" failonerror="false">
+		</sshexec>
+	</target>
+	
+	<target name="deploy-wms-stg">
+		<antcall target="deploy-wms-webapp">
+			<param name="address" value="${stg3}" />
+		</antcall>
+	</target>
+
+</project>

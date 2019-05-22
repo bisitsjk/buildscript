@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="LECS_Check">
+	<target name="prevent_active_service">
+	<groovy>
+			<arg value="${PREVENT}" />
+<![CDATA[
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpException;
+import org.apache.commons.httpclient.NTCredentials;
+import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.poifs.filesystem.POIFSFileSystem;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CreationHelper;
+import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+
+PREVENT = args[0]
+
+
+HttpClient client = new HttpClient();
+NTCredentials creds = new NTCredentials("naru","naru","ceres.lotte.com","ceres.lotte.com");
+client.getParams().setAuthenticationPreemptive(true);
+client.getState().setCredentials(AuthScope.ANY, creds);
+wget = { url ->
+	def method = new GetMethod(url);
+	client.executeMethod(method)
+	return method
+}
+
+
+def url ="http://210.93.129.57/NBP/03LECS20/LECS2.0%20L4%20%EC%97%B0%EA%B2%B0%20%EC%83%81%ED%83%9C.xlsx"
+method = wget(url)
+
+println "Status Code: ${method.getStatusCode()}"
+file = new File("active_service.xlsx")
+if(file.exists()) {
+	file.delete()
+}
+if (method.getStatusCode() == 200){
+	file = new File("active_service.xlsx").leftShift(method.getResponseStream())
+}
+
+if (file.exists()==false) {
+	throw new RuntimeException("Can not determine PREVENT Service")
+}
+
+Workbook workBook = WorkbookFactory.create(new FileInputStream(file));
+Sheet sheet = workBook.getSheetAt(0);
+def active
+for ( rowIndex in 0..sheet.getPhysicalNumberOfRows()) { 
+	def row = sheet.getRow(rowIndex);
+	if (row ==null) {
+		continue;
+	}
+	def cellCount = row.getPhysicalNumberOfCells()
+	def cell =row.getCell(1)
+	if ( cell != null && cell.cellType == Cell.CELL_TYPE_NUMERIC) {
+		active = cell.numericCellValue
+	}
+	
+}
+def activeService =Float.parseFloat(''+active).intValue() 
+if ( activeService == Integer.parseInt(PREVENT)) {
+	throw new RuntimeException("Target Is PREVENTED Server!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+} 
+
+
+]]>
+	</groovy>
+	</target>
+</project>

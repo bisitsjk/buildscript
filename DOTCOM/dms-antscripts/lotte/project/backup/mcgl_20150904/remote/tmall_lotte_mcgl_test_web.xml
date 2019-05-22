@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="glmo was test deploy" default="help">
+	<!-- ================================================== -->
+	<!-- properties -->
+	<!-- ================================================== -->
+	<property name="dep.id" value="${DEPLOY_ID}"/>
+	
+	<!-- 2014/07/29부터 사용안함
+	<property name="source.dir" value="/h2010/ncontents/src/${dep.id}" />
+	-->
+	<property name="source.dir" value="/usr1/home/jeus/deploy/src/${dep.id}" />
+	<property name="java.home"  value="/usr/java1.6"/>
+	<property name="ant.home"   value="/usr1/home/jeus/deploy/apache-ant-1.8.2"/>
+	
+	
+	<!-- real server info -->
+	<property name="her1.ip"  value="10.149.144.65"/>
+	<property name="www6.ip"  value="211.233.44.26"/>
+	<property name="user.id"  value="jeus"/>
+	<!-- <property name="user.pwd" value="w&uch6raDa*r"/> -->
+	
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->
+	<target name="check_exist">
+		<condition property="isExistWebapp">
+			<resourceexists>
+				<file file="${source.dir}/mcgl/webapp"/>
+			</resourceexists>
+		</condition>
+		<condition property="isExistAppinf">
+			<resourceexists>
+				<file file="${source.dir}/mcgl/APP-INF"/>
+			</resourceexists>
+		</condition>
+		<condition property="isExistCommon">
+			<resourceexists>
+				<file file="${source.dir}/common/conf"/>
+			</resourceexists>
+		</condition>
+		<condition property="isJspAndClass">
+			<and>
+				<istrue value="${isExistWebapp}"/>
+				<istrue value="${isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="isJsp">
+			<and>
+				<istrue value="${isExistWebapp}"/>
+				<isfalse value="${isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="isClass">
+			<and>
+				<isfalse value="${isExistWebapp}"/>
+				<istrue value="${isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="isWeb">
+			<resourceexists>
+				<file file="${source.dir}/mcgl/webroot"/>
+			</resourceexists>
+		</condition>
+		<condition property="isWas">
+			<or>
+				<istrue value="${isExistWebapp}"/>
+				<istrue value="${isExistAppinf}"/>
+				<istrue value="${isExistCommon}"/>
+			</or>
+		</condition>
+		<condition property="isCommon">
+			<istrue value="${isExistCommon}"/>
+		</condition>
+	</target>
+
+	<target name="check_host">
+		<condition property="isValid">
+			<or>
+			<contains string="${hostname}" substring="ecfotst"/>
+			<contains string="${hostname}" substring="ecfotst2"/>
+			<contains string="${hostname}" substring="fowebstg"/>
+			</or>
+		</condition>
+		<echo>hostname is `${hostname}`</echo>
+	</target>
+	
+	<target name="check_valid" depends="check_host" unless="isValid">
+		<fail message="배포 대상 서버가 아닙니다."/>
+	</target>
+	
+	
+	<!-- ================================================== -->
+	<!-- default target -->
+	<!-- ================================================== -->
+	<target name="help">
+		<echo>command1 : mcglinit [deploy id]</echo>
+		<echo>command2 : mcgldeploy [deploy id]</echo>
+	</target>
+	
+	
+	<!-- ================================================== -->
+	<!-- init -->
+	<!-- ================================================== -->
+	<target name="init">
+		<antcall target="check_valid" />
+		<antcall target="delete_sources" />
+		<antcall target="make_directory" />
+	</target>
+	
+	<target name="delete_sources">
+		<echo>Target directory `${source.dir}/mcgl`...</echo>
+		<delete dir="${source.dir}/mcgl" />
+	</target>
+	
+	<target name="make_directory">
+		<echo>Target directory `${source.dir}`...</echo>
+		<mkdir dir="${source.dir}" />
+	</target>
+	
+
+	<!-- ================================================== -->
+	<!-- backup -->
+	<!-- ================================================== -->
+	<target name="backup_web">
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte15.jar">
+			<arg value="${source.dir}"/>
+			<arg value="/h2010"/>
+			<arg value="${source.dir}_backup"/>
+		</java>
+	</target>
+	
+	
+	<!-- ================================================== -->
+	<!-- deploy -->
+	<!-- ================================================== -->
+	<target name="web" depends="check_exist" if="${isWeb}">
+		<antcall target="check_valid" />
+		<antcall target="backup_web"/>
+		<antcall target="copy_web"/>
+	</target>
+	
+	<target name="copy_web">
+        <echo message="WEB webroot"/>
+        <copy todir="/h2010/mcgl/webroot" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/mcgl/webroot" excludes="**/*.bak,**/*.tar,**/*.zip"/>
+        </copy>
+    </target>
+	
+	
+	<!-- ================================================== -->
+	<!-- sync -->
+	<!-- ================================================== -->
+	<target name="sync">
+		<antcall target="get_web"/>
+		<antcall target="clean_web"/>
+		<antcall target="untar_web"/>
+	</target>
+	
+	<target name="get_web">
+		<echo>docroot에 있는 오래된 tar 파일을 지웁니다.</echo>
+		<delete verbose="true">
+			<fileset dir="/h2010/mcgl" includes="*_WEB.tar"/>
+		</delete>
+		<echo>운영서버에서 백업받은 tar 파일을 docroot로 가져옵니다.</echo>		
+		<ftp server="${her1.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="/ncontents/src/${dep.id}/backup/mcgl"
+		     action="get">
+			<fileset dir="/h2010/mcgl"
+				     includes="${dep.id}_WEB.tar"/>
+		</ftp>
+	</target>
+	
+	<target name="del_zip">
+		<delete file="/h2010/mcgl/${dep.id}_WEB.zip"/>
+	</target>
+	
+	<target name="del_tar">
+		<delete file="/h2010/mcgl/${dep.id}_WEB.tar"/>
+	</target>
+	
+	<target name="clean_web">
+		<antcall target="clean_mcgl_web"/>
+	</target>
+	
+	<target name="clean_mcgl_web">
+		<delete verbose="true">
+			<dirset dir="/h2010/mcgl">
+				<include name="z_webroot"/>
+			</dirset>
+		</delete>
+		<move file="/h2010/mcgl/webroot"  tofile="/h2010/mcgl/z_webroot" failonerror="false"/>
+	</target>	
+	
+	<target name="unzip_web">
+		<unzip src="/h2010/mcgl/${dep.id}_WEB.zip" dest="/h2010/mcgl" overwrite="yes"/>
+	</target>
+	
+	<target name="untar_web">
+		<antcall target="untar_mcgl_web"/>
+	</target>
+	
+	<target name="untar_mcgl_web">
+		<untar src="/h2010/mcgl/${dep.id}_WEB.tar" dest="/h2010/mcgl" overwrite="yes"/>
+	</target>
+	
+	
+	<!-- ================================================== -->
+	<!-- mcglobal all deploy -->
+	<!-- ================================================== -->	
+	<target name="deployfortest">
+		<antcall target="clean_web"/>
+		<antcall target="untar_web"/>
+	</target>
+
+</project>

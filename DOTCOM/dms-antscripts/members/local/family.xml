@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="family">
+	<!-- ================================================== -->
+	<!-- properties -->
+	<!-- ================================================== -->
+	<property name="deploy.id"     value="${DEPLOY_ID}"/>
+	<property name="revision.num"  value="-1"/>
+	
+	<property name="java.home.dir" value="C:/Program Files (x86)/Java/jdk1.6.0_25"/>
+	<property name="deployer.dir"  value="D:/deployer/bin"/>
+	
+	<!-- svn server info -->
+	<!-- 서버정보 변경시 java 소스 수정 -->
+	
+	<!-- family test server info 
+	<property name="test.ip"  value="61.111.55.32"/>
+	<property name="test.id"  value="jeus"/>
+	<property name="test.pwd" value="+-Jeus77"/> -->
+	<!-- family  server info -->
+	<property name="user.id"  value="jeus"/>
+	<property name="user.pwd"  value="0fa18=b08a"/>
+	
+	<!-- family member1 live server info 
+	<property name="host.ip"  value="211.233.44.76"/>
+	<property name="user.id"  value="jeus"/>
+	<property name="user.pwd" value="0fa18=b08a"/>
+	-->
+	
+	<property name="workspace.dir"  value="E:/hudson-members/teams/member/jobs/member.FAMILY_DEPLOY_MEMBER1/workspace/ebiz"/>
+	<property name="workspace.rollback.dir"  value="E:/hudson-members/teams/member/jobs/member.FAMILY_DEPLOY_MEMBER1/workspace/ebiz"/>
+	<!-- not used
+	<property name="additional.dir.old" value="/DEPLOY_REQUEST"/> 
+	-->
+	<property name="additional.dir" value="/branches"/>
+	
+	<property name="remote.base.dir"       value="/content/ebiz"/>
+	<property name="remote.base.ejb.dir"   value="/usr2/jeus5/webhome/ejb_home"/>
+	<property name="remote.base.sso.dir"   value="/usr1/home/lottesso"/>
+	<property name="remote.base.fw.dir"    value="/usr2/jeus5/lib/application"/>
+	<property name="remote.deploy.dir"     value="/content/ebiz"/>
+	<property name="remote.deploy.ejb.dir" value="/usr2/jeus5/webhome/ejb_home"/>	
+	<property name="remote.deploy.sso.dir" value="/usr1/home/lottesso"/>
+	<property name="remote.deploy.fw.dir"  value="/usr2/jeus5/lib/application"/>
+
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->
+	<target name="check_lottesso">
+	  <condition property="isExist">
+		<resourceexists><file file="${workspace.dir}/${additional.dir}/${deploy.id}/${remote.base.sso.dir}/lottesso.conf" /></resourceexists>
+	  </condition>
+	  <echo>lottesso.conf : ${isExist}</echo>
+	</target>
+
+	<target name="check_framework">
+	  <condition property="isExist2">
+		<resourceexists><file file="${workspace.dir}/${additional.dir}/${deploy.id}/${remote.base.fw.dir}/lotteframework.jar" /></resourceexists>
+	  </condition>
+	  <echo>lotteframework.jar : ${isExist2}</echo>
+	</target>
+			
+	<target name="check_backuped" depends="check_lottesso">
+		<condition property="isBackuped">
+		  <and>
+		    <istrue value="${isExist}"/>
+ 			<resourceexists><file file="${workspace.dir}/${additional.dir}/${deploy.id}_backup/${remote.base.sso.dir}/lottesso.conf" /></resourceexists>
+		  </and>
+		</condition>
+		<echo>lottesso.conf is already backuped : ${isBackuped}</echo>
+	</target>
+
+	<target name="check_backuped2" depends="check_framework">
+		<condition property="isBackuped2">
+		  <and>
+		    <istrue value="${isExist2}"/>
+ 			<resourceexists><file file="${workspace.dir}/${additional.dir}/${deploy.id}_backup/${remote.base.fw.dir}/lotteframework.jar" /></resourceexists>
+		  </and>
+		</condition>
+		<echo>lotteframework.jar is already backuped : ${isBackuped2}</echo>
+	</target>	
+	
+	<!-- ================================================== -->
+	<!-- 배포 -->
+	<!-- ================================================== -->		
+	<target name="family_deploy">
+		<!-- use hudson
+		<antcall target="update"/>
+		-->
+		<antcall target="backup"/>
+		<antcall target="deploy"/>
+	</target>
+	
+	<!-- SVN UPDATE(JAVA) -->
+	<!--
+		Repository URL : svn://svn.lotte.com/members/branches
+		Local module directory(option) : ./ebiz/branches
+	-->
+	<target name="update">
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.dir}/family.jar">
+			<arg value="update"/>
+			<arg value="${workspace.dir}"/>
+			<arg value="${additional.dir}"/>
+			<arg value="${deploy.id}"/>
+		</java> 
+	</target>
+	
+	<!-- BACKUP -->
+	<target name="backup">
+		<java jvm="${java.home.dir}/bin/java" fork='true'
+		      failonerror="true"
+		      jar="${deployer.dir}/family.jar">
+			<arg value="backup"/>
+			<arg value="${workspace.dir}"/>
+			<arg value="${additional.dir}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${host.ip}"/>
+			<arg value="${user.id}"/>
+			<arg value="${user.pwd}"/>
+			<arg value="${remote.base.dir}"/>
+			<arg value="${remote.base.ejb.dir}"/>
+		</java>
+		
+		<antcall target="backup_lottesso"/>
+		<antcall target="backup_lotteframework"/>
+	</target>
+	
+	<target name="backup_lottesso" depends="check_backuped" unless="isBackuped">
+	  <mkdir dir="${workspace.dir}/${additional.dir}/${deploy.id}_backup/${remote.base.sso.dir}"/>
+	  <ftp server="${host.ip}" userid="${user.id}" password="${user.pwd}" passive="yes"
+		   remotedir="${remote.deploy.sso.dir}"
+		   action="get" verbose="yes">
+		<fileset dir="${workspace.dir}/${additional.dir}/${deploy.id}_backup/${remote.base.sso.dir}">
+		  <include name="lottesso.conf"></include>
+		</fileset>
+	  </ftp>
+	</target>
+
+	<target name="backup_lotteframework" depends="check_backuped2" unless="isBackuped2">
+	  <mkdir dir="${workspace.dir}/${additional.dir}/${deploy.id}_backup/${remote.base.fw.dir}"/>
+	  <ftp server="${host.ip}" userid="${user.id}" password="${user.pwd}" passive="yes"
+		   remotedir="${remote.deploy.fw.dir}"
+		   action="get" verbose="yes">
+		<fileset dir="${workspace.dir}/${additional.dir}/${deploy.id}_backup/${remote.base.fw.dir}">
+		  <include name="lotteframework.jar"></include>
+		</fileset>
+	  </ftp>
+	</target>	
+	
+	<!-- DEPLOY -->
+	<target name="deploy">
+		<java jvm="${java.home.dir}/bin/java" fork='true'
+		      failonerror="true"
+		      jar="${deployer.dir}/family.jar">
+			<arg value="deploy"/>
+			<arg value="${workspace.dir}"/>
+			<arg value="${additional.dir}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${host.ip}"/>
+			<arg value="${user.id}"/>
+			<arg value="${user.pwd}"/>
+			<arg value="${remote.deploy.dir}"/>
+			<arg value="${remote.deploy.ejb.dir}"/>
+		</java> 
+		
+		<antcall target="deploy_lottesso"/>
+		<antcall target="deploy_lotteframework"/>
+	</target>
+
+	<target name="deploy_lottesso" depends="check_lottesso" if="isExist">
+		<ftp server="${host.ip}" userid="${user.id}" password="${user.pwd}" passive="yes"
+		     remotedir="${remote.deploy.sso.dir}"
+		     action="put" verbose="yes">
+			<fileset dir="${workspace.dir}/${additional.dir}/${deploy.id}/${remote.base.sso.dir}">
+				<include name="lottesso.conf"></include>
+			</fileset>
+		</ftp>
+	</target>
+	
+	<target name="deploy_lotteframework" depends="check_framework" if="isExist2">
+		<ftp server="${host.ip}" userid="${user.id}" password="${user.pwd}" passive="yes"
+		     remotedir="${remote.deploy.fw.dir}"
+		     action="put" verbose="yes">
+			<fileset dir="${workspace.dir}/${additional.dir}/${deploy.id}/${remote.base.fw.dir}">
+				<include name="lotteframework.jar"></include>
+			</fileset>
+		</ftp>
+	</target>	
+
+	<!-- ================================================== -->
+	<!-- 롤백 -->
+	<!-- ================================================== -->
+	<target name="family_rollback">
+		<antcall target="rollback"/>
+	</target>
+	
+	<target name="rollback">
+		<ftp server="${host.ip}" userid="${user.id}" password="${user.pwd}" passive="yes"
+		     remotedir="${remote.deploy.dir}"
+		     action="put">
+			<fileset dir="${workspace.rollback.dir}/${additional.dir}/${deploy.id}_backup">
+				<include name="lottesign_was/**/*"></include>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</ftp>
+		<ftp server="${host.ip}" userid="${user.id}" password="${user.pwd}" passive="yes"
+		     remotedir="${remote.deploy.ejb.dir}"
+		     action="put">
+			<fileset dir="${workspace.rollback.dir}/${additional.dir}/${deploy.id}_backup">
+				<include name="member/**/*"></include>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</ftp>
+		
+		<antcall target="rollback_lottesso"/>
+		<antcall target="rollback_lotteframework"/>
+	</target>
+	
+	<target name="rollback_lottesso" depends="check_backuped" if="${isBackuped}">
+	  <ftp server="${host.ip}" userid="${user.id}" password="${user.pwd}" passive="yes"
+	       remotedir="${remote.deploy.sso.dir}"
+	       action="put">
+		  <fileset dir="${workspace.dir}/${additional.dir}/${deploy.id}_backup/${remote.base.sso.dir}">
+			  <include name="lottesso.conf"></include>
+			  <exclude name="**/.svn/**"></exclude>
+		  </fileset>
+  	  </ftp>
+	</target>
+
+	<target name="rollback_lotteframework" depends="check_backuped2" if="${isBackuped2}">
+	  <ftp server="${host.ip}" userid="${user.id}" password="${user.pwd}" passive="yes"
+	       remotedir="${remote.deploy.fw.dir}"
+	       action="put">
+		  <fileset dir="${workspace.dir}/${additional.dir}/${deploy.id}_backup/${remote.base.fw.dir}">
+			  <include name="lotteframework.jar"></include>
+			  <exclude name="**/.svn/**"></exclude>
+		  </fileset>
+  	  </ftp>
+	</target>	
+</project>

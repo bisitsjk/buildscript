@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="javaconv_lottesuper2011cm_jenkins_1.7">
+    <!-- **************************************************************** -->
+	<!-- PROPERTY -->
+	<!-- **************************************************************** -->
+    <taskdef resource="net/sf/antcontrib/antcontrib.properties" />
+	<echo>PROPERTY FILE : ${ant.project.name}.${deploy.phase}.properties</echo>
+	<property file="${deployer.home.dir}/scripts/${ant.project.name}.${deploy.phase}.properties"/>
+	<property name="user.id" value="${svrUserId}" />
+	<property name="user.pwd" value="${svrUserPassword}" />
+	<!--<property name="target" value="${target}"/>-->
+
+	
+	<!-- 운영서버에서 Company 는 BackOffice -->
+	<!--
+	<target name="send_bo_real">
+		<echo>send_bo_real</echo>
+		<echo>bohost : ${bohost}</echo>
+			<antcall target="send_real_back_jar" />
+			<antcall target="send_real_partner_jar" />
+			<antcall target="send_real_mback_jar" />
+		    <antcall target="send_real_company_jar" />
+		    	-->
+			<!--  batch 는 언제 배포할것인가? -->
+		<!--<antcall target="send_real_batch_jar" />-->
+	<!--
+	</target>
+	-->
+
+	<!--
+	<target name="send_fo_real">
+		<echo>send_fo_real</echo>
+		<echo>fohost : ${fohost}</echo>
+			<antcall target="send_real_front_jar" />
+			<antcall target="send_real_mobile_jar" />
+			<antcall target="send_real_winwin_jar" />
+	</target>
+	-->
+
+				
+	
+	<!-- ###################### Java Real Class Send Start ######################### -->
+	<!-- [ BackOffice ] -->
+	<!--1번에 보낸 Job 에서 파일만 2번으로 보냄. -->
+	<target name="send_real_back_jar">
+		<scp todir="${user.id}:${user.pwd}@${bohost}:/esuper/project/back/WEB-INF/lib" trust="true">
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_REAL_BUILD_${target}_1_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/dist">
+				<include name="lottesuper-commons.jar"></include>
+			</fileset>
+	</scp>
+	</target>	
+	
+	<target name="send_real_partner_jar">
+		<scp todir="${user.id}:${user.pwd}@${bohost}:/esuper/project/partner/WEB-INF/lib" trust="true">
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_REAL_BUILD_${target}_1_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/dist">
+				<include name="lottesuper-commons.jar"></include>
+			</fileset>
+	</scp>
+	</target>	
+
+	<target name="send_real_mback_jar">
+		<scp todir="${user.id}:${user.pwd}@${bohost}:/esuper/project/mback/WEB-INF/lib" trust="true">
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_REAL_BUILD_${target}_1_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/dist">
+				<include name="lottesuper-commons.jar"></include>
+			</fileset>
+		</scp>
+	</target>	
+
+	
+	<target name="send_real_company_jar">
+		<scp todir="${user.id}:${user.pwd}@${bohost}:/esuper/project/company/WEB-INF/lib" trust="true">
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_REAL_BUILD_${target}_1_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/dist">
+					<include name="lottesuper-commons.jar"></include>
+			</fileset>
+		</scp>
+	</target>
+	
+
+	<!-- 배치는 어떻게 할것인지? -->
+	<!--
+	<target name="send_real_batch_jar">
+		<scp todir="${user.id}:${user.pwd}@${bohost}:/esuper/project/batch/lib" trust="true">
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/dist">
+					<include name="lottesuper-commons.jar"></include>
+			</fileset>
+		</scp>
+	</target>
+	-->
+	
+	<!-- [ FrontOffice ] -->
+	<target name="send_real_front_jar">
+		<scp todir="${user.id}:${user.pwd}@${fohost}:/esuper/project/front/WEB-INF/lib" trust="true">
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_REAL_BUILD_${target}_1_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/dist">
+				<include name="lottesuper-commons.jar"></include>
+			</fileset>
+		</scp>
+	</target>	
+	
+	<target name="send_real_mobile_jar">
+		<scp todir="${user.id}:${user.pwd}@${fohost}:/esuper/project/mobile/WEB-INF/lib" trust="true">
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_REAL_BUILD_${target}_1_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/dist">
+				<include name="lottesuper-commons.jar"></include>
+			</fileset>
+		</scp>
+	</target>	
+	
+	<target name="send_real_winwin_jar">
+		<scp todir="${user.id}:${user.pwd}@${fohost}:/esuper/project/winwin/WEB-INF/lib" trust="true">
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_REAL_BUILD_${target}_1_1.7/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/dist">
+					<include name="lottesuper-commons.jar"></include>
+			</fileset>
+		</scp>
+	</target>	
+
+	<!-- ###################### Java Real Class Send End ######################### -->
+
+
+
+</project>

@@ -1,0 +1,1083 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="prows1">
+<!-- ================================================== -->
+<!-- 공통 -->
+<!-- ================================================== -->
+	<property name="dep.id" value="${DEPLOY_ID}" />
+	<property name="source.dir" value="/ncontents/deploy/${dep.id}" />
+	<property name="java5.home"  value="/usr/java1.5" />
+	<property name="java.home"  value="/usr/java1.6" />
+	<property name="ant.home"   value="/ncontents/src/apache-ant-1.8.2" />
+	<property name="deployer.home" value="/ncontents/src/deployer" />
+	<property name="docroot"    value="/h2010/" />
+	<property name="user.id"    value="jeus" />
+	<property file="user_pwd.properties" />
+		
+	
+<!-- ================================================== -->
+<!-- CM  -->
+<!-- ================================================== -->
+	
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->
+	<target name="cm.checkValid">
+		<condition property="cm.isValid" value="true" else="false">
+			<and>
+				<or>
+					<contains string="${hostname}" substring="prows"/>
+		            <contains string="${hostname}" substring="ccws"/>
+		            <contains string="${hostname}" substring="partner"/>
+				</or>
+				<contains string="${dep.id}" substring="CM_20" casesensitive="true" />
+			</and>
+		</condition>
+		<echo>hostname `${hostname}` is ${cm.isValid}</echo>
+	</target>
+	
+	<target name="cm.goFail" depends="cm.checkValid" unless="cm.isValid">
+		<fail message="Hostname or deploy ID is wrong."/>
+	</target>
+		
+	<target name="cm.checkExist">
+		<condition property="cm.isExistLibForBo" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/bo/APP-INF/lib"/>
+				</resourceexists>
+				<contains string="${hostname}" substring="prows"/>
+			</and>
+		</condition>
+		<condition property="cm.isExistLibForCc" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/bo/APP-INF/lib"/>
+				</resourceexists>
+	            <contains string="${hostname}" substring="ccws"/>
+			</and>
+		</condition>
+		<condition property="cm.isExistLibForPo" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/bo/APP-INF/lib"/>
+				</resourceexists>
+	            <contains string="${hostname}" substring="partner"/>
+			</and>
+		</condition>		
+		<condition property="cm.isExistLibForMp" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/mpo/APP-INF/lib"/>
+				</resourceexists>
+				<contains string="${hostname}" substring="partner"/>
+			</and>
+		</condition>
+		<condition property="cm.isExistCommon" value="true" else="false">
+			<resourceexists>
+				<file file="${source.dir}/common/conf"/>
+			</resourceexists>
+		</condition>
+		<condition property="cm.isExistCm" value="true" else="false">
+			<or>
+				<istrue value="${cm.isExistLibForBo}"/>
+				<istrue value="${cm.isExistLibForCc}"/>
+				<istrue value="${cm.isExistLibForPo}"/>
+				<istrue value="${cm.isExistLibForMp}"/>
+				<istrue value="${cm.isExistCommon}"/>
+			</or>
+		</condition>
+	</target>
+			
+	<!-- ================================================== -->
+	<!-- init -->
+	<!-- ================================================== -->
+	<target name="cm.init" depends="cm.goFail">
+		<delete dir="${source.dir}/bo" />
+		<delete dir="${source.dir}/mpo" />
+		<mkdir  dir="${source.dir}" />
+	</target>
+		
+	<!-- ================================================== -->
+	<!-- backup -->
+	<!-- ================================================== -->
+	<target name="cm.backupWas">
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte.jar">
+			<arg value="${source.dir}"/>
+			<arg value="${docroot}"/>
+			<arg value="${source.dir}_backup"/>
+		</java>
+	</target>
+		
+	<!-- ================================================== -->
+	<!-- deploy -->
+	<!-- ================================================== -->	
+	<target name="cm.deploy" depends="cm.goFail,cm.checkExist" if="${cm.isExistCm}">
+		<tstamp><format property="cm.time1" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${cm.time1}] ==========</echo>
+		<antcall target="cm.logBeginWas"/>
+		<antcall target="cm.backupWas"/>
+		<antcall target="cm.copyCommon"/>
+		<antcall target="cm.copyLibForBo"/>
+		<antcall target="cm.copyLibForCc"/>
+		<antcall target="cm.copyLibForPo"/>
+		<antcall target="cm.copyLibForMp"/>
+		<antcall target="cm.logEndWas"/>
+		<tstamp><format property="cm.time2" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${cm.time2}] ==========</echo>
+	</target>	
+
+    <target name="cm.copyLibForBo" if="${cm.isExistLibForBo}">
+        <echo message="deploy library for bo"/>
+        <copy todir="${docroot}/bo/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/bo/APP-INF"
+                     includes="lib/**"/>
+        </copy>
+    </target>
+	
+	<target name="cm.copyLibForCc" if="${cm.isExistLibForCc}">
+        <echo message="deploy library for cc"/>
+        <copy todir="${docroot}/cc/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/bo/APP-INF"
+                     includes="lib/**"/>
+        </copy>
+    </target>
+	
+	<target name="cm.copyLibForPo" if="${cm.isExistLibForPo}">
+        <echo message="deploy library for po"/>
+        <copy todir="${docroot}/po/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/bo/APP-INF"
+                     includes="lib/**"/>
+        </copy>
+		<copy todir="${docroot}/oa/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/bo/APP-INF"
+                     includes="lib/**"/>
+        </copy>		
+    </target>
+	
+    <target name="cm.copyLibForMp" if="${cm.isExistLibForMp}">
+        <echo message="deploy library for mp"/>
+    	<copy todir="${docroot}/mpo/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/mpo/APP-INF"
+                     includes="lib/**"/>
+        </copy>
+    </target>	
+
+    <target name="cm.copyCommon" if="${cm.isExistCommon}">
+		<echo message="deploy common/conf"/>
+		<copy todir="${docroot}/common/conf" overwrite="yes" verbose="true">
+			<fileset dir="${source.dir}/common/conf" 
+			         includes="**/*" 
+			         excludes="*.properties,**/*.tar,**/*.bak,**/*.zip"/>
+		</copy>
+    	<copy file="${source.dir}/common/conf/CancelRefund.real.properties" 
+    		tofile="/h2010/common/conf/CancelRefund.properties" overwrite="yes" verbose="true" failonerror="false"></copy>
+    	<copy file="${source.dir}/common/conf/Mcash.real.properties" 
+    		tofile="/h2010/common/conf/Mcash.properties" overwrite="yes" verbose="true" failonerror="false"></copy>
+    	<copy file="${source.dir}/common/conf/MCash_Cancel.real.properties" 
+    		tofile="/h2010/common/conf/MCash_Cancel.properties" overwrite="yes" verbose="true" failonerror="false"></copy>
+    	<copy file="${source.dir}/common/conf/webt.real.properties" 
+    		tofile="/h2010/common/conf/webt.properties" overwrite="yes" verbose="true" failonerror="false"></copy>
+    </target>
+	
+	<target name="cm.logBeginWas" if="${cm.isExistCm}">
+		<java jvm="${java.home}/bin/java" fork="true"
+	          failonerror="false" spawn="false"
+	          jar="${deployer.home}/bin/deploylog.jar">
+	        <arg value="20101130_1"/>
+	        <arg value="${dep.id}"/>
+	        <arg value="${hostname}"/>
+	        <arg value="B"/>
+	    </java>
+	</target>
+	
+	<target name="cm.logEndWas" if="${cm.isExistCm}">
+		<java jvm="${java.home}/bin/java" fork="true"
+	          failonerror="false" spawn="false"
+	          jar="${deployer.home}/bin/deploylog.jar">
+	        <arg value="20101130_1"/>
+	        <arg value="${dep.id}"/>
+	        <arg value="${hostname}"/>
+	        <arg value="E"/>
+	    </java>
+	</target>	
+	
+	<!-- ================================================== -->
+	<!-- rollback -->
+	<!-- ================================================== -->	
+	<target name="cm.rollback" depends="cm.goFail,cm.checkExist" if="${cm.isExistCm}">
+		<tstamp><format property="cm.time3" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${cm.time3}] ==========</echo>
+		<antcall target="cm.rollbackCommon"/>
+		<antcall target="cm.rollbackLibForBo"/>
+		<antcall target="cm.rollbackLibForCc"/>
+		<antcall target="cm.rollbackLibForPo"/>
+		<antcall target="cm.rollbackLibForMp"/>
+		<tstamp><format property="cm.time4" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${cm.time4}] ==========</echo>
+	</target>	
+
+    <target name="cm.rollbackLibForBo" if="${cm.isExistLibForBo}">
+        <echo message="rollback library for bo"/>
+        <copy todir="${docroot}/bo/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/bo/APP-INF"
+                     includes="lib/**"/>
+        </copy>
+    </target>
+	
+	<target name="cm.rollbackLibForCc" if="${cm.isExistLibForCc}">
+        <echo message="rollback library for cc"/>
+        <copy todir="${docroot}/cc/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/bo/APP-INF"
+                     includes="lib/**"/>
+        </copy>
+    </target>
+	
+	<target name="cm.rollbackLibForPo" if="${cm.isExistLibForPo}">
+        <echo message="rollback library for po"/>
+        <copy todir="${docroot}/po/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/bo/APP-INF"
+                     includes="lib/**"/>
+        </copy>
+		<copy todir="${docroot}/oa/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/bo/APP-INF"
+                     includes="lib/**"/>
+        </copy>		
+    </target>
+	
+    <target name="cm.rollbackLibForMp" if="${cm.isExistLibForMp}">
+        <echo message="rollback library for mp"/>
+    	<copy todir="${docroot}/mpo/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/mpo/APP-INF"
+                     includes="lib/**"/>
+        </copy>
+    </target>	
+
+    <target name="cm.rollbackCommon" if="${cm.isExistCommon}">
+		<echo message="rollback common/conf"/>
+		<copy todir="${docroot}/common/conf" overwrite="yes" verbose="true">
+			<fileset dir="${source.dir}_backup/common/conf" 
+			         includes="**/*" 
+			         excludes="**/*.tar,**/*.bak,**/*.zip"/>
+		</copy>
+    </target>
+	
+	
+<!-- ================================================== -->
+<!-- BO  -->
+<!-- ================================================== -->
+	
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->
+	<target name="bo.checkValid">
+		<condition property="bo.isValid" value="true" else="false">
+			<and>
+				<or>
+					<contains string="${hostname}" substring="prows"/>
+		            <contains string="${hostname}" substring="ccws"/>
+		            <contains string="${hostname}" substring="partner"/>
+		            <contains string="${hostname}" substring="pro1"/>
+					<contains string="${hostname}" substring="pro2"/>
+					<contains string="${hostname}" substring="cc1"/>
+					<contains string="${hostname}" substring="cc2"/>
+				</or>
+				<contains string="${dep.id}" substring="BO_20" casesensitive="true" />
+			</and>
+		</condition>
+		<echo>hostname `${hostname}` is ${bo.isValid}</echo>
+	</target>
+	
+	<target name="bo.goFail" depends="bo.checkValid" unless="${bo.isValid}">
+		<fail message="Hostname or deploy ID is wrong."/>
+	</target>
+			
+	<target name="bo.checkExist">
+		<condition property="bo.isWebHost" value="true" else="false">
+			<or>
+				<contains string="${hostname}" substring="partner"/>
+	            <contains string="${hostname}" substring="pro1"/>
+				<contains string="${hostname}" substring="pro2"/>
+				<contains string="${hostname}" substring="cc1"/>
+				<contains string="${hostname}" substring="cc2"/>
+			</or>
+		</condition>
+		<condition property="bo.isWasHost" value="true" else="false">
+			<or>
+				<contains string="${hostname}" substring="prows"/>
+	            <contains string="${hostname}" substring="ccws"/>
+	            <contains string="${hostname}" substring="partner"/>
+			</or>
+		</condition>
+		<condition property="bo.isExistWebroot" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/bo/webroot"/>
+				</resourceexists>
+				<istrue value="${bo.isWebHost}"/>
+			</and>
+		</condition>
+		<condition property="bo.isExistWebapp" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/bo/webapp"/>
+				</resourceexists>
+				<istrue value="${bo.isWasHost}"/>
+			</and>
+		</condition>
+		<condition property="bo.isExistAppinf" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/bo/APP-INF"/>
+				</resourceexists>
+				<istrue value="${bo.isWasHost}"/>
+			</and>
+		</condition>
+		<condition property="bo.isExistCommon" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/common/conf"/>
+				</resourceexists>
+				<istrue value="${bo.isWasHost}"/>
+			</and>
+		</condition>
+		<condition property="bo.isJspAndClass" value="true" else="false">
+			<and>
+				<istrue value="${bo.isExistWebapp}"/>
+				<istrue value="${bo.isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="bo.isJsp" value="true" else="false">
+			<and>
+				<istrue value="${bo.isExistWebapp}"/>
+				<isfalse value="${bo.isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="bo.isClass" value="true" else="false">
+			<and>
+				<isfalse value="${bo.isExistWebapp}"/>
+				<istrue value="${bo.isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="bo.isWeb" value="true" else="false">
+			<istrue value="${bo.isExistWebroot}"/>
+		</condition>
+		<condition property="bo.isWas" value="true" else="false">
+			<or>
+				<istrue value="${bo.isExistWebapp}"/>
+				<istrue value="${bo.isExistAppinf}"/>
+				<istrue value="${bo.isExistCommon}"/>
+			</or>
+		</condition>
+		<condition property="bo.isCommon" value="true" else="false">
+			<istrue value="${bo.isExistCommon}"/>
+		</condition>
+	</target>
+	
+	<target name="bo.checkHost">
+		<condition property="bo.isPartner" value="true" else="false">
+			<contains string="${hostname}" substring="partner"/>
+		</condition>
+	</target>
+			
+	<!-- ================================================== -->
+	<!-- init -->
+	<!-- ================================================== -->
+	<target name="bo.init" depends="bo.goFail">
+		<delete dir="${source.dir}/bo" />
+		<mkdir dir="${source.dir}" />
+	</target>
+		
+	<!-- ================================================== -->
+	<!-- backup -->
+	<!-- ================================================== -->
+	<target name="bo.backupWeb" if="${bo.isWeb}">
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte15.jar">
+			<arg value="${source.dir}"/>
+			<arg value="${docroot}"/>
+			<arg value="${source.dir}_backup"/>
+		</java>
+	</target>	
+	
+	<target name="bo.backupWas" if="${bo.isWas}">
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte.jar">
+			<arg value="${source.dir}"/>
+			<arg value="${docroot}"/>
+			<arg value="${source.dir}_backup"/>
+		</java>
+	</target>		
+	
+	<target name="bo.backup">
+		<!-- check hostname -->
+        <condition property="bo.isWebHost">
+        	<or>
+            	<contains string="${hostname}" substring="pro1"/>
+        		<contains string="${hostname}" substring="pro2"/>
+            	<contains string="${hostname}" substring="cc1"/>
+        		<contains string="${hostname}" substring="cc2"/>
+        		<contains string="${hostname}" substring="partner"/>
+        	</or>
+        </condition>
+        <condition property="bo.isWasHost">
+            <or>
+                <contains string="${hostname}" substring="prows"/>
+                <contains string="${hostname}" substring="ccws"/>
+            	<contains string="${hostname}" substring="partner"/>
+            </or>
+        </condition>
+		<!-- check tar files -->
+        <condition property="bo.isProcWeb">
+        	<and>
+	        	<istrue value="${bo.isWebHost}"/>
+	        	<not>
+	            	<resourceexists><file file="${source.dir}/backup/bo/${dep.id}_WEB.tar"/></resourceexists>
+	        	</not>
+        	</and>
+        </condition>
+		<condition property="bo.isProcWas">
+			<and>
+				<istrue value="${bo.isWasHost}"/>
+				<not>
+            		<resourceexists><file file="${source.dir}/backup/bo/${dep.id}_WAS.tar"/></resourceexists>
+				</not>
+			</and>
+        </condition>
+		
+		<antcall target="bo.fullbackupWeb"/>
+		<antcall target="bo.fullbackupWas"/>
+	</target>
+	
+    <target name="bo.fullbackupWeb" if="${bo.isProcWeb}">
+        <mkdir dir="${source.dir}/backup/bo"/>
+        <tar longfile="gnu" destfile="${source.dir}/backup/bo/${dep.id}_WEB.tar">
+            <tarfileset dir="${docroot}/bo" filemode="664" dirmode="775">
+                <exclude name="**/*.tar"/>
+                <exclude name="**/*.zip"/>
+            </tarfileset>
+        </tar>
+    </target>
+	
+    <target name="bo.fullbackupWas" if="${bo.isProcWas}">
+        <mkdir dir="${source.dir}/backup/bo"/>
+        <tar longfile="gnu" destfile="${source.dir}/backup/bo/${dep.id}_WAS.tar">
+            <tarfileset dir="${docroot}/bo" filemode="664" dirmode="775">            	
+                <exclude name="**/*.tar"/>
+                <exclude name="**/*.zip"/>
+            </tarfileset>
+        </tar>
+    </target>	
+		
+	<!-- ================================================== -->
+	<!-- deploy -->
+	<!-- ================================================== -->
+	<target name="bo.deploy" depends="bo.goFail,bo.checkExist">
+		<tstamp><format property="bo.time1" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${bo.time1}] ==========</echo>
+		<antcall target="bo.logBeginWeb"/>
+		<antcall target="bo.backupWeb"/>
+		<antcall target="bo.copyWeb"/>
+		<antcall target="bo.logEndWeb"/>
+		<tstamp><format property="bo.time2" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${bo.time2}] ==========</echo>
+		<antcall target="bo.logBeginWas"/>
+		<antcall target="bo.backupWas"/>
+		<antcall target="bo.copyCommon"/>
+		<antcall target="bo.copyClass"/>
+		<antcall target="bo.copyJsp"/>
+		<antcall target="bo.logEndWas"/>
+		<tstamp><format property="bo.time3" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${bo.time3}] ==========</echo>
+	</target>
+	
+	<target name="po.deploy" depends="bo.goFail,bo.checkExist">
+		<tstamp><format property="po.time1" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${po.time1}] ==========</echo>
+		<antcall target="bo.logBeginWeb"/>
+		<antcall target="bo.backupWeb"/>
+		<antcall target="po.copyWeb"/>
+		<antcall target="bo.logEndWeb"/>
+		<tstamp><format property="po.time2" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${po.time2}] ==========</echo>
+		<antcall target="bo.logBeginWas"/>
+		<antcall target="bo.backupWas"/>
+		<antcall target="bo.copyCommon"/>
+		<antcall target="po.copyClass"/>
+		<antcall target="po.copyJsp"/>
+		<antcall target="bo.logEndWas"/>
+		<tstamp><format property="po.time3" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${po.time3}] ==========</echo>
+	</target>	
+
+	<target name="bo.copyWeb" if="${bo.isExistWebroot}">
+        <echo message=""/>
+        <copy todir="${docroot}/${service}/webroot" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/bo/webroot"
+                     includes="**/*"/>
+        </copy>
+	</target>
+	
+	<target name="bo.copyJsp" if="${bo.isExistWebapp}">
+        <echo message=""/>
+        <copy todir="${docroot}/${service}/webapp" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/bo/webapp"
+                     includes="**/*"/>
+        </copy>
+    </target>
+
+    <target name="bo.copyClass" if="${bo.isExistAppinf}">
+        <echo message=""/>
+        <copy todir="${docroot}/${service}/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/bo/APP-INF"
+                     includes="**/*"/>
+        </copy>
+    </target>
+
+    <target name="bo.copyCommon" if="${bo.isExistCommon}">
+		<echo message="========================================"/>
+		<copy todir="${docroot}/common/conf" overwrite="yes" verbose="true">
+			<fileset dir="${source.dir}/common/conf" 
+				     excludes="*.properties,**/*.tar,**/*.bak,**/*.zip"/>
+		</copy>
+    	<copy file="${source.dir}/common/conf/CancelRefund.real.properties" 
+    		tofile="/h2010/common/conf/CancelRefund.properties" overwrite="yes" verbose="true" failonerror="false"></copy>
+    	<copy file="${source.dir}/common/conf/Mcash.real.properties" 
+    		tofile="/h2010/common/conf/Mcash.properties" overwrite="yes" verbose="true" failonerror="false"></copy>
+    	<copy file="${source.dir}/common/conf/MCash_Cancel.real.properties" 
+    		tofile="/h2010/common/conf/MCash_Cancel.properties" overwrite="yes" verbose="true" failonerror="false"></copy>
+    	<copy file="${source.dir}/common/conf/webt.real.properties" 
+    		tofile="/h2010/common/conf/webt.properties" overwrite="yes" verbose="true" failonerror="false"></copy>
+    </target>
+	
+	<target name="po.copyWeb" if="${bo.isExistWebroot}">
+        <echo message=""/>
+        <copy todir="${docroot}/po/webroot" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/bo/webroot"
+                     includes="**/*"/>
+        </copy>
+		<copy todir="${docroot}/oa/webroot" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/bo/webroot"
+                     includes="**/*"/>
+        </copy>		
+	</target>
+	
+	<target name="po.copyJsp" if="${bo.isExistWebapp}">
+        <echo message=""/>
+        <copy todir="${docroot}/po/webapp" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/bo/webapp"
+                     includes="**/*"/>
+        </copy>
+		<copy todir="${docroot}/oa/webapp" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/bo/webapp"
+                     includes="**/*"/>
+        </copy>
+    </target>
+
+    <target name="po.copyClass" if="${bo.isExistAppinf}">
+        <echo message=""/>
+        <copy todir="${docroot}/po/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/bo/APP-INF"
+                     includes="**/*"/>
+        </copy>
+    	<copy todir="${docroot}/oa/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/bo/APP-INF"
+                     includes="**/*"/>
+        </copy>
+    </target>
+	
+	<target name="bo.logBeginWeb" if="${bo.isWeb}">
+		<java jvm="${java.home}/bin/java" fork="true"
+	          failonerror="false" spawn="false"
+	          jar="${deployer.home}/bin/deploylog15.jar">
+	        <arg value="20101130_1"/>
+	        <arg value="${dep.id}"/>
+	        <arg value="${hostname}"/>
+	        <arg value="B"/>
+	    </java>
+	</target>
+	
+	<target name="bo.logEndWeb" if="${bo.isWeb}">
+		<java jvm="${java.home}/bin/java" fork="true"
+	          failonerror="false" spawn="false"
+	          jar="${deployer.home}/bin/deploylog15.jar">
+	        <arg value="20101130_1"/>
+	        <arg value="${dep.id}"/>
+	        <arg value="${hostname}"/>
+	        <arg value="E"/>
+	    </java>
+	</target>
+	
+	<target name="bo.logBeginWas" if="${bo.isWas}">
+		<java jvm="${java.home}/bin/java" fork="true"
+	          failonerror="false" spawn="false"
+	          jar="${deployer.home}/bin/deploylog.jar">
+	        <arg value="20101130_1"/>
+	        <arg value="${dep.id}"/>
+	        <arg value="${hostname}"/>
+	        <arg value="B"/>
+	    </java>
+	</target>
+	
+	<target name="bo.logEndWas" if="${bo.isWas}">
+		<java jvm="${java.home}/bin/java" fork="true"
+	          failonerror="false" spawn="false"
+	          jar="${deployer.home}/bin/deploylog.jar">
+	        <arg value="20101130_1"/>
+	        <arg value="${dep.id}"/>
+	        <arg value="${hostname}"/>
+	        <arg value="E"/>
+	    </java>
+	</target>
+	
+	
+	
+	<!-- ================================================== -->
+	<!-- rollback -->
+	<!-- ================================================== -->
+	<target name="bo.getBk" depends="bo.goFail,bo.checkHost"> <!-- partner에사만 사용 -->
+		<antcall target="bo.getWebBk"/>
+	</target>
+		
+	<target name="bo.rollback" depends="bo.goFail,bo.checkExist">
+		<tstamp><format property="bo.time4" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${bo.time4}] ==========</echo>
+		<antcall target="bo.rollbackWeb"/>
+		<tstamp><format property="bo.time5" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${bo.time5}] ==========</echo>
+		<antcall target="bo.rollbackCommon"/>
+		<antcall target="bo.rollbackClass"/>
+		<antcall target="bo.rollbackJsp"/>
+		<tstamp><format property="bo.time6" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${bo.time6}] ==========</echo>
+	</target>
+	
+	<target name="po.rollback" depends="bo.goFail,bo.checkExist">
+		<tstamp><format property="po.time4" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${po.time4}] ==========</echo>		
+		<antcall target="po.rollbackWeb"/>
+		<tstamp><format property="po.time5" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${po.time5}] ==========</echo>
+		<antcall target="bo.rollbackCommon"/>
+		<antcall target="po.rollbackClass"/>
+		<antcall target="po.rollbackJsp"/>
+		<tstamp><format property="po.time6" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${po.time6}] ==========</echo>
+	</target>	
+	
+	<target name="bo.getWebBk" if="${bo.isPartner}"> <!-- pro1에서 백업한 webroot를 partner로 get -->
+		<echo message="GET BACKUPED WEB SOURCES"/>
+		<ftp server="121.254.239.93" userid="${user.id}" password="${user.pwd}"
+			 remotedir="/ncontents/deploy/${dep.id}_backup"
+		     action="get" verbose="true">
+			<fileset dir="${docroot}${source.dir}_backup">
+				<include name="bo/webroot/**/*"></include>
+			</fileset>
+		</ftp>
+	</target>
+	
+	<target name="bo.rollbackWeb" if="${bo.isExistWebroot}">
+        <echo message="rollback"/>
+        <copy todir="${docroot}${service}/webroot" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/bo/webroot"
+                     includes="**/*"/>
+        </copy>
+	</target>
+	
+	<target name="bo.rollbackJsp" if="${bo.isExistWebapp}">
+        <echo message="rollback"/>
+        <copy todir="${docroot}${service}/webapp" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/bo/webapp"
+                     includes="**/*"/>
+        </copy>
+    </target>
+
+    <target name="bo.rollbackClass" if="${bo.isExistAppinf}">
+        <echo message="rollback"/>
+        <copy todir="${docroot}${service}/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/bo/APP-INF"
+                     includes="**/*"/>
+        </copy>
+    </target>
+
+    <target name="bo.rollbackCommon" if="${bo.isExistCommon}">
+		<echo message="========================================"/>
+		<copy todir="${docroot}/common/conf" overwrite="yes" verbose="true">
+			<fileset dir="${source.dir}_backup/common/conf" 
+			         includes="**/*"/>
+		</copy>
+    </target>
+		
+	<target name="po.rollbackWeb" if="${bo.isExistWebroot}">
+        <echo message=""/>
+        <copy todir="${docroot}/po/webroot" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/bo/webroot"
+                     includes="**/*"/>
+        </copy>
+		<copy todir="${docroot}/oa/webroot" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/bo/webroot"
+                     includes="**/*"/>
+        </copy>		
+	</target>
+	
+	<target name="po.rollbackJsp" if="${bo.isExistWebapp}">
+        <echo message=""/>
+        <copy todir="${docroot}/po/webapp" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/bo/webapp"
+                     includes="**/*"/>
+        </copy>
+		<copy todir="${docroot}/oa/webapp" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/bo/webapp"
+                     includes="**/*"/>
+        </copy>
+    </target>
+
+    <target name="po.rollbackClass" if="${bo.isExistAppinf}">
+        <echo message=""/>
+        <copy todir="${docroot}/po/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/bo/APP-INF"
+                     includes="**/*"/>
+        </copy>
+    	<copy todir="${docroot}/oa/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/bo/APP-INF"
+                     includes="**/*"/>
+        </copy>
+    </target>
+	
+	
+	
+<!-- ================================================== -->
+<!-- MPO  -->
+<!-- ================================================== -->
+
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->
+	<target name="mp.checkValid">
+		<condition property="mp.isValid" value="true" else="false">
+			<and>
+	            <contains string="${hostname}" substring="partner"/>
+				<contains string="${dep.id}" substring="MP_20" casesensitive="true" />
+			</and>
+		</condition>
+		<echo>hostname `${hostname}` is ${mp.isValid}</echo>
+	</target>
+	
+	<target name="mp.goFail" depends="mp.checkValid" unless="${mp.isValid}">
+		<fail message="Hostname or deploy ID is wrong."/>
+	</target>
+			
+	<target name="mp.checkExist">
+		<condition property="mp.isWebHost" value="true" else="false">
+			<contains string="${hostname}" substring="partner"/>
+		</condition>
+		<condition property="mp.isWasHost" value="true" else="false">
+            <contains string="${hostname}" substring="partner"/>
+		</condition>
+		<condition property="mp.isExistWebroot" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/mpo/webroot"/>
+				</resourceexists>
+				<istrue value="${mp.isWebHost}"/>
+			</and>
+		</condition>
+		<condition property="mp.isExistWebapp" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/mpo/webapp"/>
+				</resourceexists>
+				<istrue value="${mp.isWasHost}"/>
+			</and>
+		</condition>
+		<condition property="mp.isExistAppinf" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/mpo/APP-INF"/>
+				</resourceexists>
+				<istrue value="${mp.isWasHost}"/>
+			</and>
+		</condition>
+		<condition property="mp.isExistCommon" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/common/conf"/>
+				</resourceexists>
+				<istrue value="${mp.isWasHost}"/>
+			</and>
+		</condition>
+		<condition property="mp.isJspAndClass" value="true" else="false">
+			<and>
+				<istrue value="${mp.isExistWebapp}"/>
+				<istrue value="${mp.isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="mp.isJsp" value="true" else="false">
+			<and>
+				<istrue value="${mp.isExistWebapp}"/>
+				<isfalse value="${mp.isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="mp.isClass" value="true" else="false">
+			<and>
+				<isfalse value="${mp.isExistWebapp}"/>
+				<istrue value="${mp.isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="mp.isWeb" value="true" else="false">
+			<istrue value="${mp.isExistWebroot}"/>
+		</condition>
+		<condition property="mp.isWas" value="true" else="false">
+			<or>
+				<istrue value="${mp.isExistWebapp}"/>
+				<istrue value="${mp.isExistAppinf}"/>
+				<istrue value="${mp.isExistCommon}"/>
+			</or>
+		</condition>
+		<condition property="mp.isCommon" value="true" else="false">
+			<istrue value="${mp.isExistCommon}"/>
+		</condition>
+	</target>
+			
+	<!-- ================================================== -->
+	<!-- init -->
+	<!-- ================================================== -->
+	<target name="mp.init" depends="mp.goFail">
+		<delete dir="${source.dir}/mpo" />
+		<mkdir dir="${source.dir}" />
+	</target>
+		
+	<!-- ================================================== -->
+	<!-- backup -->
+	<!-- ================================================== -->
+	<target name="mp.backupWeb" if="${mp.isWeb}">
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte15.jar">
+			<arg value="${source.dir}"/>
+			<arg value="${docroot}"/>
+			<arg value="${source.dir}_backup"/>
+		</java>
+	</target>	
+	
+	<target name="mp.backupWas" if="${mp.isWas}">
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte.jar">
+			<arg value="${source.dir}"/>
+			<arg value="${docroot}"/>
+			<arg value="${source.dir}_backup"/>
+		</java>
+	</target>	
+	
+	<target name="mp.backup">
+		<!-- check hostname -->
+        <condition property="mp.isWebHost">
+        	<or>
+        		<contains string="${hostname}" substring="partner"/>
+        	</or>
+        </condition>
+        <condition property="mp.isWasHost">
+            <or>
+            	<contains string="${hostname}" substring="partner"/>
+            </or>
+        </condition>
+		<!-- check tar files -->
+        <condition property="mp.isProcWeb">
+        	<and>
+	        	<istrue value="${mp.isWebHost}"/>
+	        	<not>
+	            	<resourceexists><file file="${source.dir}/backup/mpo/${dep.id}_WEB.tar"/></resourceexists>
+	        	</not>
+        	</and>
+        </condition>
+		<condition property="mp.isProcWas">
+			<and>
+				<istrue value="${mp.isWasHost}"/>
+				<not>
+            		<resourceexists><file file="${source.dir}/backup/mpo/${dep.id}_WAS.tar"/></resourceexists>
+				</not>
+			</and>
+        </condition>
+		
+		<antcall target="mp.fullbackupWeb"/>
+		<antcall target="mp.fullbackupWas"/>
+	</target>
+	
+    <target name="mp.fullbackupWeb" if="${mp.isProcWeb}">
+        <mkdir dir="${source.dir}/backup/mpo"/>
+        <tar longfile="gnu" destfile="${source.dir}/backup/mpo/${dep.id}_WEB.tar">
+            <tarfileset dir="${docroot}/mpo" filemode="664" dirmode="775">
+                <exclude name="**/*.tar"/>
+                <exclude name="**/*.zip"/>
+            </tarfileset>
+        </tar>
+    </target>
+	
+    <target name="mp.fullbackupWas" if="${mp.isProcWas}">
+        <mkdir dir="${source.dir}/backup/mpo"/>
+        <tar longfile="gnu" destfile="${source.dir}/backup/mpo/${dep.id}_WAS.tar">
+            <tarfileset dir="${docroot}/mpo" filemode="664" dirmode="775">            	
+                <exclude name="**/*.tar"/>
+                <exclude name="**/*.zip"/>
+            </tarfileset>
+        </tar>
+    </target>	
+		
+	<!-- ================================================== -->
+	<!-- deploy -->
+	<!-- ================================================== -->
+	<target name="mp.deploy" depends="mp.goFail,mp.checkExist">
+		<tstamp><format property="mp.time1" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${mp.time1}] ==========</echo>
+		<antcall target="mp.logBeginWeb"/>
+		<antcall target="mp.backupWeb"/>
+		<antcall target="mp.copyWeb"/>
+		<antcall target="mp.logEndWeb"/>
+		<tstamp><format property="mp.time2" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${mp.time2}] ==========</echo>
+		<antcall target="mp.logBeginWas"/>
+		<antcall target="mp.backupWas"/>
+		<antcall target="mp.copyCommon"/>
+		<antcall target="mp.copyClass"/>
+		<antcall target="mp.copyJsp"/>
+		<antcall target="mp.logEndWas"/>
+		<tstamp><format property="mp.time3" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${mp.time3}] ==========</echo>
+	</target>
+
+	<target name="mp.copyWeb" if="${mp.isExistWebroot}">
+        <echo message=""/>
+        <copy todir="${docroot}/mpo/webroot" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/mpo/webroot"
+                     includes="**/*"/>
+        </copy>
+	</target>
+	
+	<target name="mp.copyJsp" if="${mp.isExistWebapp}">
+        <echo message=""/>
+        <copy todir="${docroot}/mpo/webapp" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/mpo/webapp"
+                     includes="**/*"/>
+        </copy>
+    </target>
+
+    <target name="mp.copyClass" if="${mp.isExistAppinf}">
+        <echo message=""/>
+        <copy todir="${docroot}/mpo/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/mpo/APP-INF"
+                     includes="**/*"/>
+        </copy>
+    </target>
+
+    <target name="mp.copyCommon" if="${mp.isExistCommon}">
+		<echo message="========================================"/>
+		<copy todir="${docroot}/common/conf" overwrite="yes" verbose="true">
+			<fileset dir="${source.dir}/common/conf" 
+				     excludes="*.properties,**/*.tar,**/*.bak,**/*.zip"/>
+		</copy>
+    	<copy file="${source.dir}/common/conf/CancelRefund.real.properties" 
+    		tofile="/h2010/common/conf/CancelRefund.properties" overwrite="yes" verbose="true" failonerror="false"></copy>
+    	<copy file="${source.dir}/common/conf/Mcash.real.properties" 
+    		tofile="/h2010/common/conf/Mcash.properties" overwrite="yes" verbose="true" failonerror="false"></copy>
+    	<copy file="${source.dir}/common/conf/MCash_Cancel.real.properties" 
+    		tofile="/h2010/common/conf/MCash_Cancel.properties" overwrite="yes" verbose="true" failonerror="false"></copy>
+    	<copy file="${source.dir}/common/conf/webt.real.properties" 
+    		tofile="/h2010/common/conf/webt.properties" overwrite="yes" verbose="true" failonerror="false"></copy>
+    </target>
+	
+	<target name="mp.logBeginWeb" if="${mp.isWeb}">
+		<java jvm="${java.home}/bin/java" fork="true"
+	          failonerror="false" spawn="false"
+	          jar="${deployer.home}/bin/deploylog15.jar">
+	        <arg value="20101130_1"/>
+	        <arg value="${dep.id}"/>
+	        <arg value="${hostname}"/>
+	        <arg value="B"/>
+	    </java>
+	</target>
+	
+	<target name="mp.logEndWeb" if="${mp.isWeb}">
+		<java jvm="${java.home}/bin/java" fork="true"
+	          failonerror="false" spawn="false"
+	          jar="${deployer.home}/bin/deploylog15.jar">
+	        <arg value="20101130_1"/>
+	        <arg value="${dep.id}"/>
+	        <arg value="${hostname}"/>
+	        <arg value="E"/>
+	    </java>
+	</target>
+	
+	<target name="mp.logBeginWas" if="${mp.isWas}">
+		<java jvm="${java.home}/bin/java" fork="true"
+	          failonerror="false" spawn="false"
+	          jar="${deployer.home}/bin/deploylog.jar">
+	        <arg value="20101130_1"/>
+	        <arg value="${dep.id}"/>
+	        <arg value="${hostname}"/>
+	        <arg value="B"/>
+	    </java>
+	</target>
+	
+	<target name="mp.logEndWas" if="${mp.isWas}">
+		<java jvm="${java.home}/bin/java" fork="true"
+	          failonerror="false" spawn="false"
+	          jar="${deployer.home}/bin/deploylog.jar">
+	        <arg value="20101130_1"/>
+	        <arg value="${dep.id}"/>
+	        <arg value="${hostname}"/>
+	        <arg value="E"/>
+	    </java>
+	</target>	
+	
+	<!-- ================================================== -->
+	<!-- rollback -->
+	<!-- ================================================== -->
+	<target name="mp.rollback" depends="mp.goFail,mp.checkExist">
+		<tstamp><format property="mp.time4" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${mp.time4}] ==========</echo>
+		<antcall target="mp.rollbackWeb"/>
+		<tstamp><format property="mp.time5" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${mp.time5}] ==========</echo>
+		<antcall target="mp.rollbackCommon"/>
+		<antcall target="mp.rollbackClass"/>
+		<antcall target="mp.rollbackJsp"/>
+		<tstamp><format property="mp.time6" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${mp.time6}] ==========</echo>
+	</target>
+
+	<target name="mp.rollbackWeb" if="${mp.isExistWebroot}">
+        <echo message=""/>
+        <copy todir="${docroot}/mpo/webroot" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/mpo/webroot"
+                     includes="**/*"/>
+        </copy>
+	</target>
+	
+	<target name="mp.rollbackJsp" if="${mp.isExistWebapp}">
+        <echo message=""/>
+        <copy todir="${docroot}/mpo/webapp" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/mpo/webapp"
+                     includes="**/*"/>
+        </copy>
+    </target>
+
+    <target name="mp.rollbackClass" if="${mp.isExistAppinf}">
+        <echo message=""/>
+        <copy todir="${docroot}/mpo/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/mpo/APP-INF"
+                     includes="**/*"/>
+        </copy>
+    </target>
+
+    <target name="mp.rollbackCommon" if="${mp.isExistCommon}">
+		<echo message="========================================"/>
+		<copy todir="${docroot}/common/conf" overwrite="yes" verbose="true">
+			<fileset dir="${source.dir}_backup/common/conf" 
+			         includes="**/*"/>
+		</copy>
+    </target>
+</project>

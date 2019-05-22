@@ -1,0 +1,114 @@
+<project name="LECS_Build_CSS">
+	<target name="switch-css">
+		<groovy>
+			<arg value="${dir}" />
+			<arg value="${targetDir}" />
+			<arg value="${prefix}" />
+			<arg value="${scheme}" />
+			<![CDATA[
+			import java.io.*
+
+			dir = args[0]
+			targetDir = args[1]
+			if (new File(targetDir).exists()==false){
+				new File(targetDir).mkdirs()
+			}
+			prefix = args[2] //"http://imagedev.mujikorea.net/"
+			scheme = args[3]
+			if (prefix.endsWith("/") == false) {
+			    prefix = prefix +"/";
+			}
+
+			//println "/rule/conect_recycle.gif".replaceAll(/^\//, prefix)
+			//println "'../image/customer/bg_snbS.gif'".replaceAll(/\.\.\/image\//,  prefix)
+			//return
+			convert = { url -> 
+				orig = url
+				url = url.replaceAll("'",  "")
+				url = url.replaceAll(/\.\.\/image\//,  "/")
+				url = url.replaceAll(/\.\.\/images\//,  "/")
+				url = url.replaceAll(/\/image\//,  "/")
+				url = url.replaceAll(/\/images\//,  "/")
+				url = url.replaceAll(/\.\.\/img\//,  "/")
+				url = url.replaceAll(/\.\.\/\.\.\/img\//,  "/")
+				url = url.replaceAll(/\.\.\/\.\.\/\.\.\/img\//,  "/")
+				url = url.replaceAll(/\/\//,  "/")
+				url = url.replaceAll(/\.\.\//,  "")
+				url = url.replaceAll(/\.\.\//,  "")
+				url = url.replaceAll(/\.\.\//,  "")
+				url = url.replaceAll(/\.\.\//,  "")
+				url = url.replaceAll(/\.\.\//,  "")
+				url = url.replaceAll(/\.\.\//,  "")
+				url = url.replaceAll(/MJ001/,  "")
+				url = url.replaceAll(/http:\/\/[^\/]+/, prefix)
+				
+				if (url.startsWith("http") == false && url.startsWith("/") ==false){
+					url = prefix+"/"+url
+				}
+
+				url = url.replaceAll(/^\//, prefix)
+
+				
+				
+				url = url.replaceAll(/\/\//, "/")
+				if (prefix.contains("http")){
+					url = url.replaceAll(/http:\//, "http://")		
+				}
+				
+				if (scheme.contains("https")){
+					url = url.replaceAll(/http:/, "https:")		
+				}
+				
+
+				println "Convert: $orig  -->  $url"
+				return url
+			}
+
+			new File(dir).eachFileRecurse {  cssFile ->
+				if (cssFile.name =~ /.*\.css/) {
+					def relativePath = cssFile.absolutePath.substring(new File(dir).absolutePath.length())
+					println "Source CSS: $cssFile.absolutePath"
+					txt = cssFile.getText();
+					res = ""
+					txt.split("\n").each { line ->
+						m = line  =~ /([a-zA-Z0-9-:\/_\.]+\.([gG][iI][fF]|[jJ][pP][gG]|[pP][nN][gG]))[^a-zA-Z0-9]+/
+						if ( m.find()){
+							imageUrl = m.group(1)
+							res += line.substring(0, m.start(1))
+							res += convert(imageUrl)
+							res += line.substring(m.end(1))+"\n"
+						}
+						else {
+							res += line+"\n"
+						}
+					}
+					f = new File(targetDir+"/"+relativePath);
+					if (f.getParentFile().exists()==false){
+						f.getParentFile().mkdirs();
+					}
+					f.write(res,"UTF-8")
+					println "Target Path: $f.absolutePath"
+			//		cssFile.write(res, "UTF-8")
+				}
+			}
+
+			]]></groovy>
+	</target>
+
+	<target name="switch-css-test">
+		<antcall target="switch-css">
+			<param name="dir">build/src/LECS-Store-Nike</param>
+			<param name="prefix">http://image.nikestore.co.kr/</param>
+		</antcall>
+	</target>
+
+
+	<target name="change-css">
+		<antcall target="switch-css">
+			<param name="dir" value="build/LECS-Store-Muji_contents/" />
+			<param name="targetDir" value="build/LECS-Store-Muji_contents/" />
+			<param name="prefix" value="http://image.mujikorea.net/" />
+			<param name="scheme" value="" />
+		</antcall>
+	</target>
+</project>

@@ -1,0 +1,46 @@
+<project name="LECS_Build_Checkout">
+	<target name="checkout-all">
+		<antcall target="checkout-library" />
+		<antcall target="checkout-bo" />
+		<antcall target="checkout-lps" />
+		<antcall target="checkout-muji" />
+		<antcall target="checkout-batch" />
+		<antcall target="checkout-nike" />
+	</target>
+
+	<target name="checkout-library">
+		<checkout-source target="LECS-Library"/>
+	</target>
+
+	<target name="checkout-nike">
+		<checkout-source target="LECS-Store-Nike"/>
+	</target>
+
+	<target name="checkout-bo">
+		<checkout-source target="LECS-Platform-BO"/>
+	</target>
+
+	<target name="checkout-lps">
+		<checkout-source target="LECS-Platform-LPS"/>
+	</target>
+
+	<target name="checkout-muji">
+		<checkout-source target="LECS-Store-Muji"/>
+	</target>
+	
+	<target name="checkout-batch">
+		<checkout-source target="LECS-Batch"/>
+	</target>
+
+	<macrodef name="checkout-source" >
+		<attribute name="target"/>
+		<sequential>
+			<svn taskname="Checkout ${svn.server}/LECS/${REPO_BRANCH}/@{target}  to ${build.dir}/src/@{target}" 
+				username="naru" password="naru!@#$" javahl="false">
+				<checkout url	="${svn.server}/${REPO_BRANCH}/@{target}"
+					destPath	="${build.dir}/src/@{target}" />
+			</svn>
+			
+		</sequential>
+	</macrodef>
+</project>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lecs20 pmd project">
+    <property name="pmd.dir" value="C:/pmd-4.3.0" />
+    <property name="pmd.output.dir" value="${wkspc}/results" />
+    <property name="pmd.service.dir" value="D:/docroot/webapp-instances/hudsonz/webapps/pmd" />
+    <property name="xsl.dir" value="${pmd.dir}/result" />
+    <property name="service.name" value="LECS20" />
+    <property name="source.dir" value="${wkspc}/${service}/src" />
+    <property name="lib.source.dir" value="${wkspc}/Library/${service}" />
+    
+    <path id="pmd.classpath">
+	    <fileset dir="${pmd.dir}/lib/">
+		    <include name="*.jar"/>
+	    </fileset>
+    </path>
+
+    <taskdef name="pmd" classname="net.sourceforge.pmd.ant.PMDTask" classpathref="pmd.classpath"/>
+
+    <target name="pmd">
+        <tstamp><format property="pmd.exec.date" pattern="yyyyMMdd"/></tstamp>
+		<mkdir dir="${pmd.output.dir}/${service.name}"/>
+		<mkdir dir="${pmd.service.dir}/${service.name}/PROJECT/${service}"/>    	
+        <property name="report.name" value="${service}_${pmd.exec.date}" />
+        <pmd rulesetfiles="${pmd.dir}/rulesets/lotte_ruleset.xml" minimumPriority="2">
+            <formatter type="xml" toFile="${pmd.output.dir}/${service.name}/${report.name}.xml" />
+            <formatter type="csv" toFile="${pmd.service.dir}/${service.name}/PROJECT/${service}/${report.name}.csv" />
+            <fileset dir="${source.dir}">
+                <include name="**/*.java"/>
+            </fileset>
+        </pmd>
+        <xslt in="${pmd.output.dir}/${service.name}/${report.name}.xml" style="${xsl.dir}/pmd-nicerhtml.xsl" out="${pmd.service.dir}/${service.name}/PROJECT/${service}/${report.name}.html" />
+    </target>
+
+    <target name="pmd_lib">
+        <tstamp><format property="pmd.exec.date" pattern="yyyyMMdd"/></tstamp>
+		<mkdir dir="${pmd.output.dir}/${service.name}"/>
+		<mkdir dir="${pmd.service.dir}/${service.name}/PROJECT/Library/${service}"/>    	
+        <property name="report.name" value="${service}_${pmd.exec.date}" />
+        <pmd rulesetfiles="${pmd.dir}/rulesets/lotte_ruleset.xml" minimumPriority="2">
+            <formatter type="xml" toFile="${pmd.output.dir}/${service.name}/${report.name}.xml" />
+            <formatter type="csv" toFile="${pmd.service.dir}/${service.name}/PROJECT/Library/${service}/${report.name}.csv" />
+            <fileset dir="${lib.source.dir}">
+                <include name="**/*.java"/>
+				<exclude name="**/LogisticsDeliveryMgmtBizImpl.java"/>
+            </fileset>
+        </pmd>
+        <xslt in="${pmd.output.dir}/${service.name}/${report.name}.xml" style="${xsl.dir}/pmd-nicerhtml.xsl" out="${pmd.service.dir}/${service.name}/PROJECT/Library/${service}/${report.name}.html" />
+    </target>
+
+</project>

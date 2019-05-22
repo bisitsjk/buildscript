@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottesuper2011cp_real">
+	<property name="deploy.id" value="${DEPLOY_ID}"/>	
+	<property name="deploy.dir" value="/usr1/home/jeus/deploy"/>	
+	<property name="app.dir" value="project/company"/>
+	
+	<property name="base.dir" value="/esuper/project"/>	
+	<property name="company.dir" value="${base.dir}/company"/>	
+	<property name="source.dir" value="${deploy.dir}/${deploy.id}"/>
+	
+	<!--bozipbackup.dir = /usr1/home/jeus/deploy/bozipbackup -->
+	<property name="bozipbackup.dir" value="${deploy.dir}/bozipbackup"/>
+
+
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->		
+	<target name="check_host">
+		<condition property="isHost">
+			<contains string="${hostname}" substring="espbwas"/>
+		</condition>
+		<echo>hostname is `${hostname}`</echo>
+	</target>
+			
+	<target name="check_valid" depends="check_host" unless="isHost">
+		<fail message="배포 대상 서버가 아닙니다."/>
+	</target>
+	
+	
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->
+	<target name="check_exist">
+		<condition property="isExistCP">
+			<resourceexists>
+				<!-- /usr1/home/jeus/deploy/src/CP_20161108_1330 -->
+				<file file="${source.dir}"/>
+			</resourceexists>
+		</condition>
+	</target>
+					
+	<!-- ================================================== -->
+	<!-- init -->
+	<!-- ================================================== -->
+	<target name="init">
+		<antcall target="check_valid" />
+		<antcall target="delete_sources" />
+		<antcall target="make_directory" />
+	</target>
+
+	<target name="ssh_init">
+		<antcall target="check_valid" />
+		<antcall target="delete_sources" />
+		<antcall target="make_directory" />
+	</target>
+
+	<target name="delete_sources">
+		<echo>Target directory `${source.dir}/project`...</echo>
+		<delete dir="${source.dir}/project" />
+	</target>
+	
+	<target name="make_directory">
+		<echo>Target directory `${source.dir}`...</echo>
+		<mkdir dir="${source.dir}" />
+	</target>	
+	
+	
+	<!-- ================================================== -->
+	<!-- ssh deploy -->
+	<!-- ================================================== -->	
+	<target name="ssh_deploy_was">
+		<antcall target="ssh_backup_was" />
+		<antcall target="ssh_copy_was" />
+	</target>
+	
+	<target name="ssh_deploy_test_was">
+		<antcall target="ssh_backup_was" />
+		<antcall target="ssh_copy_test_was" />
+	</target>
+
+	<!-- ================================================== -->
+	<!-- ssh backup -->
+	<!-- ================================================== -->	
+
+	<!-- source.dir/app.dir                                                =         /usr1/home/jeus/deploy/CP_20170125_1330/project/company -->
+	<!-- company.dir                                                                            =         /esuper/project/company -->
+	<!-- source.dir_backup/project/company         =         /usr1/home/jeus/deploy/CP_20170125_1330_backup/project/company -->
+
+
+	<!-- Company Backup-->
+	<target name="ssh_backup_was">
+		<echo>Backup ${source.dir}</echo>
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte.jar">
+			<arg value="${source.dir}/${app.dir}"/>
+			<arg value="${company.dir}"/>
+			<arg value="${source.dir}_backup/project/company"/>
+		</java>
+	</target>
+
+	<!-- ================================================== -->
+	<!-- copy -->
+	<!-- ================================================== -->		
+	<target name="copy_was">
+		<copy todir="${company.dir}" failonerror="false" overwrite="true">
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="**/*"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<!-- company.dir                      =         /esuper/project/company -->
+	<!-- source.dir/app.dir          =         /usr1/home/jeus/deploy/CP_20170125_1330/project/company -->
+	<target name="ssh_copy_was">
+		<copy todir="${company.dir}" failonerror="false" overwrite="true">
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="**/*"/>
+			</fileset>
+		</copy>
+	</target>
+
+
+	<!-- source.dir/app.dir          =         /usr1/home/jeus/deploy/CP_20170125_1330/project/company -->
+	<target name="ssh_copy_test_was">
+		<copy todir="/esuper/project/deploytest/company" failonerror="false" overwrite="true">
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="**/*"/>
+			</fileset>
+		</copy>
+	</target>
+
+	<!-- ================================================== -->
+	<!-- LotteSuper CP ssh_Rollback -->
+	<!-- ================================================== -->
+	<!-- check_exist = /usr1/home/jeus/deploy/CP_20161117_1330 -->
+	
+	<target name="ssh_rollback" depends="check_exist">
+		<antcall target="check_valid"/>
+		<echo message="Rollback Java Applications"/>
+		<antcall target="rollbackcp"/>
+	</target>	
+
+	<!-- SSH Rollback -->
+	
+	<target name="rollbackcp" if="isExistCP">        
+        <copy todir="/esuper/project/company" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/project/company"
+                     includes="WEB-INF/**/*"/>
+        </copy>
+    </target>		
+
+	
+	<!-- file file= /usr1/home/jeus/deploy/bozipbackup/20170201_back_was.zip -->
+	<!-- file file= /usr1/home/jeus/deploy/bozipbackup/20170201_mback_was.zip -->
+	<!-- file file= /usr1/home/jeus/deploy/bozipbackup/20170201_partner_was.zip -->
+	<target name="ssh_cpzipbackup_was">
+		<!-- check hostname -->
+        <condition property="cp.isWasHost">
+            	<contains string="${hostname}" substring="espbwas"/>
+        </condition>
+		<!-- check tar files -->
+		<condition property="cp.isProcWas">
+			<and>
+				<istrue value="${cp.isWasHost}"/>
+				<not>
+            		<resourceexists><file file="${bozipbackup.dir}/${deploy.id}_company_was.zip"/></resourceexists>
+				</not>
+				<not>
+            		<resourceexists><file file="${bozipbackup.dir}/${deploy.id}_company_full_was.zip"/></resourceexists>
+				</not>
+			</and>
+        </condition>
+		<echo>cp.isProcWas : 호스트가 espbwas 이며, ${deploy.id}_company_was.zip,  ${deploy.id}_company_full_was.zip 가 없어야 True / 적합성 ${cp.isProcWas}</echo>
+		<antcall target="cp.fullbackup"/>
+	</target>
+
+	<!-- tar mode 추가 -->
+	<!--
+	<target name="cp.fullbackupWas" if="${cp.isProcWas}">
+        <mkdir dir="${bozipbackup.dir}"/>
+        <tar longfile="gnu" destfile="${bozipbackup.dir}/${deploy.id}_WAS.tar">
+           <tarfileset dir="${back.dir}/WEB-INF" filemode="664" dirmode="775">            	
+            <tarfileset dir="${back.dir}/WEB-INF">
+                <exclude name="**/*.tar"/>
+                <exclude name="**/*.zip"/>
+            </tarfileset>
+        </tar>
+    </target>	
+	-->
+
+	
+	<!--tar  mode 제외 -->
+	<!--
+	<target name="cp.fullbackupWas" if="${cp.isProcWas}">
+        <mkdir dir="${bozipbackup.dir}"/>
+        <tar longfile="gnu" destfile="${bozipbackup.dir}/${deploy.id}_WAS.tar">
+            <tarfileset dir="${back.dir}/WEB-INF">
+                <exclude name="**/*.tar"/>
+                <exclude name="**/*.zip"/>
+            </tarfileset>
+        </tar>
+    </target>	
+	-->
+
+     <!-- 	
+	<target name="cp.fullbackupWas" if="${cp.isProcWas}">
+	        <mkdir dir="${bozipbackup.dir}"/>
+		    <echo>Creating zip file...</echo>
+		    <zip destfile="${bozipbackup.dir}/${deploy.id}_back_was.zip" basedir="/esuper/project/company/WEB-INF"  excludes="x2log/**" />
+		        <echo>...complete</echo>
+    </target>
+  -->
+	<!-- 
+		① 운영배포가 한번 나간다음에 동기화할때에는 운영배포 나간것이 문제가 있어서 테스트서버 동기화 필요하기때문에 기존 압축파일을 지우지 않는다.
+		② 운영배포가 한번 나간다음에 긴급배포가 나가야할 경우에는 기존 운영배포 나간것도 같이 말아야하므로 압축된 파일을 백업 받아놓던지, 혹은 지워야 한다.
+	-->
+	<target name="cp.fullbackup" if="cp.isProcWas"><!-- Host가  espbwas 이며, 당일 날짜 company_was.zip, company_full_was.zip 가 없다면 압축파일 생성. -->
+		<!--<antcall target="bozipbackupdelete" />-->
+		<antcall target="cp.fullbackupWas" />
+		<!--<antcall target="check_zip" />-->
+	</target>
+	<target name="cp.fullbackupWas">
+	        <mkdir dir="${bozipbackup.dir}"/>
+		    <echo>Creating zip file...</echo>
+				<zip destFile="${bozipbackup.dir}/${deploy.id}_company_was.zip" basedir="/esuper/project/company/WEB-INF">
+					<include name="classes/**"/>
+					<include name="dynamic_classes/**"/>
+					<include name="x2scenario/**"/>
+					<include name="jsp/**"/>
+					<include name="lib/lottesuper-commons.jar"/>
+					<!--
+			      <exclude name="*.xml" />
+			      <exclude name="x2log/**" />
+				  <exclude name="tempdir/**" />
+				  <exclude name="x2config/**" />
+				  <exclude name="lib/**" />
+				  -->
+			    </zip>
+           <echo>...complete</echo>
+		
+	    <echo>Fullbackup Creating zip file...</echo>
+			<zip destFile="${bozipbackup.dir}/${deploy.id}_company_full_was.zip" basedir="/esuper/project/company">
+				<exclude name="*.tar"/>
+				<include name="*.html"/>
+				<include name="*.jsp"/>
+				<include name="WiseGrid/**"/>
+				<include name="admin/**"/>
+				<exclude name="WEB-INF/x2log/**"/>
+				<include name="WEB-INF/**"/>
+				<exclude name="static-root/fileupload/**/**"/><!-- 뒤에 ** 를 하나더 주니까 먹히네?? -->
+				<include name="static-root/**"/>
+		    </zip>
+       <echo>...complete</echo>
+		<!--<antcall target="check_zip"/>-->
+    </target>
+	<target name="check_zip"  unless="cp.isProcWas">
+		<!--<fail message="압축파일이 있습니다. 삭제후 다시 시도하십시오."/>-->
+		<!--<echo message="압축파일이 있습니다. 삭제후 재 압축중입니다....."/>-->
+		<echo message="압축파일이 있습니다. 현재 DocRoot를 압축하지 않습니다."/>
+		<!--<antcall target="bozipbackupdelete"/>-->
+		<!--<antcall target="ssh_cpzipbackup_was"/>-->
+	</target>
+	
+	<target name="bozipbackupdelete">
+		<delete>
+	    		<fileset dir="${bozipbackup.dir}" includes="${deploy.id}_company_was.zip"/>
+	  </delete>
+		<delete>
+	    		<fileset dir="${bozipbackup.dir}" includes="${deploy.id}_company_full_was.zip"/>
+	  </delete>
+	</target>
+
+</project>

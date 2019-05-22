@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="tomcat_spp2014webcm_jenkins_1.6">
+	<!-- BUILD -->
+	<!-- **************************************************************** -->
+	<target name="build">
+		<antcall target="compile" />
+		<antcall target="jar" />
+		<!--<antcall target="send" />-->
+	</target>
+	
+	<path id="classpath">
+		<fileset dir="${java.home.dir}/lib">
+			<include name="*.jar" />
+		</fileset>		
+		<fileset dir="E:/jenkins-smartpick/jobs/${seq0}-${seq1}. TOMCAT_SPP2014WEB_CM_${seq2}_${deploy.phase}_BUILD_1.6/workspace/spp2014/branches/PROJECT/TomcatProject/spp-web-cm/spp-web-common-lib/LIB-INF/common-lib">
+			<include name="*.jar" />
+		</fileset>	
+	</path>
+			
+	<target name="compile">
+		<delete includeemptydirs="true">
+			<fileset dir="E:/jenkins-smartpick/jobs/${seq0}-${seq1}. TOMCAT_SPP2014WEB_CM_${seq2}_${deploy.phase}_BUILD_1.6/workspace/spp2014/branches/PROJECT/TomcatProject/spp-web-cm/spp-web-common-lib/classes" includes="**/*"/>
+    	</delete>
+
+		<javac classpathref="classpath" 
+			srcdir="E:/jenkins-smartpick/jobs/${seq0}-${seq1}. TOMCAT_SPP2014WEB_CM_${seq2}_${deploy.phase}_BUILD_1.6/workspace/spp2014/branches/PROJECT/TomcatProject/spp-web-cm/spp-web-common-lib/src/main/java"
+			destdir="E:/jenkins-smartpick/jobs/${seq0}-${seq1}. TOMCAT_SPP2014WEB_CM_${seq2}_${deploy.phase}_BUILD_1.6/workspace/spp2014/branches/PROJECT/TomcatProject/spp-web-cm/spp-web-common-lib/classes"
+			target="1.6"
+			failonerror="on" debug="on"
+			encoding="utf-8" 
+			nowarn="on" 
+			deprecation="on"
+			includeantruntime="false" />
+			
+		<copy todir="E:/jenkins-smartpick/jobs/${seq0}-${seq1}. TOMCAT_SPP2014WEB_CM_${seq2}_${deploy.phase}_BUILD_1.6/workspace/spp2014/branches/PROJECT/TomcatProject/spp-web-cm/spp-web-common-lib/classes" overwrite="true">
+			<fileset dir="E:/jenkins-smartpick/jobs/${seq0}-${seq1}. TOMCAT_SPP2014WEB_CM_${seq2}_${deploy.phase}_BUILD_1.6/workspace/spp2014/branches/PROJECT/TomcatProject/spp-web-cm/spp-web-common-lib/src/main/java">
+				<exclude name="**/*.java" />
+		    </fileset>
+		</copy>
+	</target>
+	
+	<target name="jar">
+		<mkdir dir="E:/jenkins-smartpick/jobs/${seq0}-${seq1}. TOMCAT_SPP2014WEB_CM_${seq2}_${deploy.phase}_BUILD_1.6/workspace/spp2014/branches/PROJECT/TomcatProject/spp-web-cm/spp-web-common-lib/jar" />
+		<delete includeemptydirs="true">
+			<fileset dir="E:/jenkins-smartpick/jobs/${seq0}-${seq1}. TOMCAT_SPP2014WEB_CM_${seq2}_${deploy.phase}_BUILD_1.6/workspace/spp2014/branches/PROJECT/TomcatProject/spp-web-cm/spp-web-common-lib/jar" includes="**/*"/>
+    	</delete>
+		<jar encoding="UTF-8" destfile="E:/jenkins-smartpick/jobs/${seq0}-${seq1}. TOMCAT_SPP2014WEB_CM_${seq2}_${deploy.phase}_BUILD_1.6/workspace/spp2014/branches/PROJECT/TomcatProject/spp-web-cm/spp-web-common-lib/jar/spp-web-common-lib.jar">
+			<fileset dir="E:/jenkins-smartpick/jobs/${seq0}-${seq1}. TOMCAT_SPP2014WEB_CM_${seq2}_${deploy.phase}_BUILD_1.6/workspace/spp2014/branches/PROJECT/TomcatProject/spp-web-cm/spp-web-common-lib/classes" />
+		</jar>
+		
+		<!--<antcall target="rm"/>-->
+	</target>
+
+	
+	<target name="rm">
+			<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+				trust="true" verbose="false" command="cd /lotte/spp_bo/tomcat_webapp/WEB-INF/lib;find . -name spp-web-common-lib.jar | xargs rm -f " />
+			
+		<antcall target="send" />
+	
+	</target>
+					
+	
+	<!-- 실제 DocRoot 경로가 아님. 테스트를 위한 경로임. -->
+	<target name="send">
+		<scp todir="${user.id}:${user.pwd}@${host}:/lotte/spp_bo/tomcat_webapp/WEB-INF/lib" trust="true">
+			<fileset dir="E:/jenkins-smartpick/jobs/${seq0}-${seq1}. TOMCAT_SPP2014WEB_CM_${seq2}_${deploy.phase}_BUILD_1.6/workspace/spp2014/branches/PROJECT/TomcatProject/spp-web-cm/spp-web-common-lib/jar">
+				<include name="spp-web-common-lib.jar"></include>
+			</fileset>
+		</scp>
+	</target>
+
+	
+	<!-- 실제 운영중인곳에 배포시 아래 코드 적용해야함 -->
+	<!--
+	<target name="rm">
+			<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+				trust="true" verbose="false" command="cd /lotte/spp_bo/webapp/WEB-INF/lib;find . -name spp-web-common-lib.jar | xargs rm -f " />
+			
+		<antcall target="send" />
+	
+	</target>
+
+		
+	<target name="send">
+		<scp todir="${user.id}:${user.pwd}@${host}:/lotte/spp_bo/webapp/WEB-INF/lib" trust="true">
+			<fileset dir="E:/jenkins-smartpick/jobs/${seq0}-${seq1}. TOMCAT_SPP2014WEB_CM_${seq2}_${deploy.phase}_BUILD_1.6/workspace/spp2014/branches/PROJECT/TomcatProject/spp-web-cm/spp-web-common-lib/jar">
+				<include name="spp-web-common-lib.jar"></include>
+			</fileset>
+		</scp>
+	</target>
+	-->
+
+	
+	
+	
+	
+	
+</project>

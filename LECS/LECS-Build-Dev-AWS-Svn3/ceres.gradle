@@ -1,0 +1,462 @@
+buildscript {
+	
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath group:'org.tmatesoft.svnkit', name:'svnkit', version:'1.8.5'
+		classpath group:'commons-httpclient', name:'commons-httpclient', version:'3.1'
+		classpath files("lib/lecs-tools.jar")       	
+		classpath files("lib/lecs-library.jar")       	
+		classpath group:'jdom', name:'jdom', version:'1.1'
+ 		classpath group:'org.apache.poi', name:'poi', version:'3.7'
+		classpath group:'org.apache.poi', name:'poi-ooxml', version:'3.7'
+		classpath gradleApi() // $GRADLE_HOME/lib 에 있는 라이브러리들중 .guava.jar 를 사용하기 위
+		
+    }
+}
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpException;
+import org.apache.commons.httpclient.NTCredentials;
+import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.commons.httpclient.methods.*;
+
+SharePointListsWebServiceUrl = "http://ceres.lotte.com/NBP/_vti_bin/lists.asmx"
+배포문서_리스트_이름 = "9DEF62BC-C18D-401C-91E3-7089390C2033"
+배포문서_리스트_이름 = "D125335F-01A8-44A4-BB79-711BED920007"
+ViewName = "8BEF93F9-3167-4E51-8FBD-959E2B7A101E"
+def 배포요청서_작업디렉토리 = file("src/request/${DEPLOY}/${TIMESTAMP}")
+
+전체배포요청목록 = null
+
+class 배포요청 {
+	Long id;
+	String 대상시스템;
+	public String 대상시스템_공통;
+	public String 업무구분;
+	public String 제목;
+	public String 배포요청파일명;
+	public String 담당자;
+	public String PL;
+	public String 개발요청자;
+	public String 기획담당자;	
+	public String 진행상태;
+	public String 취소이유;
+	public String 취소이유상세;
+	public String 배포요청사유;
+	public String 배포희망일자;
+	public String 배포희망시간;
+	public String 배포완료일자;
+	public String 개발내용;
+	public String DB_작업_필요_여부;
+	public String DB_작업_내용;
+	public Long DB변경이력_ID;
+	public String 변경영향기능;
+	public String 배포파일;
+	public Date 등록일;
+	public String 배포대상;
+	public String 운영업무_요청관리_ID;
+	public Date 생성일시;
+	public Date 수정일시;
+	
+	public 배포요청(row){
+		 id = row.@ows_ID.text().toLong();
+		 진행상태  = row.@ows_Status.text() 
+		 제목 = row.@ows_LinkTitle.text()
+	 	대상시스템 			= row.@ows_Priority.text()
+	 	대상시스템_공통 		= row.@ows__xb300__xc0c1__xc2dc__xc2a4__xd1.text() == null	? null  : row.@ows__xb300__xc0c1__xc2dc__xc2a4__xd1.text().replaceAll(';#',' ').trim()
+
+	 	업무구분 			= row.@ows__xc5c5__xbb34__xad6c__xbd84_.text()
+	 	제목 				= row.@ows_LinkTitle.text()
+	 	배포요청파일명 		= row.@ows__xbc30__xd3ec__xc694__xccad__xd3.text()?.trim()
+	 	담당자 	= ceresName  (row.@ows_AssignedTo.text())
+	 	PL 		= ceresName  (row.@ows__xb2e8__xc704_PM.text())
+	 	개발요청자 			=  ceresName (row.@ows__xac1c__xbc1c__xc694__xccad__xc7.text())
+	 	기획담당자 			= ceresName (row.@ows__xae30__xd68d__xb2f4__xb2f9__xc7.text())
+	 	진행상태 			= row.@ows_Status.text()
+	 	취소이유 			= row.@ows__xcde8__xc18c__xc774__xc720_.text()
+	 	배포요청사유 			= row.@ows__xbc30__xd3ec__xc694__xccad__xc0.text()
+	 	배포희망일자 			= row.@ows__xbc30__xd3ec__xd76c__xb9dd__xc7.text()
+	 	배포희망시간 			= row.@ows__xbc30__xd3ec__xd76c__xb9dd__xc2.text()
+		배포완료일자			= row.@ows__xbc30__xd3ec__xc644__xb8cc__xc7.text()
+	 	개발내용 			= row.@ows__xacb0__xacfc_.text()
+	 	변경영향기능 			= row.@ows__xbcc0__xacbd__xc601__xd5a5__xae.text()
+	 	배포대상 			= row.@ows__xbc30__xd3ec__xb300__xc0c1_.text()
+	 	운영업무_요청관리_ID 	= row.@ows__xc6b4__xc601__xc5c5__xbb34__x00.text()
+		 
+	}
+	
+	String ceresName (str ){
+		
+		return str == null  ? null : str.contains('#') ? str[(str.indexOf('#')+1)..-1] : str
+	}
+	
+	String toString()  {"배포요청={$id,$제목,$진행상태,$배포요청파일명,  }"}
+	
+	String toReport() {
+			"Ceres ID:${id}\n"		+
+			" 개발요청자: ${개발요청자}\n"	+
+			" 기획담당자: ${기획담당자}\n"		+
+			(운영업무_요청관리_ID == null ? '': " 운영업무_요청관리_ID: ${운영업무_요청관리_ID[0..(운영업무_요청관리_ID.indexOf(';')-1)]}\n")		+
+			" 배포요청파일명: ${배포요청파일명}\n"	+			
+			" 대상시스템: ${대상시스템}\n"	+			
+			(대상시스템_공통 == null ? '': " 대상시스템_공통: ${대상시스템_공통.replaceAll(';#',' ')}\n") +
+			" 진행상태: ${진행상태}\n"	+
+			" 배포완료일자: ${배포완료일자}\n"	+
+			" 제목 : ${제목}\n"	+
+			" 내용 : ${개발내용}\n\n"
+	}
+}
+
+
+ceresProxy = { id, password ->
+	def serviceUrl = "http://ceres.lotte.com/NBP/_vti_bin/lists.asmx"
+	def listName = '9DEF62BC-C18D-401C-91E3-7089390C2033'
+
+	
+	
+	
+	배포요청목록 = { 
+		HttpClient client = new HttpClient();
+		println "$id / $password"
+		NTCredentials creds = new NTCredentials( id, password,"ceres.lotte.com","ceres.lotte.com");
+		client.getParams().setAuthenticationPreemptive(true);
+		client.getState().setCredentials(AuthScope.ANY, creds);
+		PostMethod method = new PostMethod(serviceUrl);
+		
+		def body = """<?xml version="1.0" encoding="utf-8"?>
+	<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+	  <soap:Body>
+	    <GetListItems xmlns="http://schemas.microsoft.com/sharepoint/soap/">
+			<listName>$listName</listName>
+			<viewName>8BEF93F9-3167-4E51-8FBD-959E2B7A101E</viewName>
+			<rowLimit>500</rowLimit>
+			<query>
+		        <Query>
+		            <Where>	
+					<And>
+						<Neq>
+		                    <FieldRef Name="Status" />
+		                    <Value Type="Text">운영 배포됨</Value>
+						</Neq>
+						<Neq>
+		                    <FieldRef Name="Status" />
+		                    <Value Type="Text">취소됨</Value>
+						</Neq>					
+					</And>				
+
+						
+		            </Where>
+					<OrderBy>
+						<FieldRef Name='ID' Ascending='False'></FieldRef>
+					</OrderBy>					
+		        </Query>
+		    </query>
+	    </GetListItems>
+	  </soap:Body>
+	</soap:Envelope>"""	
+
+		byte[] data = body.getBytes('UTF-8')
+		method.setRequestBody(new ByteArrayInputStream(data))
+
+		method.setRequestHeader('Content-Length',"${data.size()}")
+		method.setRequestHeader('Host','ceres.lotte.com')
+		method.setRequestHeader('Content-Type','text/xml; charset=utf-8')
+	
+		method.setRequestHeader('SOAPAction','"http://schemas.microsoft.com/sharepoint/soap/GetListItems"')
+	
+		client.executeMethod(method);
+		String soapResponse = new String(method.getResponseBody(), "UTF-8");
+		println soapResponse
+		xml =  new XmlSlurper().parseText(soapResponse).declareNamespace(
+			soap:'http://schemas.xmlsoap.org/soap/envelope/',
+			xsi:"http://www.w3.org/2001/XMLSchema-instance" ,
+			xsd:"http://www.w3.org/2001/XMLSchema",
+			s:'uuid:BDC6E3F0-6DA3-11d1-A2A3-00AA00C14882',
+			dt:'uuid:C2F41010-65B3-11d1-A29F-00AA00C14882',
+			rs:'urn:schemas-microsoft-com:rowset',
+			z:'#RowsetSchema',
+		
+		)
+		rows =  xml.'soap:Body'.'GetListItemsResponse'.'GetListItemsResult'.'listitems'.'rs:data'.'z:row'
+		return rows.collect { row ->	new 배포요청(row) }
+	}
+	
+	상태갱신 = { ceresId, newStatus, completeDate ->
+		HttpClient client = new HttpClient();
+		NTCredentials creds = new NTCredentials( id, password,"ceres.lotte.com","ceres.lotte.com");
+		client.getParams().setAuthenticationPreemptive(true);
+		client.getState().setCredentials(AuthScope.ANY, creds);
+		PostMethod method = new PostMethod(serviceUrl);
+		
+		def body = 	"""<?xml version="1.0"?>
+	<S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/">
+		<S:Body>
+			<UpdateListItems xmlns="http://schemas.microsoft.com/sharepoint/soap/">
+				<listName>9DEF62BC-C18D-401C-91E3-7089390C2033</listName>
+				<updates>
+					<Batch xmlns:ns2="http://schemas.microsoft.com/sharepoint/soap/" xmlns="" ListVersion="1" OnError="Continue">
+						<Method Cmd="Update" ID="1">
+							<Field Name="ID">$ceresId</Field>
+							<Field Name="Status">$newStatus</Field>""" + ( completeDate == null ? "" : """
+							<Field Name="_xbc30__xd3ec__xc644__xb8cc__xc7">$completeDate</Field>""")+"""
+						</Method>
+					</Batch>
+				</updates>
+			</UpdateListItems>
+		</S:Body>
+	</S:Envelope>"""
+	
+
+		byte[] data = body.getBytes('UTF-8')
+
+		method.setRequestBody(new ByteArrayInputStream(data))
+
+		method.setRequestHeader('Content-Length',"${data.size()}")
+		method.setRequestHeader('Host','ceres.lotte.com')
+		method.setRequestHeader('Content-Type','text/xml; charset=utf-8')
+	
+		method.setRequestHeader('SOAPAction','"http://schemas.microsoft.com/sharepoint/soap/UpdateListItems"')
+	
+		client.executeMethod(method);
+		String soapResponse = new String(method.getResponseBody(), "UTF-8");
+		println soapResponse
+		return method
+	}
+	
+	요청관리_상태갱신 = { ceresId, completeDate ->
+		HttpClient client = new HttpClient();
+		NTCredentials creds = new NTCredentials( id, password,"ceres.lotte.com","ceres.lotte.com");
+		client.getParams().setAuthenticationPreemptive(true);
+		client.getState().setCredentials(AuthScope.ANY, creds);
+		PostMethod method = new PostMethod(serviceUrl);
+		
+		def body = 	"""<?xml version="1.0"?>
+	<S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/">
+		<S:Body>
+			<UpdateListItems xmlns="http://schemas.microsoft.com/sharepoint/soap/">
+				<listName>5D0D322F-9FC8-42FC-ACFA-C7989EE77F14</listName>
+				<updates>
+					<Batch xmlns:ns2="http://schemas.microsoft.com/sharepoint/soap/" xmlns="" ListVersion="1" OnError="Continue">
+						<Method Cmd="Update" ID="1">
+							<Field Name="ID">$ceresId</Field>
+							<Field Name="_xc2e4__xc81c__xbc30__xd3ec__xc7">$completeDate</Field>
+						</Method>
+					</Batch>
+				</updates>
+			</UpdateListItems>
+		</S:Body>
+	</S:Envelope>"""
+	
+
+		byte[] data = body.getBytes('UTF-8')
+
+		method.setRequestBody(new ByteArrayInputStream(data))
+
+		method.setRequestHeader('Content-Length',"${data.size()}")
+		method.setRequestHeader('Host','ceres.lotte.com')
+		method.setRequestHeader('Content-Type','text/xml; charset=utf-8')
+	
+		method.setRequestHeader('SOAPAction','"http://schemas.microsoft.com/sharepoint/soap/UpdateListItems"')
+	
+		client.executeMethod(method);
+		String soapResponse = new String(method.getResponseBody(), "UTF-8");
+		println soapResponse
+		return method
+	}
+	return this
+}
+
+task ceresStatusUpdate << {
+	def ceres = ceresProxy(CERES_ID,CERES_PASSWORD)
+	def buf = ""
+	전체배포요청목록.each { 배포요청 -> 
+		if (배포요청.진행상태 == CERES_상태_갱신_규칙[DEPLOY].filter) {
+			println  "Update state of ceres ID:${배포요청.id} to ${CERES_상태_갱신_규칙[DEPLOY].newStatus}"
+			ceres.상태갱신( 배포요청.id, CERES_상태_갱신_규칙[DEPLOY].newStatus , null) 
+		}
+	}  
+}
+
+task ceresCompleteStatusUpdate << {
+	def ceres = ceresProxy(CERES_ID,CERES_PASSWORD)
+	def buf = ""
+	전체배포요청목록.each { 배포요청 -> 
+		if (배포요청.진행상태 == CERES_상태_갱신_규칙[DEPLOY].filter) {
+			println  "Update state of ceres ID:${배포요청.id} to ${CERES_상태_갱신_규칙[DEPLOY].newStatus}"
+			ceres.상태갱신( 배포요청.id, CERES_상태_갱신_규칙[DEPLOY].newStatus , CURRENT.format("yyyy-MM-dd HH:mm:ss")) 
+			if (CERES_상태_갱신_규칙[DEPLOY].newStatus == "운영 배포됨") {
+				ceres.요청관리_상태갱신( 배포요청.운영업무_요청관리_ID.substring(0, 배포요청.운영업무_요청관리_ID.indexOf(";")), , CURRENT.format("yyyy-MM-dd HH:mm:ss")) 
+			}
+		}
+	}  
+}
+
+
+
+wget = { url ->
+	HttpClient client = new HttpClient();
+	NTCredentials creds = new NTCredentials(CERES_ID,CERES_PASSWORD,"ceres.lotte.com","ceres.lotte.com");
+	client.getParams().setAuthenticationPreemptive(true);
+	client.getState().setCredentials(AuthScope.ANY, creds);
+
+	def method = new GetMethod(url);
+	client.executeMethod(method)
+	return method
+}
+
+
+
+
+download반영요청서 = {workDir,  fileName ->
+	if (fileName.contains(".xls") == false){
+		fileName = fileName +".xlsx"
+	}
+	println "Download $fileName"
+	
+	m = fileName =~ /\d\d\d\d\d\d\d\d/
+//  대상_폴더  = m[0][-4..-1] 변경 	대상_폴더  = m[0][-6..-1]
+	대상_폴더  = m[0][-6..-1]
+	
+	def path = URLEncoder.encode(대상_폴더,"UTF-8")
+	def encodedFileName = URLEncoder.encode("${fileName}","UTF-8")
+	
+	def url =  "http://ceres.lotte.com/NBP/02/${path}/${encodedFileName}"
+	println url
+	method = wget(url)
+	
+	workDir.mkdirs()
+	
+	println "Status Code: ${method.getStatusCode()}"
+	if (method.getStatusCode() == 200){
+		def a =fileName
+		def b = (a[0..(a.indexOf('.'))])
+		def c = (a[(a.indexOf('.')..-1)])
+		def filenameToSave = b.bytes.encodeBase64().toString() + c
+		println "Save to ${filenameToSave}"
+		new File(workDir, filenameToSave).leftShift(method.getResponseStream())
+	}
+	else {
+		throw new FileNotFoundException("$fileName is not found")
+	}	
+}
+
+download반영요청서All = { workDir, 배포요청목록  ->
+	def 실패목록 = []
+	배포요청목록.each {
+		try {
+			download반영요청서(workDir, it.배포요청파일명)
+		}
+		catch(Exception ex){
+			실패목록.add(it.id)
+		}
+	}
+	
+	if (실패목록.size() > 0){
+		println "다운로드 실패목록 : $실패목록"
+		throw RuntimeException("다운로드 실패 $실패목록")
+	}
+}
+
+미사용_목록제거 = { it.진행상태 != "취소됨" && it.진행상태 != "운영 배포됨" && it.진행상태 != "완료" }
+
+배포요청이_Only_DB가_아니라면 = {it.대상시스템_공통 == null || it.대상시스템_공통 != "DB" }
+
+배포요청Filter = [
+	tst:{ it -> ["신청", "개발 배포됨", "개발확인", "스테이지 배포됨", "스테이지확인"].find { state->
+			return it.진행상태 == state && 배포요청이_Only_DB가_아니라면(it) } != null },
+	stg:{ it -> 
+		["개발확인", "스테이지 배포됨", "스테이지확인"].find { state-> it.진행상태 == state  && 배포요청이_Only_DB가_아니라면(it) }  != null },
+	prd:{ it -> ["스테이지확인"].find { state->it.진행상태 == state && 배포요청이_Only_DB가_아니라면(it) } != null },	
+	emergencyStg:{ it -> ["긴급(즉시)"].find { state->it.배포희망시간 == state && 배포요청이_Only_DB가_아니라면(it) } != null },	
+	emergency:{ it -> ["긴급(즉시)"].find { state->it.배포희망시간 == state && 배포요청이_Only_DB가_아니라면(it) } != null },	
+	
+]
+
+fetch배포요청목록All = {
+	list =  ceresProxy(CERES_ID,CERES_PASSWORD).배포요청목록()	
+	if (System.properties['ceresIds'] != null){
+		ceresIds = System.properties['ceresIds']
+		println "CERES ID 필터링 정보가 있습니다. : $ceresIds"
+		ceresIdsTokens = ceresIds.split(",").collect { Long.parseLong(it.trim())}
+		list = list.findAll {  
+			ceresIdsTokens.contains(it.id)
+		}
+	}
+	list.each { println ":::"+it}
+	
+}
+
+
+fetch배포요청목록 = { 
+	fetch배포요청목록All().findAll(미사용_목록제거).findAll(배포요청Filter[DEPLOY])
+}
+
+
+save배포요청목록 =  { dir, 배포요청목록 ->
+	toSave = new File(dir, "list.txt")
+	
+	배포요청목록.each {   println it.toReport()
+		toSave.append(it.toReport())+'\n' 
+	}
+}
+
+
+
+excludeDB = {배포요청List->
+	println 배포요청List
+	return 배포요청List.findAll { 배포요청 ->
+		배포요청목록.대상시스템_공통 == null || 배포요청.find { 대상시스템_공통-> 대상시스템_공통.contains("DB") } == false
+	}
+}
+
+전체배포요청목록Fetch = {
+	전체배포요청목록 = fetch배포요청목록()
+}
+
+task ceresRequestList << {
+	전체배포요청목록Fetch()
+}
+
+
+
+
+task updateCeres << {
+	전체배포요청목록Fetch()
+	ceresStatusUpdate.execute();	
+}
+
+task updateCeresComplete << {
+	전체배포요청목록Fetch()
+	ceresCompleteStatusUpdate.execute();	
+}
+
+
+task downloadCeresRequest << {
+	전체배포요청목록Fetch()
+	전체배포요청목록.each { println "## $it"}
+	배포요청서_작업디렉토리.mkdirs()
+	save배포요청목록(배포요청서_작업디렉토리, 전체배포요청목록 )
+	download반영요청서All (배포요청서_작업디렉토리, 전체배포요청목록 )	
+}
+
+
+
+task cccc << {
+	p = ceresProxy(CERES_ID,CERES_PASSWORD)
+	def c1= new GregorianCalendar(2012, Calendar.JULY, 18, 0, 0, 0, 0)
+	
+	p.상태갱신(1242,"운영 배포됨",  String.format('%tF %<tT', c1))
+
+
+	[
+		1525,1524,1523,1522,1521,1520,1519,1518,1517,1516,1515,1512,1511,1510,1509,1508,1505,1504,1503,1502,1498,1497,1496,1495,1494,1493,1492,1491,1490,1488,1487,1486,1484,1483,1482,1481,1480,1479,1478,1477,1476,1475,1474,1473,1472,1471,1470,1469,1468,1467,1466,1465,1464,1463,1462,1461,1460,1459,1458,1457,1456,1455,1454,1453,1452,1451,1449,1448,1447,1446,1445,1444,1443,1442,1441,1440,1439,1438,1437,1436,1435,1434,1433,1431,1430,1429,1428,1427,1426,1425,1424,1423,1422,1421,1420,1419,1418,1417,1416,1415,1414,1413,1412,1411,1410,1409,1408,1407,1406,1405,1404,1403,1402,1401,1400,1399,1398,1397,1396,1395,1394,1391,1390,1389,
+	]
+	.each { 
+		ceredId ->
+		
+		p.상태갱신(ceredId,"운영 배포됨",  String.format('%tF %<tT', c1))
+	
+	}
+	//p.상태갱신(1161,"취소됨",  CURRENT.format("yyyy-MM-dd HH:mm:ss"))
+}

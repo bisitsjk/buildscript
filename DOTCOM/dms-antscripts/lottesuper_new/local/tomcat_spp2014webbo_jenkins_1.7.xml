@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="tomcat_spp2014webbo_jenkins_1.7">
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties">
+		<classpath>
+			<pathelement location="C:/Ant-1.8.2/lib/ant-contrib-1.0b3.jar"/>
+		</classpath>
+	</taskdef>
+	
+	<macrodef name="substring">
+		<attribute name="property"/>
+		<attribute name="string"/>
+		<attribute name="start"/>
+		<attribute name="end"/>
+		<sequential>
+			<script language="javascript">
+				self.getProject().setNewProperty("@{property}", "@{string}".substring(@{start}, @{end}));
+			</script>
+		</sequential>
+	</macrodef>	
+	
+	<macrodef name="propertyvalue">
+		<attribute name="property"/>
+		<attribute name="value"/>
+		<sequential>
+			<property name="@{property}" value="${@{value}}"/>
+		</sequential>
+	</macrodef>
+
+	<!-- BUILD -->
+	<!-- **************************************************************** -->
+	<!-- Webbo 서비스는 왜 빌드할때 /src/main/resources 파일들(*.properties) 및 폴더들(message,sqls,spring) 을 /src/main/webapp/classes 로 복사하지 않는가? -->
+	<!-- *.properties 파일들은 어차피 /spp-web-bo/deploy/real/*.properties 를 복사하기때문에 상관은 없는데 폴더들(message,sqls,spring) 은 왜 복사하지 않는가? -->
+	<!-- 서버에서는 /lotte/spp_bo/webapp/WEB-INF/resources 가 그대로 배포가 되어있음 -->
+	<target name="build">
+		<!-- E:/jenkins-smartpick/jobs/${seq0}-${seq1}. TOMCAT_SPP2014WEB_BO_${seq2}_${deploy.phase}_BUILD_1.7/workspace/spp2014/branches/PROJECT/TomcatProject/spp-web-bo/src/main/webapp/WEB-INF/classes -->
+	    <mkdir dir="E:/jenkins-smartpick/jobs/${seq0}-${seq1}. TOMCAT_SPP2014WEB_BO_${seq2}_${deploy.phase}_BUILD_1.7/workspace/spp2014/branches/PROJECT/TomcatProject/spp-web-bo/src/main/webapp/WEB-INF/classes" />
+		
+		<!-- main source -->
+		<path id="classpath">
+			<fileset dir="${java.home.dir}/jre/lib">
+				<include name="rt.jar" />
+			</fileset>
+			
+			<!-- 공통라이브러리 Lib의 Jar 파일들 참조 -->
+			<fileset dir="E:/jenkins-smartpick/jobs/${cseq0}-${cseq1}. TOMCAT_SPP2014WEB_CM_${cseq2}_${deploy.phase}_BUILD_1.7/workspace/spp2014/branches/PROJECT/TomcatProject/spp-web-cm/spp-web-common-lib/LIB-INF/common-lib">
+				<include name="*.jar" />
+			</fileset>
+			
+			<!-- 공통라이브러리 컴파일된 class 파일들의 Jar 참조 -->
+			<fileset dir="E:/jenkins-smartpick/jobs/${cseq0}-${cseq1}. TOMCAT_SPP2014WEB_CM_${cseq2}_${deploy.phase}_BUILD_1.7/workspace/spp2014/branches/PROJECT/TomcatProject/spp-web-cm/spp-web-common-lib/jar">
+				<include name="spp-web-common-lib.jar" />
+			</fileset>			
+			
+			<!-- WEBBO Lib의 Jar 파일들 참조 -->
+			<fileset dir="E:/jenkins-smartpick/jobs/${seq0}-${seq1}. TOMCAT_SPP2014WEB_BO_${seq2}_${deploy.phase}_BUILD_1.7/workspace/spp2014/branches/PROJECT/TomcatProject/spp-web-bo/src/main/webapp/WEB-INF/lib">
+				<include name="*.jar" />
+			</fileset>			
+		</path>
+	
+		<javac classpathref="classpath"  
+			srcdir="E:/jenkins-smartpick/jobs/${seq0}-${seq1}. TOMCAT_SPP2014WEB_BO_${seq2}_${deploy.phase}_BUILD_1.7/workspace/spp2014/branches/PROJECT/TomcatProject/spp-web-bo/src/main/java"			
+			destdir="E:/jenkins-smartpick/jobs/${seq0}-${seq1}. TOMCAT_SPP2014WEB_BO_${seq2}_${deploy.phase}_BUILD_1.7/workspace/spp2014/branches/PROJECT/TomcatProject/spp-web-bo/src/main/webapp/WEB-INF/classes"
+			target="1.7"
+			failonerror="on" debug="on"
+			encoding="utf-8" 
+			nowarn="on" 
+			deprecation="on"
+			includeantruntime="false" />
+		
+		<!-- Java 파일외에는 *.properties , *.xml 파일들이 없는거 같은데 무엇을 복사하는것인가? -->
+		<!-- Java 파일들을 제외하고 나머지 파일들을 복사함 -->
+		<copy todir="E:/jenkins-smartpick/jobs/${seq0}-${seq1}. TOMCAT_SPP2014WEB_BO_${seq2}_${deploy.phase}_BUILD_1.7/workspace/spp2014/branches/PROJECT/TomcatProject/spp-web-bo/src/main/webapp/WEB-INF/classes" overwrite="true">
+			<fileset dir="E:/jenkins-smartpick/jobs/${seq0}-${seq1}. TOMCAT_SPP2014WEB_BO_${seq2}_${deploy.phase}_BUILD_1.7/workspace/spp2014/branches/PROJECT/TomcatProject/spp-web-bo/src/main/java">
+				<include name="**/*"/>
+				<exclude name="**/*.java"/>
+		    </fileset>
+		</copy>
+		<antcall target="zip"/>
+	</target>	
+	
+	<target name="zip">
+	<zip destfile="E:/jenkins-smartpick/jobs/${seq0}-${seq1}. TOMCAT_SPP2014WEB_BO_${seq2}_${deploy.phase}_BUILD_1.7/workspace/spp2014/pack/PROJECT/classes1.7.zip"
+	    basedir="E:/jenkins-smartpick/jobs/${seq0}-${seq1}. TOMCAT_SPP2014WEB_BO_${seq2}_${deploy.phase}_BUILD_1.7/workspace/spp2014/branches/PROJECT/TomcatProject/spp-web-bo/src/main/webapp/WEB-INF"
+		includes="classes/**"
+		/>
+	
+		<antcall target="rm"/>
+	
+	</target>
+	
+	
+	<!-- 실제 DocRoot 경로가 아님. 테스트를 위한 경로임. -->
+	<target name="rm">
+			<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+				trust="true" verbose="false" command="cd /lotte/spp_bo/tomcat_webapp/WEB-INF;find . -name classes1.7.zip | xargs rm -f " />
+
+			<antcall target="send" />
+		
+	</target>
+
+	
+	<target name="send">
+		<scp todir="${user.id}:${user.pwd}@${host}:/lotte/spp_bo/tomcat_webapp/WEB-INF" trust="true">
+			<fileset dir="E:/jenkins-smartpick/jobs/${seq0}-${seq1}. TOMCAT_SPP2014WEB_BO_${seq2}_${deploy.phase}_BUILD_1.7/workspace/spp2014/pack/PROJECT">
+				<include name="classes1.7.zip"></include>
+			</fileset>
+		</scp>
+		
+		<antcall target="unzip"/>
+	
+	</target>	
+	
+	<target name="unzip">
+		<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" command="cd /lotte/spp_bo/tomcat_webapp/WEB-INF;unzip -o -q  ./classes1.7.zip" />
+	</target>
+
+	
+	
+	<!--실제 운영중인곳에 배포시 아래 코드 적용해야함  -->
+	<!--
+	<target name="rm">
+			<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+				trust="true" verbose="false" command="cd /lotte/spp_bo/webapp/WEB-INF;find . -name classes1.7.zip | xargs rm -f " />
+
+			<antcall target="send" />
+		
+	</target>
+
+	
+	<target name="send">
+		<scp todir="${user.id}:${user.pwd}@${host}:/lotte/spp_bo/webapp/WEB-INF" trust="true">
+			<fileset dir="E:/jenkins-smartpick/jobs/${seq0}-${seq1}. TOMCAT_SPP2014WEB_BO_${seq2}_${deploy.phase}_BUILD_1.7/workspace/spp2014/pack/PROJECT">
+				<include name="classes1.7.zip"></include>
+			</fileset>
+		</scp>
+		
+		<antcall target="unzip"/>
+	
+	</target>	
+	
+	<target name="unzip">
+		<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" command="cd /lotte/spp_bo/webapp/WEB-INF;unzip -o -q  ./classes1.7.zip" />
+	</target>
+	-->
+
+
+
+	
+	<target name="ssh_bo_precompile">
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" command="cd deploy;./ssh_bojspcompile" />
+	</target>
+
+
+</project>

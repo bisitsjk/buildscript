@@ -1,0 +1,44 @@
+import groovy.io.*;
+
+// settings.gradle은 gradle에서 멀티 프로젝트에 대한 설정 파일이다. 
+
+// 프로젝트 소스들의 루트 위치를 환경변수에서 가져와 확인한다. 
+// 환경변수나 gradle 실행시 옵션으로 주어져야 한다. 
+// JENKINS에서 환경변수로 주어지거나 실행 옵션에서 '-PPROJECT_ROOT_DIR=경로'' 형태로 주어지는 게 일반적이다. 
+
+assert System.properties['SOURCE_ROOT_DIR'] != null, '환경변수 SOURCE_ROOT_DIR 을 정확하게 주었는지 확인하세요.'	
+def 소스_루트_경로 = file(System.properties['SOURCE_ROOT_DIR'])
+assert 소스_루트_경로.isDirectory(), "소스 루트 경로는 디렉토리여야 합니다."
+println "소스 루트 경로: ${소스_루트_경로}"
+
+
+// 모든 프로젝트는 LECS-Library에 의존하므로 기본으로 포함한다.
+include 'LECS-Library'
+
+// LECS에서는 빌드때마다 포함되어야 하는 프로젝트가 매우 가변적이다. 
+// 설정에서 프로젝트 목록을 하드코딩 해서는 요구사항을 만족시킬수 없기 때문에, 프로젝트 루트 소스 디렉토리를 검사하여 대상 프로젝트 목록을 추출하여 iclude한다. 
+// 이렇게 하면, 프로젝트 빌드 구성이 체크아웃 받은 소스 목록에 따라 결정된다. 
+// 폴더명 필터링으로 불필요한 디렉토리는 배제한다. 
+소스_루트_경로.eachFileMatch  FileType.DIRECTORIES, ~/LECS-(Store|Platform|Batch).*/,  { 프로젝트_경로 ->
+	// 불필요한 디렉토리가 서브 프로젝트로 추가 되는 것을 막기 위한 필터링
+	// 서브 프로젝트가 되기 위해서는 빌드 스크립트를 포함하고 있어야 한다.
+	if ( new File(프로젝트_경로, 'build.gradle').exists()) {
+		include 프로젝트_경로.name	
+	}
+	
+}
+
+println "서브 프로젝트:"
+// rootProject는 Gradle에서 제공하는 객체. 멀티 프로젝트를 총괄하는 루트 프로젝트에 대응한다. 
+rootProject.children.each { 서브프로젝트 -> 
+	println "\t${서브프로젝트.name}"
+	
+	// 중요: Gradle은 기본적으로 루트 프로젝트 하위에 서브 프로젝트가 있다고 가정한다. (루트 프로젝트가 빌드 스트립트를 포함한다)
+	// 하지만 LECS-Build 환경에서는 빌드 스크립트의 하위경로가 아닌 곳(이클립스 워크스페이스나, 젠킨스 워크스페이스)에  빌드 대상 프로젝트들을 체크아웃 받게 된다. 
+	// 따라서 서브 프로젝트에 프로젝트 경로를 지정해 주어야한 정상적으로 빌드 되게 된다. 
+    서브프로젝트.projectDir = new File(소스_루트_경로, 서브프로젝트.name) 
+    assert 서브프로젝트.projectDir.isDirectory() , "프로젝트 경로(${서브프로젝트.projectDir})는 디렉토리여야 합니다."
+    assert 서브프로젝트.buildFile.isFile() , "프로젝트 경로(${서브프로젝트.projectDir})에는 빌드 스크립트 build.gradle이 있어야 합니다."
+}
+
+

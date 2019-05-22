@@ -1,0 +1,475 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lecs20.deploy" basedir="."><!-- Global Param: ${target} -->
+	
+	<tstamp>
+		<format property="TSTAMP" pattern="HH"/>
+	</tstamp>
+	
+	<property file="pwd.properties" />
+	
+	<property name="work.path" value="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace" />
+		
+	<property name="stg.bo.war.path" value="E:/jenkins-lecs2jenkins/jobs/${target}.CD.BOWAS/workspace/BOWAS" />
+	<property name="stg.bo.web.path" value="E:/jenkins-lecs2jenkins/jobs/${target}.CD.BOWEB/workspace/BOWEB" />
+	<property name="bo.war.path1" value="E:/jenkins-lecs2jenkins/jobs/${target}.CD.BOWAS1/workspace/BOWAS" />
+	<property name="bo.web.path1" value="E:/jenkins-lecs2jenkins/jobs/${target}.CD.BOWEB1/workspace/BOWEB" />
+	<property name="cc.web.path1" value="E:/jenkins-lecs2jenkins/jobs/${target}.CD.CCWEB1/workspace/BOWEB" />
+	<property name="po.web.path1" value="E:/jenkins-lecs2jenkins/jobs/${target}.CD.POWEB1/workspace/BOWEB" />
+	<property name="bo.war.path2" value="E:/jenkins-lecs2jenkins/jobs/${target}.CD.BOWAS2/workspace/BOWAS" />
+	<property name="bo.web.path2" value="E:/jenkins-lecs2jenkins/jobs/${target}.CD.BOWEB2/workspace/BOWEB" />
+	<property name="cc.web.path2" value="E:/jenkins-lecs2jenkins/jobs/${target}.CD.CCWEB2/workspace/BOWEB" />
+	<property name="po.web.path2" value="E:/jenkins-lecs2jenkins/jobs/${target}.CD.POWEB2/workspace/BOWEB" />
+	<property name="bo.src.path" value="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/build/build/LECS-Platform-BO" />
+		
+	<property name="cc.war.path1" value="E:/jenkins-lecs2jenkins/jobs/${target}.CD.CCWAS1/workspace/CCWAS" />
+	<property name="cc.war.path2" value="E:/jenkins-lecs2jenkins/jobs/${target}.CD.CCWAS2/workspace/CCWAS" />
+	<property name="cc.src.path" value="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/build/build/Cc" />
+		
+	<property name="po.war.path1" value="E:/jenkins-lecs2jenkins/jobs/${target}.CD.POWAS1/workspace/POWAS" />
+	<property name="po.war.path2" value="E:/jenkins-lecs2jenkins/jobs/${target}.CD.POWAS2/workspace/POWAS" />
+	<property name="po.src.path" value="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/build/build/Po" />
+	
+	<property name="lps.war.path" value="E:/jenkins-lecs2jenkins/jobs/${target}.CD.LPSWAS/workspace/LPSWAS" />
+	<property name="lps.web.path" value="E:/jenkins-lecs2jenkins/jobs/${target}.CD.LPSWEB/workspace/LPSWEB" />
+	<property name="lps.src.path" value="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/build/build/LECS-Platform-LPS" />
+
+	<property name="oa.war.path" value="E:/jenkins-lecs2jenkins/jobs/${target}.CD.OAWAS/workspace/OAWAS" />
+	<property name="oa.src.path" value="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/build/build/Oa" />
+
+	<property name="batch.war.path" value="E:/jenkins-lecs2jenkins/jobs/${target}.CD.BATCH/workspace/BATCH" />
+	<property name="batch.src.path" value="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/build/build/LECS-Batch" />
+
+	<property name="wms.war.path" value="E:/jenkins-lecs2jenkins/jobs/${target}.CD.WMSWAS/workspace/WMSWAS" />
+	<property name="wms.src.path" value="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/build/build/Wms" />
+	
+	<property name="mj.war.path" value="E:/jenkins-lecs2jenkins/jobs/${target}.CD.MJWAS/workspace/MJWAS" />
+	<property name="mj.web.path" value="E:/jenkins-lecs2jenkins/jobs/${target}.CD.MJWEB/workspace/MJWEB" />
+	<property name="mj.img.path" value="E:/jenkins-lecs2jenkins/jobs/${target}.CD.MJIMG/workspace/MJIMG" />
+	<property name="mj.src.path" value="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/build/build/LECS-Store-Muji" />
+	
+	<property name="uq.war.path" value="E:/jenkins-lecs2jenkins/jobs/${target}.CD.UQWAS/workspace/UQWAS" />
+	<property name="uq.web.path" value="E:/jenkins-lecs2jenkins/jobs/${target}.CD.UQWEB/workspace/UQWEB" />
+	<property name="uq.img.path" value="E:/jenkins-lecs2jenkins/jobs/${target}.CD.UQIMG/workspace/UQIMG" />
+	<property name="uq.src.path" value="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/build/build/LECS-Store-New-Uniqlo" />
+	
+	<property name="uqoa.war.path" value="E:/jenkins-lecs2jenkins/jobs/${target}.CD.UQAPIWAS/workspace/UQAPIWAS" />
+	<property name="uqoa.web.path" value="E:/jenkins-lecs2jenkins/jobs/${target}.CD.UQAPIWEB/workspace/UQAPIWEB" />
+	<property name="uqoa.src.path" value="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/build/build/LECS-Store-New-Uniqlo-FR-API" />
+	
+	<property name="gu.war.path" value="E:/jenkins-lecs2jenkins/jobs/${target}.CD.GUWAS/workspace/GUWAS" />
+	<property name="gu.web.path" value="E:/jenkins-lecs2jenkins/jobs/${target}.CD.GUWEB/workspace/GUWEB" />
+	<property name="gu.img.path" value="E:/jenkins-lecs2jenkins/jobs/${target}.CD.GUIMG/workspace/GUIMG" />
+	<property name="gu.src.path" value="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/build/build/LECS-Store-GU" />
+
+	<property name="tom.ins.path" value="/usr2/apache-tomcat/instance" />
+	
+	<target name="CH.TIME">
+		<replace dir="e:/jenkins-lecs2jenkins/deployResult/l20aws/rel" value="${TSTAMP}">
+				<include name="result.txt"/>
+				<replacetoken>deploy_time</replacetoken>
+		</replace>
+	</target>
+	
+	<target name="INIT.TST">
+		<delete dir="E:\jenkins-lecs2jenkins\jobs\AWS.UPDATE.TST\workspace\src\LECS-Batch"/>
+		<delete dir="E:\jenkins-lecs2jenkins\jobs\AWS.UPDATE.TST\workspace\src\app"/>
+	</target>
+	
+	<target name="INIT.PRD">
+		<delete dir="E:\jenkins-lecs2jenkins\jobs\AWS.UPDATE.PRD\workspace\src\LECS-Batch"/>
+		<delete dir="E:\jenkins-lecs2jenkins\jobs\AWS.UPDATE.PRD\workspace\src\app"/>
+	</target>
+	
+	<target name="TMP.DELETE">
+		<delete dir="E:\usr3\lecs20\mergeTool\merge"/>
+	</target>
+	
+	<target name="AWS.TMP.DELETE">
+		<delete dir="E:/usr3/mergeTool/l20aws/prd/merge"/>
+	</target>
+	
+	<!-- INIT -->
+		
+	<target name="INIT.BO">
+		<delete dir="${bo.war.path1}"/>
+		<mkdir dir="${bo.war.path1}"/>
+		<delete dir="${bo.web.path1}"/>
+		<mkdir dir="${bo.web.path1}"/>
+		<delete dir="${cc.web.path1}"/>
+		<mkdir dir="${cc.web.path1}"/>
+		<delete dir="${po.web.path1}"/>
+		<mkdir dir="${po.web.path1}"/>
+		<delete dir="${cc.war.path1}"/>
+		<mkdir dir="${cc.war.path1}"/>
+		<delete dir="${po.war.path1}"/>
+		<mkdir dir="${po.war.path1}"/>
+		<delete dir="${bo.war.path2}"/>
+		<mkdir dir="${bo.war.path2}"/>
+		<delete dir="${bo.web.path2}"/>
+		<mkdir dir="${bo.web.path2}"/>
+		<delete dir="${cc.web.path2}"/>
+		<mkdir dir="${cc.web.path2}"/>
+		<delete dir="${po.web.path2}"/>
+		<mkdir dir="${po.web.path2}"/>
+		<delete dir="${cc.war.path2}"/>
+		<mkdir dir="${cc.war.path2}"/>
+		<delete dir="${po.war.path2}"/>
+		<mkdir dir="${po.war.path2}"/>
+	</target>
+		
+	<target name="STG.INIT.BO">
+		<delete dir="${stg.bo.war.path}"/>
+		<mkdir dir="${stg.bo.war.path}"/>
+		<delete dir="${stg.bo.web.path}"/>
+		<mkdir dir="${stg.bo.web.path}"/>
+	</target>
+	
+	<target name="INIT.LPS">
+		<delete dir="${lps.war.path}"/>
+		<mkdir dir="${lps.war.path}"/>
+		<delete dir="${lps.web.path}"/>
+		<mkdir dir="${lps.web.path}"/>
+	</target>
+	
+	<target name="INIT.BATCH">
+		<delete dir="${batch.war.path}"/>
+		<mkdir dir="${batch.war.path}"/>
+	</target>
+	
+	<target name="INIT.WMS">
+		<delete dir="${wms.war.path}"/>
+		<mkdir dir="${wms.war.path}"/>
+	</target>
+	
+	<target name="INIT.MJ">
+		<delete dir="${mj.war.path}"/>
+		<mkdir dir="${mj.war.path}"/>
+		<delete dir="${mj.web.path}"/>
+		<mkdir dir="${mj.web.path}"/>
+		<delete dir="${mj.img.path}"/>
+		<mkdir dir="${mj.img.path}"/>
+	</target>
+	
+	<target name="INIT.UQ">
+		<delete dir="${uq.war.path}"/>
+		<mkdir dir="${uq.war.path}"/>
+		<delete dir="${uq.web.path}"/>
+		<mkdir dir="${uq.web.path}"/>
+		<delete dir="${uq.img.path}"/>
+		<mkdir dir="${uq.img.path}"/>
+	</target>
+	
+	<target name="INIT.OA">
+		<delete dir="${oa.war.path}"/>
+		<mkdir dir="${oa.war.path}"/>
+	</target>
+	
+	<target name="INIT.UQAPI">
+		<delete dir="${uqoa.war.path}"/>
+		<mkdir dir="${uqoa.war.path}"/>
+		<delete dir="${uqoa.web.path}"/>
+		<mkdir dir="${uqoa.web.path}"/>
+	</target>
+	
+	<target name="INIT.GU">
+		<delete dir="${gu.war.path}"/>
+		<mkdir dir="${gu.war.path}"/>
+		<delete dir="${gu.web.path}"/>
+		<mkdir dir="${gu.web.path}"/>
+		<delete dir="${gu.img.path}"/>
+		<mkdir dir="${gu.img.path}"/>
+	</target>
+	
+	<!-- COPY.COMMON.XML -->
+		
+	    <target name="TST.COMMON.COPY">
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.TST/workspace/src/app/classes/config/spring/bean/common.xml.aws" tofile="/Source/lecs2/jobs/${JOB_NAME}/workspace/build/build/${svn.name}/app/WEB-INF/classes/config/spring/bean/common.xml" overwrite="true"/>
+	    </target>
+	
+	<!-- FILECOPY -->
+		
+		<target name="BO.WAR.FILECOPY">	
+			<copy tofile="${bo.war.path1}/ROOT.war">
+				<fileset dir="${bo.src.path}">
+					<include name="LECS-Platform-BO-WEBAPP*.zip"/>
+				</fileset>
+			</copy>
+			<copy tofile="${bo.war.path2}/ROOT.war">
+				<fileset dir="${bo.src.path}">
+					<include name="LECS-Platform-BO-WEBAPP*.zip"/>
+				</fileset>
+			</copy>
+		</target>
+		
+		<target name="STG.BO.WAR.FILECOPY">	
+			<copy tofile="${stg.bo.war.path}/ROOT.war">
+				<fileset dir="${bo.src.path}">
+					<include name="LECS-Platform-BO-WEBAPP*.zip"/>
+				</fileset>
+			</copy>
+		</target>
+		
+		<target name="BO.WEB.FILECOPY">	
+			<copy tofile="${bo.web.path1}/BOWEB.zip">
+				<fileset dir="${bo.src.path}">
+					<include name="LECS-Platform-BO-CONTENT*.zip"/>
+				</fileset>
+			</copy>
+			<copy tofile="${bo.web.path2}/BOWEB.zip">
+				<fileset dir="${bo.src.path}">
+					<include name="LECS-Platform-BO-CONTENT*.zip"/>
+				</fileset>
+			</copy>
+			<copy tofile="${cc.web.path1}/BOWEB.zip">
+				<fileset dir="${bo.src.path}">
+					<include name="LECS-Platform-BO-CONTENT*.zip"/>
+				</fileset>
+			</copy>
+			<copy tofile="${cc.web.path2}/BOWEB.zip">
+				<fileset dir="${bo.src.path}">
+					<include name="LECS-Platform-BO-CONTENT*.zip"/>
+				</fileset>
+			</copy>
+			<copy tofile="${po.web.path1}/BOWEB.zip">
+				<fileset dir="${bo.src.path}">
+					<include name="LECS-Platform-BO-CONTENT*.zip"/>
+				</fileset>
+			</copy>
+			<copy tofile="${po.web.path2}/BOWEB.zip">
+				<fileset dir="${bo.src.path}">
+					<include name="LECS-Platform-BO-CONTENT*.zip"/>
+				</fileset>
+			</copy>
+		</target>
+		
+		<target name="STG.BO.WEB.FILECOPY">	
+			<copy tofile="${stg.bo.web.path}/BOWEB.zip">
+				<fileset dir="${bo.src.path}">
+					<include name="LECS-Platform-BO-CONTENT*.zip"/>
+				</fileset>
+			</copy>
+		</target>
+		
+		<target name="BO.RULE.FILECOPY">	
+			<copy tofile="${bo.war.path1}/RULE.zip">
+				<fileset dir="${bo.src.path}">
+					<include name="BO-UPLOAD-RULES*.zip"/>
+				</fileset>
+			</copy>
+			<copy tofile="${bo.war.path2}/RULE.zip">
+				<fileset dir="${bo.src.path}">
+					<include name="BO-UPLOAD-RULES*.zip"/>
+				</fileset>
+			</copy>
+		</target>
+		
+		<target name="STG.BO.RULE.FILECOPY">	
+			<copy tofile="${stg.bo.war.path}/RULE.zip">
+				<fileset dir="${bo.src.path}">
+					<include name="BO-UPLOAD-RULES*.zip"/>
+				</fileset>
+			</copy>
+		</target>
+	
+	<target name="CC.WAR.FILECOPY">	
+		<copy tofile="${cc.war.path1}/ROOT.war">
+			<fileset dir="${cc.src.path}">
+				<include name="Cc-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+		<copy tofile="${cc.war.path2}/ROOT.war">
+			<fileset dir="${cc.src.path}">
+				<include name="Cc-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="PO.WAR.FILECOPY">	
+		<copy tofile="${po.war.path1}/ROOT.war">
+			<fileset dir="${po.src.path}">
+				<include name="Po-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+		<copy tofile="${po.war.path2}/ROOT.war">
+			<fileset dir="${po.src.path}">
+				<include name="Po-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+		
+		<target name="LPS.WAR.FILECOPY">	
+			<copy tofile="${lps.war.path}/ROOT.war">
+				<fileset dir="${lps.src.path}">
+					<include name="LECS-Platform-LPS-WEBAPP*.zip"/>
+				</fileset>
+			</copy>
+		</target>
+		
+		<target name="LPS.WEB.FILECOPY">	
+			<copy tofile="${lps.web.path}/LPSWEB.zip">
+				<fileset dir="${lps.src.path}">
+					<include name="LECS-Platform-LPS-CONTENT*.zip"/>
+				</fileset>
+			</copy>
+		</target>
+		
+		<target name="OA.WAR.FILECOPY">	
+			<copy tofile="${oa.war.path}/ROOT.war">
+				<fileset dir="${oa.src.path}">
+					<include name="Oa-WEBAPP*.zip"/>
+				</fileset>
+			</copy>
+		</target>
+		
+		<target name="WMS.WAR.FILECOPY">	
+			<copy tofile="${wms.war.path}/ROOT.war">
+				<fileset dir="${wms.src.path}">
+					<include name="Wms-WEBAPP*.zip"/>
+				</fileset>
+			</copy>
+		</target>
+		
+		<target name="TST.BATCH.WAR.FILECOPY">	
+			<copy tofile="${batch.war.path}/Batch.zip">
+				<fileset dir="${batch.src.path}">
+					<include name="Batch*.zip"/>
+				</fileset>
+			</copy>
+		</target>
+		
+		<target name="PRD.BATCH.WAR.FILECOPY">	
+			<copy tofile="${batch.war.path}/Batch.zip">
+				<fileset dir="${batch.src.path}">
+					<include name="Batch*.zip"/>
+				</fileset>
+			</copy>
+		</target>
+		
+		<target name="MJ.WAR.FILECOPY">	
+			<copy tofile="${mj.war.path}/ROOT.war">
+				<fileset dir="${mj.src.path}">
+					<include name="LECS-Store-Muji-WEBAPP*.zip"/>
+				</fileset>
+			</copy>
+		</target>
+		
+		<target name="MJ.WEB.FILECOPY">	
+			<copy tofile="${mj.web.path}/MJWEB.zip">
+				<fileset dir="${mj.src.path}">
+					<include name="LECS-Store-Muji-CONTENT*.zip"/>
+				</fileset>
+			</copy>
+		</target>
+		
+		<target name="MJ.IMG.FILECOPY">	
+			<copy tofile="${mj.img.path}/MJIMG.zip">
+				<fileset dir="${mj.src.path}">
+					<include name="LECS-Store-Muji-IMAGE*.zip"/>
+				</fileset>
+			</copy>
+		</target>
+		
+		<target name="UQ.WAR.FILECOPY">	
+			<copy tofile="${uq.war.path}/ROOT.war">
+				<fileset dir="${uq.src.path}">
+					<include name="LECS-Store-New-Uniqlo-WEBAPP*.zip"/>
+				</fileset>
+			</copy>
+		</target>
+		
+		<target name="UQ.WEB.FILECOPY">	
+			<copy tofile="${uq.web.path}/UQWEB.zip">
+				<fileset dir="${uq.src.path}">
+					<include name="LECS-Store-New-Uniqlo-CONTENT*.zip"/>
+				</fileset>
+			</copy>
+		</target>
+		
+		<target name="UQ.IMG.FILECOPY">	
+			<copy tofile="${uq.img.path}/UQIMG.zip">
+				<fileset dir="${uq.src.path}">
+					<include name="LECS-Store-New-Uniqlo-IMAGE*.zip"/>
+				</fileset>
+			</copy>
+		</target>
+		
+		<target name="UQAPI.WAR.FILECOPY">	
+			<copy tofile="${uqoa.war.path}/ROOT.war">
+				<fileset dir="${uqoa.src.path}">
+					<include name="LECS-Store-New-Uniqlo-FR-API-WEBAPP*.zip"/>
+				</fileset>
+			</copy>
+		</target>
+		
+		<target name="UQAPI.WEB.FILECOPY">	
+			<copy tofile="${uqoa.web.path}/UQOAWEB.zip">
+				<fileset dir="${uqoa.src.path}">
+					<include name="LECS-Store-New-Uniqlo-FR-API-CONTENT*.zip"/>
+				</fileset>
+			</copy>
+		</target>
+	
+	<target name="GU.WAR.FILECOPY">	
+				<copy tofile="${gu.war.path}/ROOT.war">
+					<fileset dir="${gu.src.path}">
+						<include name="LECS-Store-GU-WEBAPP*.zip"/>
+					</fileset>
+				</copy>
+			</target>
+			
+			<target name="GU.WEB.FILECOPY">	
+				<copy tofile="${gu.web.path}/GUWEB.zip">
+					<fileset dir="${gu.src.path}">
+						<include name="LECS-Store-GU-CONTENT*.zip"/>
+					</fileset>
+				</copy>
+			</target>
+			
+			<target name="GU.IMG.FILECOPY">	
+				<copy tofile="${gu.img.path}/GUIMG.zip">
+					<fileset dir="${gu.src.path}">
+						<include name="LECS-Store-GU-IMAGE*.zip"/>
+					</fileset>
+				</copy>
+			</target>
+	
+	<!-- COPY.CONFIG -->
+		
+	    <target name="AWS.CONFIG.COPY.STG.PRD">
+			<delete dir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG"/>
+			<mkdir dir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG"/>
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_common/config/system/lecs/config_lecs.xml.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_common/config/system/lecs/config_lecs.xml.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_common/config/system/salt/config_salt.xml.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_common/config/system/salt/config_salt.xml.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_platform_component/config/spring/bean/common.xml.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_platform_component/config/spring/bean/common.xml.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_interface/java/interfaces.properties.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_interface/java/interfaces.properties.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_interface/java/CancelRefund.properties.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_interface/java/CancelRefund.properties.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_interface/java/Mcash.properties.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_interface/java/Mcash.properties.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Platform-LPS/src/config/system/lps/config_lps.xml.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Platform-LPS/src/config/system/lps/config_lps.xml.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Store-Muji/src/config/system/muji/config_muji.xml.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Store-Muji/src/config/system/muji/config_muji.xml.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Store-New-Uniqlo/src/config/system/uniqlo/config_uniqlo.xml.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Store-New-Uniqlo/src/config/system/uniqlo/config_uniqlo.xml.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Store-New-Uniqlo-FR-API/src/config/system/uniqlooa/config_uniqlooa.xml.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Store-New-Uniqlo-FR-API/src/config/system/uniqlooa/config_uniqlooa.xml.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Platform-LPS/src/config/log4j/log4j.xml.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG/LECS-Platform-LPS" overwrite="true"/>
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Platform-LPS/src/config/log4j/log4j.xml.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG/LECS-Platform-LPS" overwrite="true"/>
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Store-Muji/src/config/log4j/log4j.xml.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG/LECS-Store-Muji" overwrite="true"/>
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Store-Muji/src/config/log4j/log4j.xml.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG/LECS-Store-Muji" overwrite="true"/>
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Store-New-Uniqlo/src/config/log4j/log4j.xml.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG/LECS-Store-New-Uniqlo" overwrite="true"/>
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Store-New-Uniqlo/src/config/log4j/log4j.xml.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG/LECS-Store-New-Uniqlo" overwrite="true"/>
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Store-New-Uniqlo-FR-API/src/config/log4j/log4j.xml.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG/LECS-Store-New-Uniqlo-FR-API" overwrite="true"/>
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Store-New-Uniqlo-FR-API/src/config/log4j/log4j.xml.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG/LECS-Store-New-Uniqlo-FR-API" overwrite="true"/>
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_common/config/spring/common/spring_properties.properties.display.uniqlo.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_common/config/spring/common/spring_properties.properties.display.uniqlo.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_common/config/spring/common/spring_properties.properties.main.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+	    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_common/config/spring/common/spring_properties.properties.main.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+	    </target>
+	
+</project>

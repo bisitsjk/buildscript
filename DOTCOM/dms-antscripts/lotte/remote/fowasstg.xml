@@ -1,0 +1,1335 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="fowasstg1">
+<!-- ================================================== -->
+<!-- 공통 -->
+<!-- ================================================== -->
+	<property name="dep.id" value="${DEPLOY_ID}" />	
+	<property name="source.dir" value="/usr1/home/jeus/deploy/src/${dep.id}" />
+	<property name="java.home"  value="/usr/java1.6" />
+	<property name="ant.home"   value="/usr1/home/jeus/deploy/apache-ant-1.8.2" />
+	<property name="docroot"    value="/h2010" />
+	<property name="user.id"    value="jeus" />
+	<property file="user_pwd.properties" />
+		
+	
+	
+<!-- ================================================== -->
+<!-- CM  -->
+<!-- ================================================== -->
+		
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->
+	<target name="cm.checkValid">
+		<condition property="cm.isValid" value="true" else="false">
+			<and>
+				<contains string="${hostname}" substring="fowasstg1"/>
+				<contains string="${dep.id}" substring="CM_20" casesensitive="true" />
+			</and>
+		</condition>
+		<echo>hostname `${hostname}` is ${cm.isValid}</echo>
+	</target>
+	
+	<target name="cm.goFail" depends="cm.checkValid" unless="cm.isValid">
+		<fail message="Hostname or deploy ID is wrong."/>
+	</target>
+		
+	<target name="cm.checkExist">
+		<condition property="cm.isExistLibForFo" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/fo/APP-INF/lib"/>
+				</resourceexists>
+				<contains string="${hostname}" substring="fowasstg1"/>
+			</and>
+		</condition>
+		<condition property="cm.isExistLibForGl" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/gl/APP-INF/lib"/>
+				</resourceexists>
+				<contains string="${hostname}" substring="fowasstg1"/>
+			</and>
+		</condition>
+		<condition property="cm.isExistCommon" value="true" else="false">
+			<resourceexists>
+				<file file="${source.dir}/common/conf"/>
+			</resourceexists>
+		</condition>
+		<condition property="cm.isExistCm" value="true" else="false">
+			<or>
+				<istrue value="${cm.isExistLibForFo}"/>
+				<istrue value="${cm.isExistLibForGl}"/>
+				<istrue value="${cm.isExistCommon}"/>
+			</or>
+		</condition>
+	</target>
+			
+	<!-- ================================================== -->
+	<!-- init -->
+	<!-- ================================================== -->
+	<target name="cm.init" depends="cm.goFail">
+		<delete dir="${source.dir}/fo" />
+		<delete dir="${source.dir}/gl" />
+		<mkdir  dir="${source.dir}" />
+	</target>
+		
+	<!-- ================================================== -->
+	<!-- backup -->
+	<!-- ================================================== -->
+	<target name="cm.backupWas">
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte.jar">
+			<arg value="${source.dir}"/>
+			<arg value="/h2010"/>
+			<arg value="${source.dir}_backup"/>
+		</java>
+	</target>
+		
+	<!-- ================================================== -->
+	<!-- deploy -->
+	<!-- ================================================== -->	
+	<target name="cm.deploy" depends="cm.goFail,cm.checkExist" if="${cm.isExistCm}">
+		<tstamp><format property="cm.time1" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${cm.time1}] ==========</echo>
+		<antcall target="cm.backupWas"/>
+		<antcall target="cm.copyCommon"/>
+		<antcall target="cm.copyLibForFo"/>
+		<antcall target="cm.copyLibForGl"/>
+		<tstamp><format property="cm.time2" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${cm.time2}] ==========</echo>
+	</target>	
+
+    <target name="cm.copyLibForFo" if="${cm.isExistLibForFo}">
+        <echo message="deploy library for fo"/>
+        <copy todir="/h2010/fo/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/fo/APP-INF"
+                     includes="lib/**"/>
+        </copy>
+    </target>
+	
+    <target name="cm.copyLibForGl" if="${cm.isExistLibForGl}">
+        <echo message="deploy library for gl"/>
+    	<copy todir="/h2010/gl/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/gl/APP-INF"
+                     includes="lib/**"/>
+        </copy>
+    </target>	
+
+    <target name="cm.copyCommon" if="${cm.isExistCommon}">
+		<echo message="deploy common/conf"/>
+		<copy todir="/h2010/common/conf" overwrite="yes" verbose="true">
+			<fileset dir="${source.dir}/common/conf" 
+			         includes="**/*" 
+				     excludes="*.real.properties,*.dev.properties,**/*.tar,**/*.bak,**/*.zip"/>
+		</copy>
+    	<!-- 사용안함 삭제 예정
+    	<copy file="${source.dir}/common/conf/CancelRefund.real.properties" 
+    		tofile="/h2010/common/conf/CancelRefund.properties" overwrite="yes" verbose="true" failonerror="false"></copy>
+    	<copy file="${source.dir}/common/conf/Mcash.real.properties" 
+    		tofile="/h2010/common/conf/Mcash.properties" overwrite="yes" verbose="true" failonerror="false"></copy>
+    	<copy file="${source.dir}/common/conf/MCash_Cancel.real.properties" 
+    		tofile="/h2010/common/conf/MCash_Cancel.properties" overwrite="yes" verbose="true" failonerror="false"></copy>
+    	<copy file="${source.dir}/common/conf/webt.real.properties" 
+    		tofile="/h2010/common/conf/webt.properties" overwrite="yes" verbose="true" failonerror="false"></copy>
+    	-->
+    </target>
+
+	<!-- ================================================== -->
+	<!-- rollback -->
+	<!-- ================================================== -->	
+	<target name="cm.rollback" depends="cm.goFail,cm.checkExist" if="${cm.isExistCm}">
+		<tstamp><format property="cm.time3" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${cm.time3}] ==========</echo>
+		<antcall target="cm.rollbackCommon"/>
+		<antcall target="cm.rollbackLibForFo"/>
+		<antcall target="cm.rollbackLibForGl"/>
+		<tstamp><format property="cm.time4" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${cm.time4}] ==========</echo>
+	</target>	
+
+    <target name="cm.rollbackLibForFo" if="${cm.isExistLibForFo}">
+        <echo message="rollback library for fo"/>
+        <copy todir="/h2010/fo/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/fo/APP-INF"
+                     includes="lib/**"/>
+        </copy>
+    </target>
+	
+    <target name="cm.rollbackLibForGl" if="${cm.isExistLibForGl}">
+        <echo message="rollback library for gl"/>
+    	<copy todir="/h2010/gl/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/gl/APP-INF"
+                     includes="lib/**"/>
+        </copy>
+    </target>	
+
+    <target name="cm.rollbackCommon" if="${cm.isExistCommon}">
+		<echo message="rollback common/conf"/>
+		<copy todir="/h2010/common/conf" overwrite="yes" verbose="true">
+			<fileset dir="${source.dir}_backup/common/conf" 
+			         includes="**/*"/>
+		</copy>
+    </target>	
+	
+
+	
+<!-- ================================================== -->
+<!-- FO  -->
+<!-- ================================================== -->
+	
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->
+	<target name="fo.checkValid">
+		<condition property="fo.isValid" value="true" else="false">
+			<and>
+				<contains string="${hostname}" substring="fowasstg1"/>
+				<contains string="${dep.id}" substring="FO_20" casesensitive="true" />
+			</and>
+		</condition>
+		<echo>hostname `${hostname}` is ${fo.isValid}</echo>
+	</target>
+	
+	<target name="fo.goFail" depends="fo.checkValid" unless="${fo.isValid}">
+		<fail message="Hostname or deploy ID is wrong."/>
+	</target>
+			
+	<target name="fo.checkExist">
+		<condition property="fo.isWebHost" value="true" else="false">
+			<contains string="${hostname}" substring="fowebstg"/>
+		</condition>
+		<condition property="fo.isWasHost" value="true" else="false">
+			<contains string="${hostname}" substring="fowasstg1"/>
+		</condition>
+		<condition property="fo.isExistWebroot" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/fo/webroot"/>
+				</resourceexists>
+				<istrue value="${fo.isWebHost}"/>
+			</and>
+		</condition>
+		<condition property="fo.isExistWebapp" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/fo/webapp"/>
+				</resourceexists>
+				<istrue value="${fo.isWasHost}"/>
+			</and>
+		</condition>
+		<condition property="fo.isExistAppinf" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/fo/APP-INF"/>
+				</resourceexists>
+				<istrue value="${fo.isWasHost}"/>
+			</and>
+		</condition>
+		<condition property="fo.isExistCommon" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/common/conf"/>
+				</resourceexists>
+				<istrue value="${fo.isWasHost}"/>
+			</and>
+		</condition>
+		<condition property="fo.isJspAndClass" value="true" else="false">
+			<and>
+				<istrue value="${fo.isExistWebapp}"/>
+				<istrue value="${fo.isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="fo.isJsp" value="true" else="false">
+			<and>
+				<istrue value="${fo.isExistWebapp}"/>
+				<isfalse value="${fo.isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="fo.isClass" value="true" else="false">
+			<and>
+				<isfalse value="${fo.isExistWebapp}"/>
+				<istrue value="${fo.isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="fo.isWeb" value="true" else="false">
+			<istrue value="${fo.isExistWebroot}"/>
+		</condition>
+		<condition property="fo.isWas" value="true" else="false">
+			<or>
+				<istrue value="${fo.isExistWebapp}"/>
+				<istrue value="${fo.isExistAppinf}"/>
+				<istrue value="${fo.isExistCommon}"/>
+			</or>
+		</condition>
+		<condition property="fo.isCommon" value="true" else="false">
+			<istrue value="${fo.isExistCommon}"/>
+		</condition>
+	</target>
+			
+	<!-- ================================================== -->
+	<!-- init -->
+	<!-- ================================================== -->
+	<target name="fo.init" depends="fo.goFail">
+		<delete dir="${source.dir}/fo" />
+		<mkdir dir="${source.dir}" />
+	</target>
+		
+	<!-- ================================================== -->
+	<!-- backup -->
+	<!-- ================================================== -->
+	<target name="fo.backupWeb" if="${fo.isWeb}">
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte15.jar">
+			<arg value="${source.dir}"/>
+			<arg value="/h2010"/>
+			<arg value="${source.dir}_backup"/>
+		</java>
+	</target>	
+	
+	<target name="fo.backupWas" if="${fo.isWas}">
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte.jar">
+			<arg value="${source.dir}"/>
+			<arg value="/h2010"/>
+			<arg value="${source.dir}_backup"/>
+		</java>
+	</target>	
+		
+	<!-- ================================================== -->
+	<!-- deploy -->
+	<!-- ================================================== -->
+	<target name="fo.deploy" depends="fo.goFail,fo.checkExist">
+		<tstamp><format property="fo.time1" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${fo.time1}] ==========</echo>
+		<antcall target="fo.backupWeb"/>
+		<antcall target="fo.copyWeb"/>
+		<tstamp><format property="fo.time2" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${fo.time2}] ==========</echo>
+		<antcall target="fo.backupWas"/>
+		<antcall target="fo.copyCommon"/>
+		<antcall target="fo.copyClass"/>
+		<antcall target="fo.copyJsp"/>
+		<tstamp><format property="fo.time3" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${fo.time3}] ==========</echo>
+	</target>
+
+	<target name="fo.copyWeb" if="${fo.isExistWebroot}">
+        <echo message=""/>
+        <copy todir="/h2010/fo/webroot" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/fo/webroot"
+                     includes="**/*"/>
+        </copy>
+	</target>
+	
+	<target name="fo.copyJsp" if="${fo.isExistWebapp}">
+        <echo message=""/>
+        <copy todir="/h2010/fo/webapp" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/fo/webapp"
+                     includes="**/*"
+                     excludes="lotte/event/surprise/surprise_dpt.jsp,
+                               lotte/event/surprise/surprise.jsp,
+                               lotte/event/surprise/surprise_mens.jsp,
+                               lotte/event/surprise/surprise_young.jsp,
+                               lotte/event/superone/superone.jsp,
+                               lotte/event/brandwar/brandwar.jsp,
+                               lotte/event/invite/invite.jsp,
+                               lotte/event/cardpoint/LCSaleMain.jsp,
+                               main/lotte/ECThemeZone.jsp"/>
+        </copy>
+    </target>
+
+    <target name="fo.copyClass" if="${fo.isExistAppinf}">
+        <echo message=""/>
+        <copy todir="/h2010/fo/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/fo/APP-INF"
+                     includes="**/*"/>
+        </copy>
+    </target>
+
+    <target name="fo.copyCommon" if="${fo.isExistCommon}">
+		<echo message="========================================"/>
+		<copy todir="/h2010/common/conf" overwrite="yes" verbose="true">
+			<fileset dir="${source.dir}/common/conf" 
+			         includes="**/*"
+				     excludes="*.properties,**/*.tar,**/*.bak,**/*.zip"/>
+		</copy>
+    	<copy file="${source.dir}/common/conf/CancelRefund.real.properties" 
+    		tofile="/h2010/common/conf/CancelRefund.properties" overwrite="yes" verbose="true" failonerror="false"></copy>
+    	<copy file="${source.dir}/common/conf/Mcash.real.properties" 
+    		tofile="/h2010/common/conf/Mcash.properties" overwrite="yes" verbose="true" failonerror="false"></copy>
+    	<copy file="${source.dir}/common/conf/MCash_Cancel.real.properties" 
+    		tofile="/h2010/common/conf/MCash_Cancel.properties" overwrite="yes" verbose="true" failonerror="false"></copy>
+    	<copy file="${source.dir}/common/conf/webt.real.properties" 
+    		tofile="/h2010/common/conf/webt.properties" overwrite="yes" verbose="true" failonerror="false"></copy>
+    </target>
+	
+	<!-- ================================================== -->
+	<!-- rollback -->
+	<!-- ================================================== -->
+	<target name="fo.rollback" depends="fo.goFail,fo.checkExist">
+		<tstamp><format property="fo.time4" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${fo.time4}] ==========</echo>
+		<antcall target="fo.rollbackWeb"/>
+		<tstamp><format property="fo.time5" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${fo.time5}] ==========</echo>
+		<antcall target="fo.rollbackCommon"/>
+		<antcall target="fo.rollbackClass"/>
+		<antcall target="fo.rollbackJsp"/>
+		<tstamp><format property="fo.time6" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${fo.time6}] ==========</echo>
+	</target>
+
+	<target name="fo.rollbackWeb" if="${fo.isExistWebroot}">
+        <echo message=""/>
+        <copy todir="/h2010/fo/webroot" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/fo/webroot"
+                     includes="**/*"/>
+        </copy>
+	</target>
+	
+	<target name="fo.rollbackJsp" if="${fo.isExistWebapp}">
+        <echo message=""/>
+        <copy todir="/h2010/fo/webapp" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/fo/webapp"
+                     includes="**/*"/>
+        </copy>
+    </target>
+
+    <target name="fo.rollbackClass" if="${fo.isExistAppinf}">
+        <echo message=""/>
+        <copy todir="/h2010/fo/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/fo/APP-INF"
+                     includes="**/*"/>
+        </copy>
+    </target>
+
+    <target name="fo.rollbackCommon" if="${fo.isExistCommon}">
+		<echo message="========================================"/>
+		<copy todir="/h2010/common/conf" overwrite="yes" verbose="true">
+			<fileset dir="${source.dir}_backup/common/conf" 
+			         includes="**/*"/>
+		</copy>
+    </target>	
+		
+	<!-- ================================================== -->
+	<!-- sync -->
+	<!-- ================================================== -->
+	<property name="fo.was.ip"  value="10.149.144.65" />
+	
+	<target name="fo.sync" depends="fo.goFail">
+		<antcall target="fo.getWas"/>
+		<antcall target="fo.cleanWas"/>
+		<antcall target="fo.untarWas"/>
+	</target>
+	
+	<target name="fo.getWas">
+		<echo>docroot에 있는 오래된 tar 파일을 지웁니다.</echo>
+		<delete verbose="true">
+			<fileset dir="/h2010/fo" includes="*_WAS.tar"/>
+		</delete>
+		<echo>운영서버에서 백업받은 tar 파일을 docroot로 가져옵니다.</echo>
+		<!--
+		<ftp server="${fo.was.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="/ncontents/src/${dep.id}/backup/fo"
+		     action="get">
+			<fileset dir="/h2010/fo"
+				     includes="${dep.id}_WAS.tar"/>
+		</ftp>
+		-->
+		<scp file="${user.id}:${user.pwd}@${fo.was.ip}:/ncontents/src/${dep.id}/backup/fo/${dep.id}_WAS.tar" 
+			todir="/h2010/fo" 
+			trust="true"/>
+	</target>
+	
+	<target name="fo.cleanWas">
+		<delete verbose="true">
+			<dirset dir="/h2010/fo">
+				<include name="z_webapp"/>
+				<include name="z_APP-INF"/>
+			</dirset>
+		</delete>
+		<move file="/h2010/fo/webapp"  tofile="/h2010/fo/z_webapp"/>
+		<move file="/h2010/fo/APP-INF"  tofile="/h2010/fo/z_APP-INF"/>
+	</target>
+	
+	<target name="fo.untarWas">
+		<untar src="/h2010/fo/${dep.id}_WAS.tar" dest="/h2010/fo" overwrite="yes"/>
+		<copy todir="/h2010/fo/APP-INF/conf">
+            <fileset dir="/h2010/fo/z_APP-INF/conf">
+                <include name="*.stg.*"/>
+            </fileset>
+        </copy>
+	</target>
+	
+	<!-- ================================================== -->
+	<!-- alive -->
+	<!-- ================================================== -->	
+	<target name="fo.alive">
+		<echo>Web-WAS 통신 포트 체크</echo>
+		<waitfor maxwait="30" maxwaitunit="second" checkevery="10" checkeveryunit="second" timeoutproperty="fo.webtob">
+			<socket server="10.149.192.62" port="9900"/>
+		</waitfor>
+		<echo>${fo.webtob}</echo>
+		<echo>WAS fo 컨테이너 포트 체크</echo>
+		<waitfor maxwait="30" maxwaitunit="second" checkevery="10" checkeveryunit="second" timeoutproperty="fo.jeus">
+			<socket server="10.149.192.71" port="8081"/>
+		</waitfor>
+		<echo>${fo.jeus}</echo>
+	</target>
+	
+	
+	
+	
+<!-- ================================================== -->
+<!-- GL  -->
+<!-- ================================================== -->
+	
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->
+	<target name="gl.checkValid">
+		<condition property="gl.isValid" value="true" else="false">
+			<and>
+				<contains string="${hostname}" substring="fowasstg1"/>
+				<contains string="${dep.id}" substring="GL_20" casesensitive="true" />
+			</and>
+		</condition>
+		<echo>hostname `${hostname}` is ${gl.isValid}</echo>
+	</target>
+	
+	<target name="gl.goFail" depends="gl.checkValid" unless="${gl.isValid}">
+		<fail message="Hostname or deploy ID is wrong."/>
+	</target>
+			
+	<target name="gl.checkExist">
+		<condition property="gl.isWebHost" value="true" else="false">
+			<contains string="${hostname}" substring="fowebstg"/>
+		</condition>
+		<condition property="gl.isWasHost" value="true" else="false">
+			<contains string="${hostname}" substring="fowasstg1"/>
+		</condition>
+		<condition property="gl.isExistWebroot" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/gl/webroot"/>
+				</resourceexists>
+				<istrue value="${gl.isWebHost}"/>
+			</and>
+		</condition>
+		<condition property="gl.isExistWebapp" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/gl/webapp"/>
+				</resourceexists>
+				<istrue value="${gl.isWasHost}"/>
+			</and>
+		</condition>
+		<condition property="gl.isExistAppinf" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/gl/APP-INF"/>
+				</resourceexists>
+				<istrue value="${gl.isWasHost}"/>
+			</and>
+		</condition>
+		<condition property="gl.isExistCommon" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/common/conf"/>
+				</resourceexists>
+				<istrue value="${gl.isWasHost}"/>
+			</and>
+		</condition>
+		<condition property="gl.isJspAndClass" value="true" else="false">
+			<and>
+				<istrue value="${gl.isExistWebapp}"/>
+				<istrue value="${gl.isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="gl.isJsp" value="true" else="false">
+			<and>
+				<istrue value="${gl.isExistWebapp}"/>
+				<isfalse value="${gl.isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="gl.isClass" value="true" else="false">
+			<and>
+				<isfalse value="${gl.isExistWebapp}"/>
+				<istrue value="${gl.isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="gl.isWeb" value="true" else="false">
+			<istrue value="${gl.isExistWebroot}"/>
+		</condition>
+		<condition property="gl.isWas" value="true" else="false">
+			<or>
+				<istrue value="${gl.isExistWebapp}"/>
+				<istrue value="${gl.isExistAppinf}"/>
+				<istrue value="${gl.isExistCommon}"/>
+			</or>
+		</condition>
+		<condition property="gl.isCommon" value="true" else="false">
+			<istrue value="${gl.isExistCommon}"/>
+		</condition>
+	</target>
+			
+	<!-- ================================================== -->
+	<!-- init -->
+	<!-- ================================================== -->
+	<target name="gl.init" depends="gl.goFail">
+		<delete dir="${source.dir}/gl" />
+		<mkdir dir="${source.dir}" />
+	</target>
+		
+	<!-- ================================================== -->
+	<!-- backup -->
+	<!-- ================================================== -->
+	<target name="gl.backupWeb" if="${gl.isWeb}">
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte15.jar">
+			<arg value="${source.dir}"/>
+			<arg value="/h2010"/>
+			<arg value="${source.dir}_backup"/>
+		</java>
+	</target>	
+	
+	<target name="gl.backupWas" if="${gl.isWas}">
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte.jar">
+			<arg value="${source.dir}"/>
+			<arg value="/h2010"/>
+			<arg value="${source.dir}_backup"/>
+		</java>
+	</target>		
+		
+	<!-- ================================================== -->
+	<!-- deploy -->
+	<!-- ================================================== -->
+	<target name="gl.deploy" depends="gl.goFail,gl.checkExist">
+		<tstamp><format property="gl.time1" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${gl.time1}] ==========</echo>
+		<antcall target="gl.backupWeb"/>
+		<antcall target="gl.copyWeb"/>
+		<tstamp><format property="gl.time2" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${gl.time2}] ==========</echo>
+		<antcall target="gl.backupWas"/>
+		<antcall target="gl.copyCommon"/>
+		<antcall target="gl.copyClass"/>
+		<antcall target="gl.copyJsp"/>
+		<tstamp><format property="gl.time3" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${gl.time3}] ==========</echo>
+	</target>
+
+	<target name="gl.copyWeb" if="${gl.isExistWebroot}">
+        <echo message=""/>
+        <copy todir="/h2010/gl/webroot" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/gl/webroot"
+                     includes="**/*"/>
+        </copy>
+	</target>
+	
+	<target name="gl.copyJsp" if="${gl.isExistWebapp}">
+        <echo message=""/>
+        <copy todir="/h2010/gl/webapp" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/gl/webapp"
+                     includes="**/*"/>
+        </copy>
+    </target>
+
+    <target name="gl.copyClass" if="${gl.isExistAppinf}">
+        <echo message=""/>
+        <copy todir="/h2010/gl/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/gl/APP-INF"
+                     includes="**/*"/>
+        </copy>
+    </target>
+
+    <target name="gl.copyCommon" if="${gl.isExistCommon}">
+		<echo message="========================================"/>
+		<copy todir="/h2010/common/conf" overwrite="yes" verbose="true">
+			<fileset dir="${source.dir}/common/conf" 
+			         includes="**/*"
+				     excludes="*.properties,**/*.tar,**/*.bak,**/*.zip"/>
+		</copy>
+    	<copy file="${source.dir}/common/conf/CancelRefund.real.properties" 
+    		tofile="/h2010/common/conf/CancelRefund.properties" overwrite="yes" verbose="true" failonerror="false"></copy>
+    	<copy file="${source.dir}/common/conf/Mcash.real.properties" 
+    		tofile="/h2010/common/conf/Mcash.properties" overwrite="yes" verbose="true" failonerror="false"></copy>
+    	<copy file="${source.dir}/common/conf/MCash_Cancel.real.properties" 
+    		tofile="/h2010/common/conf/MCash_Cancel.properties" overwrite="yes" verbose="true" failonerror="false"></copy>
+    	<copy file="${source.dir}/common/conf/webt.real.properties" 
+    		tofile="/h2010/common/conf/webt.properties" overwrite="yes" verbose="true" failonerror="false"></copy>
+    </target>
+	
+	<!-- ================================================== -->
+	<!-- rollback -->
+	<!-- ================================================== -->
+	<target name="gl.rollback" depends="gl.goFail,gl.checkExist">
+		<tstamp><format property="gl.time4" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${gl.time4}] ==========</echo>
+		<antcall target="gl.rollbackWeb"/>
+		<tstamp><format property="gl.time5" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${gl.time5}] ==========</echo>
+		<antcall target="gl.rollbackCommon"/>
+		<antcall target="gl.rollbackClass"/>
+		<antcall target="gl.rollbackJsp"/>
+		<tstamp><format property="gl.time6" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${gl.time6}] ==========</echo>
+	</target>
+
+	<target name="gl.rollbackWeb" if="${gl.isExistWebroot}">
+        <echo message=""/>
+        <copy todir="/h2010/gl/webroot" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/gl/webroot"
+                     includes="**/*"/>
+        </copy>
+	</target>
+	
+	<target name="gl.rollbackJsp" if="${gl.isExistWebapp}">
+        <echo message=""/>
+        <copy todir="/h2010/gl/webapp" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/gl/webapp"
+                     includes="**/*"/>
+        </copy>
+    </target>
+
+    <target name="gl.rollbackClass" if="${gl.isExistAppinf}">
+        <echo message=""/>
+        <copy todir="/h2010/gl/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/gl/APP-INF"
+                     includes="**/*"/>
+        </copy>
+    </target>
+
+    <target name="gl.rollbackCommon" if="${gl.isExistCommon}">
+		<echo message="========================================"/>
+		<copy todir="/h2010/common/conf" overwrite="yes" verbose="true">
+			<fileset dir="${source.dir}_backup/common/conf" 
+			         includes="**/*"/>
+		</copy>
+    </target>	
+		
+	<!-- ================================================== -->
+	<!-- sync -->
+	<!-- ================================================== -->
+	<property name="gl.was.ip"  value="10.149.144.75" />
+	
+	<target name="gl.sync" depends="gl.goFail">
+		<antcall target="gl.getWas"/>
+		<antcall target="gl.cleanWas"/>
+		<antcall target="gl.untarWas"/>
+	</target>
+	
+	<target name="gl.getWas">
+		<echo>docroot에 있는 오래된 tar 파일을 지웁니다.</echo>
+		<delete verbose="true">
+			<fileset dir="/h2010/gl" includes="*_WAS.tar"/>
+		</delete>
+		<echo>운영서버에서 백업받은 tar 파일을 docroot로 가져옵니다.</echo>
+		<!--
+		<ftp server="${gl.was.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="/ncontents/src/${dep.id}/backup/gl"
+		     action="get">
+			<fileset dir="/h2010/gl"
+				     includes="${dep.id}_WAS.tar"/>
+		</ftp>
+		-->
+		<scp file="${user.id}:${user.pwd}@${gl.was.ip}:/ncontents/src/${dep.id}/backup/gl/${dep.id}_WAS.tar" 
+			todir="/h2010/gl" 
+			trust="true"/>
+	</target>
+	
+	<target name="gl.cleanWas">
+		<delete verbose="true">
+			<dirset dir="/h2010/gl">
+				<include name="z_webapp"/>
+				<include name="z_APP-INF"/>
+			</dirset>
+		</delete>
+		<move file="/h2010/gl/webapp"  tofile="/h2010/gl/z_webapp"/>
+		<move file="/h2010/gl/APP-INF"  tofile="/h2010/gl/z_APP-INF"/>
+	</target>
+	
+	<target name="gl.untarWas">
+		<untar src="/h2010/gl/${dep.id}_WAS.tar" dest="/h2010/gl" overwrite="yes"/>
+		<copy todir="/h2010/gl/APP-INF/conf">
+            <fileset dir="/h2010/gl/z_APP-INF/conf">
+                <include name="*.stg.*"/>
+            </fileset>
+        </copy>
+	</target>	
+
+	
+	
+<!-- ================================================== -->
+<!-- MO  -->
+<!-- ================================================== -->
+
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->
+	<target name="mo.checkValid">
+		<condition property="mo.isValid" value="true" else="false">
+			<and>
+				<contains string="${hostname}" substring="fowasstg1"/>
+				<contains string="${dep.id}" substring="MO_20" casesensitive="true" />
+			</and>
+		</condition>
+		<echo>hostname `${hostname}` is ${mo.isValid}</echo>
+	</target>
+	
+	<target name="mo.goFail" depends="mo.checkValid" unless="${mo.isValid}">
+		<fail message="Hostname or deploy ID is wrong."/>
+	</target>
+			
+	<target name="mo.checkExist">
+		<condition property="mo.isWebHost" value="true" else="false">
+			<contains string="${hostname}" substring="fowebstg"/>
+		</condition>
+		<condition property="mo.isWasHost" value="true" else="false">
+			<contains string="${hostname}" substring="fowasstg1"/>
+		</condition>
+		<condition property="mo.isExistWebroot" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/mo/webroot"/>
+				</resourceexists>
+				<istrue value="${mo.isWebHost}"/>
+			</and>
+		</condition>
+		<condition property="mo.isExistWebapp" value="true" else="false">
+			<and>
+				<resourcecount when="greater" count="0">
+					<fileset dir="${source.dir}" casesensitive="yes">
+						<include name="mo/webapp/**"/>
+						<exclude name="mo/webapp/WEB-INF/classes/**"/>
+						<exclude name="mo/webapp/WEB-INF/lib/**"/>
+						<exclude name="mo/webapp/WEB-INF/spring/**"/>
+						<exclude name="mo/webapp/WEB-INF/config/**"/>
+						<exclude name="mo/webapp/WEB-INF/mapping/**"/>
+						<exclude name="mo/webapp/WEB-INF/*.xml"/>
+					</fileset>
+				</resourcecount>				
+				<istrue value="${mo.isWasHost}"/>
+			</and>
+		</condition>
+		<condition property="mo.isExistWebinf" value="true" else="false">
+			<and>
+				<resourcecount when="greater" count="0">
+					<fileset dir="${source.dir}" casesensitive="yes">
+						<include name="mo/webapp/WEB-INF/classes/**"/>
+						<include name="mo/webapp/WEB-INF/lib/**"/>
+						<include name="mo/webapp/WEB-INF/spring/**"/>
+						<include name="mo/webapp/WEB-INF/config/**"/>
+						<include name="mo/webapp/WEB-INF/mapping/**"/>
+						<include name="mo/webapp/WEB-INF/*.xml"/>
+					</fileset>
+				</resourcecount>
+				<istrue value="${mo.isWasHost}"/>
+			</and>
+		</condition>
+		<condition property="mo.isJspAndClass" value="true" else="false">
+			<and>
+				<istrue value="${mo.isExistWebapp}"/>
+				<istrue value="${mo.isExistWebinf}"/>
+			</and>
+		</condition>
+		<condition property="mo.isJsp" value="true" else="false">
+			<and>
+				<istrue value="${mo.isExistWebapp}"/>
+				<isfalse value="${mo.isExistWebinf}"/>
+			</and>
+		</condition>
+		<condition property="mo.isClass" value="true" else="false">
+			<and>
+				<isfalse value="${mo.isExistWebapp}"/>
+				<istrue value="${mo.isExistWebinf}"/>
+			</and>
+		</condition>
+		<condition property="mo.isWeb" value="true" else="false">
+			<istrue value="${mo.isExistWebroot}"/>
+		</condition>
+		<condition property="mo.isWas" value="true" else="false">
+			<or>
+				<istrue value="${mo.isExistWebapp}"/>
+				<istrue value="${mo.isExistWebinf}"/>
+			</or>
+		</condition>
+	</target>	
+			
+	<!-- ================================================== -->
+	<!-- init -->
+	<!-- ================================================== -->
+	<target name="mo.init" depends="mo.goFail">
+		<delete dir="${source.dir}/mo" />
+		<mkdir dir="${source.dir}" />
+	</target>
+		
+	<!-- ================================================== -->
+	<!-- backup -->
+	<!-- ================================================== -->
+	<target name="mo.backupWeb" if="${mo.isWeb}">
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte15.jar">
+			<arg value="${source.dir}"/>
+			<arg value="/h2010"/>
+			<arg value="${source.dir}_backup"/>
+		</java>
+	</target>
+	
+	<target name="mo.backupWas" if="${mo.isWas}">
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte.jar">
+			<arg value="${source.dir}"/>
+			<arg value="/h2010"/>
+			<arg value="${source.dir}_backup"/>
+		</java>
+	</target>		
+		
+	<!-- ================================================== -->
+	<!-- deploy -->
+	<!-- ================================================== -->
+	<target name="mo.deploy" depends="mo.goFail,mo.checkExist">
+		<tstamp><format property="mo.time1" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${mo.time1}] ==========</echo>
+		<antcall target="mo.backupWeb"/>
+		<antcall target="mo.copyWeb"/>
+		<tstamp><format property="mo.time2" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${mo.time2}] ==========</echo>
+		<antcall target="mo.backupWas"/>
+		<antcall target="mo.copyClass"/>
+		<antcall target="mo.copyJsp"/>
+		<tstamp><format property="mo.time3" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${mo.time3}] ==========</echo>
+	</target>
+	
+	<target name="mo.copyWeb" if="${mo.isExistWebroot}">
+        <echo message="WAS webapp(jsp)"/>
+        <copy todir="/h2010/mo/webroot" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/mo/webroot">
+	        	<include name="**/*"/>
+            </fileset>
+        </copy>
+    </target>
+
+	<target name="mo.copyJsp" if="${mo.isExistWebapp}">
+        <echo message="WAS webapp(jsp)"/>
+        <copy todir="/h2010/mo/webapp" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/mo/webapp">
+            	<include name="**/*"/>
+				<exclude name="WEB-INF/classes/**"/>
+				<exclude name="WEB-INF/lib/**"/>
+				<exclude name="WEB-INF/spring/**"/>
+            	<exclude name="WEB-INF/config/**"/>
+				<exclude name="WEB-INF/mapping/**"/>
+				<exclude name="WEB-INF/*.xml"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <target name="mo.copyClass" if="${mo.isExistWebinf}">
+        <echo message="WAS web-inf(class, xml, properties and etc)"/>
+        <copy todir="/h2010/mo/webapp/WEB-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/mo/webapp/WEB-INF">
+            	<include name="classes/**"/>
+				<include name="lib/**"/>
+				<include name="spring/**"/>
+            	<include name="config/**"/>
+				<include name="mapping/**"/>
+				<include name="*.xml"/>            	
+            </fileset>
+        </copy>
+    </target>
+
+	<!-- ================================================== -->
+	<!-- rollback -->
+	<!-- ================================================== -->
+	<target name="mo.rollback" depends="mo.goFail,mo.checkExist">
+		<tstamp><format property="mo.time4" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${mo.time4}] ==========</echo>
+		<antcall target="mo.rollbackWeb"/>
+		<tstamp><format property="mo.time5" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${mo.time5}] ==========</echo>
+		<antcall target="mo.rollbackClass"/>
+		<antcall target="mo.rollbackJsp"/>
+		<tstamp><format property="mo.time6" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${mo.time6}] ==========</echo>
+	</target>
+	
+	<target name="mo.rollbackWeb" if="${mo.isExistWebroot}">
+        <echo message="webroot"/>
+        <copy todir="/h2010/mo/webroot" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/mo/webroot">
+	        	<include name="**/*"/>
+            </fileset>
+        </copy>
+    </target>
+
+	<target name="mo.rollbackJsp" if="${mo.isExistWebapp}">
+        <echo message="webapp"/>
+        <copy todir="/h2010/mo/webapp" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/mo/webapp">
+            	<include name="**/*"/>
+				<exclude name="WEB-INF/classes/**"/>
+				<exclude name="WEB-INF/lib/**"/>
+				<exclude name="WEB-INF/spring/**"/>
+            	<exclude name="WEB-INF/config/**"/>
+				<exclude name="WEB-INF/mapping/**"/>
+				<exclude name="WEB-INF/*.xml"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <target name="mo.rollbackClass" if="${mo.isExistWebinf}">
+        <echo message="webapp/WEB-INF"/>
+        <copy todir="/h2010/mo/webapp/WEB-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/mo/webapp/WEB-INF">
+            	<include name="classes/**"/>
+				<include name="lib/**"/>
+				<include name="spring/**"/>
+            	<include name="config/**"/>
+				<include name="mapping/**"/>
+				<include name="*.xml"/>            	
+            </fileset>
+        </copy>
+    </target>	
+	
+	<!-- ================================================== -->
+	<!-- sync -->
+	<!-- ================================================== -->
+	<property name="mo.was.ip"  value="10.149.144.38" />
+	
+	<target name="mo.sync" depends="mo.goFail">
+		<antcall target="mo.getWas"/>
+		<antcall target="mo.cleanWas"/>
+		<antcall target="mo.untarWas"/>
+	</target>
+	
+	<target name="mo.getWas">
+		<echo>docroot에 있는 오래된 tar 파일을 지웁니다.</echo>
+		<delete verbose="true">
+			<fileset dir="/h2010/mo" includes="*_WAS.tar"/>
+		</delete>
+		<echo>운영서버에서 백업받은 tar 파일을 docroot로 가져옵니다.</echo>
+		<!--
+		<ftp server="${mo.was.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="/ncontents/src/${dep.id}/backup/mo"
+		     action="get">
+			<fileset dir="/h2010/mo"
+				     includes="${dep.id}_WAS.tar"/>
+		</ftp>
+		-->
+		<scp file="${user.id}:${user.pwd}@${mo.was.ip}:/ncontents/src/${dep.id}/backup/mo/${dep.id}_WAS.tar" 
+			todir="/h2010/mo" 
+			trust="true"/>
+	</target>
+	
+	<target name="mo.cleanWas">
+		<delete verbose="true">
+			<dirset dir="/h2010/mo">
+				<include name="z_webapp"/>
+			</dirset>
+		</delete>
+		<move file="/h2010/mo/webapp"  tofile="/h2010/mo/z_webapp"/>
+	</target>
+	
+	<target name="mo.untarWas">
+		<untar src="/h2010/mo/${dep.id}_WAS.tar" dest="/h2010/mo" overwrite="yes"/>
+		<copy todir="/h2010/mo/webapp/WEB-INF/classes">
+            <fileset dir="/h2010/mo/z_webapp/WEB-INF/classes">
+                <include name="*.stg.*"/>
+            </fileset>
+        </copy>
+	</target>	
+	
+
+	
+<!-- ================================================== -->
+<!-- MC - GLOBAL MOBILE CHINA  -->
+<!-- ================================================== -->
+	
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->
+	<target name="mc.checkValid">
+		<condition property="mc.isValid" value="true" else="false">
+			<and>
+				<contains string="${hostname}" substring="fowasstg1"/>
+				<contains string="${dep.id}" substring="MC_20" casesensitive="true" />
+			</and>
+		</condition>
+		<echo>hostname `${hostname}` is ${mc.isValid}</echo>
+	</target>
+	
+	<target name="mc.goFail" depends="mc.checkValid" unless="${mc.isValid}">
+		<fail message="Hostname or deploy ID is wrong."/>
+	</target>
+			
+	<target name="mc.checkExist">
+		<condition property="mc.isWebHost" value="true" else="false">
+			<contains string="${hostname}" substring="fowebstg"/>
+		</condition>
+		<condition property="mc.isWasHost" value="true" else="false">
+			<contains string="${hostname}" substring="fowasstg1"/>
+		</condition>
+		<condition property="mc.isExistWebroot" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/mcgl/webroot"/>
+				</resourceexists>
+				<istrue value="${mc.isWebHost}"/>
+			</and>
+		</condition>
+		<condition property="mc.isExistWebapp" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/mcgl/webapp"/>
+				</resourceexists>
+				<istrue value="${mc.isWasHost}"/>
+			</and>
+		</condition>
+		<condition property="mc.isExistAppinf" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/mcgl/APP-INF"/>
+				</resourceexists>
+				<istrue value="${mc.isWasHost}"/>
+			</and>
+		</condition>
+		<condition property="mc.isExistCommon" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/common/conf"/>
+				</resourceexists>
+				<istrue value="${mc.isWasHost}"/>
+			</and>
+		</condition>
+		<condition property="mc.isJspAndClass" value="true" else="false">
+			<and>
+				<istrue value="${mc.isExistWebapp}"/>
+				<istrue value="${mc.isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="mc.isJsp" value="true" else="false">
+			<and>
+				<istrue value="${mc.isExistWebapp}"/>
+				<isfalse value="${mc.isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="mc.isClass" value="true" else="false">
+			<and>
+				<isfalse value="${mc.isExistWebapp}"/>
+				<istrue value="${mc.isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="mc.isWeb" value="true" else="false">
+			<istrue value="${mc.isExistWebroot}"/>
+		</condition>
+		<condition property="mc.isWas" value="true" else="false">
+			<or>
+				<istrue value="${mc.isExistWebapp}"/>
+				<istrue value="${mc.isExistAppinf}"/>
+				<istrue value="${mc.isExistCommon}"/>
+			</or>
+		</condition>
+		<condition property="mc.isCommon" value="true" else="false">
+			<istrue value="${mc.isExistCommon}"/>
+		</condition>
+	</target>
+			
+	<!-- ================================================== -->
+	<!-- init -->
+	<!-- ================================================== -->
+	<target name="mc.init" depends="mc.goFail">
+		<delete dir="${source.dir}/mcgl" />
+		<mkdir dir="${source.dir}" />
+	</target>
+		
+	<!-- ================================================== -->
+	<!-- backup -->
+	<!-- ================================================== -->
+	<target name="mc.backupWeb" if="${mc.isWeb}">
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte15.jar">
+			<arg value="${source.dir}"/>
+			<arg value="/h2010"/>
+			<arg value="${source.dir}_backup"/>
+		</java>
+	</target>	
+	
+	<target name="mc.backupWas" if="${mc.isWas}">
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte.jar">
+			<arg value="${source.dir}"/>
+			<arg value="/h2010"/>
+			<arg value="${source.dir}_backup"/>
+		</java>
+	</target>		
+		
+	<!-- ================================================== -->
+	<!-- deploy -->
+	<!-- ================================================== -->
+	<target name="mc.deploy" depends="mc.goFail,mc.checkExist">
+		<tstamp><format property="mc.time1" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${mc.time1}] ==========</echo>
+		<antcall target="mc.backupWeb"/>
+		<antcall target="mc.copyWeb"/>
+		<tstamp><format property="mc.time2" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${mc.time2}] ==========</echo>
+		<antcall target="mc.backupWas"/>
+		<antcall target="mc.copyCommon"/>
+		<antcall target="mc.copyClass"/>
+		<antcall target="mc.copyJsp"/>
+		<tstamp><format property="mc.time3" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${mc.time3}] ==========</echo>
+	</target>
+
+	<target name="mc.copyWeb" if="${mc.isExistWebroot}">
+        <echo message=""/>
+        <copy todir="/h2010/mcgl/webroot" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/mcgl/webroot"
+                     includes="**/*"/>
+        </copy>
+	</target>
+	
+	<target name="mc.copyJsp" if="${mc.isExistWebapp}">
+        <echo message=""/>
+        <copy todir="/h2010/mcgl/webapp" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/mcgl/webapp"
+                     includes="**/*"/>
+        </copy>
+    </target>
+
+    <target name="mc.copyClass" if="${mc.isExistAppinf}">
+        <echo message=""/>
+        <copy todir="/h2010/mcgl/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/mcgl/APP-INF"
+                     includes="**/*"/>
+        </copy>
+    </target>
+
+    <target name="mc.copyCommon" if="${mc.isExistCommon}">
+		<echo message="========================================"/>
+		<copy todir="/h2010/common/conf" overwrite="yes" verbose="true">
+			<fileset dir="${source.dir}/common/conf" 
+			         includes="**/*"
+				     excludes="*.properties,**/*.tar,**/*.bak,**/*.zip"/>
+		</copy>
+    	<copy file="${source.dir}/common/conf/CancelRefund.real.properties" 
+    		tofile="/h2010/common/conf/CancelRefund.properties" overwrite="yes" verbose="true" failonerror="false"></copy>
+    	<copy file="${source.dir}/common/conf/Mcash.real.properties" 
+    		tofile="/h2010/common/conf/Mcash.properties" overwrite="yes" verbose="true" failonerror="false"></copy>
+    	<copy file="${source.dir}/common/conf/MCash_Cancel.real.properties" 
+    		tofile="/h2010/common/conf/MCash_Cancel.properties" overwrite="yes" verbose="true" failonerror="false"></copy>
+    	<copy file="${source.dir}/common/conf/webt.real.properties" 
+    		tofile="/h2010/common/conf/webt.properties" overwrite="yes" verbose="true" failonerror="false"></copy>
+    </target>
+	
+	<!-- ================================================== -->
+	<!-- rollback -->
+	<!-- ================================================== -->
+	<target name="mc.rollback" depends="mc.goFail,mc.checkExist">
+		<tstamp><format property="mc.time4" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${mc.time4}] ==========</echo>
+		<antcall target="mc.rollbackWeb"/>
+		<tstamp><format property="mc.time5" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${mc.time5}] ==========</echo>
+		<antcall target="mc.rollbackCommon"/>
+		<antcall target="mc.rollbackClass"/>
+		<antcall target="mc.rollbackJsp"/>
+		<tstamp><format property="mc.time6" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${mc.time6}] ==========</echo>
+	</target>
+
+	<target name="mc.rollbackWeb" if="${mc.isExistWebroot}">
+        <echo message=""/>
+        <copy todir="/h2010/mcgl/webroot" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/mcgl/webroot"
+                     includes="**/*"/>
+        </copy>
+	</target>
+	
+	<target name="mc.rollbackJsp" if="${mc.isExistWebapp}">
+        <echo message=""/>
+        <copy todir="/h2010/mcgl/webapp" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/mcgl/webapp"
+                     includes="**/*"/>
+        </copy>
+    </target>
+
+    <target name="mc.rollbackClass" if="${mc.isExistAppinf}">
+        <echo message=""/>
+        <copy todir="/h2010/mcgl/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/mcgl/APP-INF"
+                     includes="**/*"/>
+        </copy>
+    </target>
+
+    <target name="mc.rollbackCommon" if="${mc.isExistCommon}">
+		<echo message="========================================"/>
+		<copy todir="/h2010/common/conf" overwrite="yes" verbose="true">
+			<fileset dir="${source.dir}_backup/common/conf" 
+			         includes="**/*"/>
+		</copy>
+    </target>	
+		
+	<!-- ================================================== -->
+	<!-- sync -->
+	<!-- ================================================== -->
+	<property name="mc.was.ip"  value="10.149.144.42" />
+	
+	<target name="mc.sync" depends="mc.goFail">
+		<antcall target="mc.getWas"/>
+		<antcall target="mc.cleanWas"/>
+		<antcall target="mc.untarWas"/>
+	</target>
+	
+	<target name="mc.getWas">
+		<echo>docroot에 있는 오래된 tar 파일을 지웁니다.</echo>
+		<delete verbose="true">
+			<fileset dir="/h2010/mcgl" includes="*_WAS.tar"/>
+		</delete>
+		<echo>운영서버에서 백업받은 tar 파일을 docroot로 가져옵니다.</echo>
+		<!--
+		<ftp server="${mc.was.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="/ncontents/src/${dep.id}/backup/mcgl"
+		     action="get">
+			<fileset dir="/h2010/mcgl"
+				     includes="${dep.id}_WAS.tar"/>
+		</ftp>
+		-->
+		<scp file="${user.id}:${user.pwd}@${mc.was.ip}:/ncontents/src/${dep.id}/backup/mcgl/${dep.id}_WAS.tar" 
+			todir="/h2010/mcgl" 
+			trust="true"/>
+	</target>
+	
+	<target name="mc.cleanWas">
+		<delete verbose="true">
+			<dirset dir="/h2010/mcgl">
+				<include name="z_webapp"/>
+				<include name="z_APP-INF"/>
+			</dirset>
+		</delete>
+		<move file="/h2010/mcgl/webapp"  tofile="/h2010/mcgl/z_webapp"/>
+		<move file="/h2010/mcgl/APP-INF"  tofile="/h2010/mcgl/z_APP-INF"/>
+	</target>
+	
+	<target name="mc.untarWas">
+		<untar src="/h2010/mcgl/${dep.id}_WAS.tar" dest="/h2010/mcgl" overwrite="yes"/>
+		<copy todir="/h2010/mcgl/APP-INF/conf">
+            <fileset dir="/h2010/mcgl/z_APP-INF/conf">
+            	<include name="*.stg.*"/>
+            </fileset>
+        </copy>				
+	</target>	
+</project>

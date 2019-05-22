@@ -1,0 +1,228 @@
+buildscript {
+	
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath group:'org.tmatesoft.svnkit', name:'svnkit', version:'1.3.5'
+		classpath files("lib/httpcore-4.2.2.jar")       	
+		classpath files("lib/httpclient-4.2.2.jar")    	
+		classpath files("lib/jcifs-1.3.17.jar")        	
+		classpath files("lib/lecs-tools.jar")       	
+		classpath files("lib/lecs-library.jar")       	
+		classpath group:'jdom', name:'jdom', version:'1.1'
+ 		classpath group:'org.apache.poi', name:'poi', version:'3.7'
+		classpath group:'org.apache.poi', name:'poi-ooxml', version:'3.7'
+		classpath gradleApi() // $GRADLE_HOME/lib 에 있는 라이브러리들중 .guava.jar 를 사용하기 위
+		
+    }
+}
+import org.apache.http.HttpHost;
+import org.apache.http.HttpResponse;
+import org.apache.http.auth.AuthScheme;
+import org.apache.http.auth.AuthSchemeFactory;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.Credentials;
+import org.apache.http.auth.NTCredentials;
+import org.apache.http.auth.params.AuthPNames;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.params.AuthPolicy;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.auth.NTLMEngine;
+import org.apache.http.impl.auth.NTLMEngineException;
+import org.apache.http.impl.auth.NTLMScheme;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.HttpParams;
+
+import jcifs.ntlmssp.NtlmFlags;
+import jcifs.ntlmssp.Type1Message;
+import jcifs.ntlmssp.Type2Message;
+import jcifs.ntlmssp.Type3Message;
+import jcifs.util.Base64;
+
+class 배포요청 {
+	Long id;
+	String 대상시스템;
+	public String 대상시스템_공통;
+	public String 업무구분;
+	public String 제목;
+	public String 배포요청파일명;
+	public String 담당자;
+	public String PL;
+	public String 개발요청자;
+	public String 기획담당자;	
+	public String 진행상태;
+	public String 취소이유;
+	public String 취소이유상세;
+	public String 배포요청사유;
+	public String 배포희망일자;
+	public String 배포희망시간;
+	public String 배포완료일자;
+	public String 개발내용;
+	public String DB_작업_필요_여부;
+	public String DB_작업_내용;
+	public Long DB변경이력_ID;
+	public String 변경영향기능;
+	public String 배포파일;
+	public Date 등록일;
+	public String 배포대상;
+	public String 운영업무_요청관리_ID;
+	public Date 생성일시;
+	public Date 수정일시;
+	
+	public 배포요청(row){
+		 id = row.@ows_ID.text().toLong();
+		 진행상태  = row.@ows_Status.text() 
+		 제목 = row.@ows_LinkTitle.text()
+	 	대상시스템 			= row.@ows_Priority.text()
+	 	대상시스템_공통 		= row.@ows__xb300__xc0c1__xc2dc__xc2a4__xd1.text() == null	? null  : row.@ows__xb300__xc0c1__xc2dc__xc2a4__xd1.text().replaceAll(';#',' ').trim()
+
+	 	업무구분 			= row.@ows__xc5c5__xbb34__xad6c__xbd84_.text()
+	 	제목 				= row.@ows_LinkTitle.text()
+	 	배포요청파일명 		= row.@ows__xbc30__xd3ec__xc694__xccad__xd3.text()?.trim()
+	 	담당자 	= ceresName  (row.@ows_AssignedTo.text())
+	 	PL 		= ceresName  (row.@ows__xb2e8__xc704_PM.text())
+	 	개발요청자 			=  ceresName (row.@ows__xac1c__xbc1c__xc694__xccad__xc7.text())
+	 	기획담당자 			= ceresName (row.@ows__xae30__xd68d__xb2f4__xb2f9__xc7.text())
+	 	진행상태 			= row.@ows_Status.text()
+	 	취소이유 			= row.@ows__xcde8__xc18c__xc774__xc720_.text()
+	 	배포요청사유 			= row.@ows__xbc30__xd3ec__xc694__xccad__xc0.text()
+	 	배포희망일자 			= row.@ows__xbc30__xd3ec__xd76c__xb9dd__xc7.text()
+	 	배포희망시간 			= row.@ows__xbc30__xd3ec__xd76c__xb9dd__xc2.text()
+		배포완료일자			= row.@ows__xbc30__xd3ec__xc644__xb8cc__xc7.text()
+	 	개발내용 			= row.@ows__xacb0__xacfc_.text()
+	 	변경영향기능 			= row.@ows__xbcc0__xacbd__xc601__xd5a5__xae.text()
+	 	배포대상 			= row.@ows__xbc30__xd3ec__xb300__xc0c1_.text()
+	 	운영업무_요청관리_ID 	= row.@ows__xc6b4__xc601__xc5c5__xbb34__x00.text()
+		 
+	}
+	
+	String ceresName (str ){
+		
+		return str == null  ? null : str.contains('#') ? str[(str.indexOf('#')+1)..-1] : str
+	}
+	
+	String toString()  {"배포요청={$id,$제목,$진행상태,$배포요청파일명,  }"}
+	
+	String toReport() {
+			"Ceres ID:${id}\n"		+
+			" 개발요청자: ${개발요청자}\n"	+
+			" 기획담당자: ${기획담당자}\n"		+
+			(운영업무_요청관리_ID == null ? '': " 운영업무_요청관리_ID: ${운영업무_요청관리_ID[0..(운영업무_요청관리_ID.indexOf(';')-1)]}\n")		+
+			" 배포요청파일명: ${배포요청파일명}\n"	+			
+			" 대상시스템: ${대상시스템}\n"	+			
+			(대상시스템_공통 == null ? '': " 대상시스템_공통: ${대상시스템_공통.replaceAll(';#',' ')}\n") +
+			" 진행상태: ${진행상태}\n"	+
+			" 배포완료일자: ${배포완료일자}\n"	+
+			" 제목 : ${제목}\n"	+
+			" 내용 : ${개발내용}\n\n"
+	}
+}
+
+class JCIFSEngine implements NTLMEngine {
+
+    private static final int TYPE_1_FLAGS = 
+            NtlmFlags.NTLMSSP_NEGOTIATE_56 | 
+            NtlmFlags.NTLMSSP_NEGOTIATE_128 | 
+            NtlmFlags.NTLMSSP_NEGOTIATE_NTLM2 | 
+            NtlmFlags.NTLMSSP_NEGOTIATE_ALWAYS_SIGN | 
+            NtlmFlags.NTLMSSP_REQUEST_TARGET;
+
+    public String generateType1Msg(final String domain, final String workstation)
+            throws NTLMEngineException {
+        final Type1Message type1Message = new Type1Message(TYPE_1_FLAGS, domain, workstation);
+        return Base64.encode(type1Message.toByteArray());
+    }
+
+    public String generateType3Msg(final String username, final String password,
+            final String domain, final String workstation, final String challenge)
+            throws NTLMEngineException {
+        Type2Message type2Message;
+        try {
+            type2Message = new Type2Message(Base64.decode(challenge));
+        } catch (final IOException exception) {
+            throw new NTLMEngineException("Invalid NTLM type 2 message", exception);
+        }
+        final int type2Flags = type2Message.getFlags();
+        final int type3Flags = type2Flags & (0xffffffff ^ (NtlmFlags.NTLMSSP_TARGET_TYPE_DOMAIN | NtlmFlags.NTLMSSP_TARGET_TYPE_SERVER));
+        final Type3Message type3Message = new Type3Message(type2Message, password, domain, username, workstation, type3Flags);
+        return Base64.encode(type3Message.toByteArray());
+    }
+
+}
+
+class NTLMSchemeFactory implements AuthSchemeFactory {
+
+    public AuthScheme newInstance(final HttpParams params) {
+        return new NTLMScheme(new JCIFSEngine());
+    }
+
+}
+ceresProxyTest = { id, password ->
+	def serviceUrl = "http://210.93.129.57/NBP/_vti_bin/lists.asmx"
+	def listName = '9DEF62BC-C18D-401C-91E3-7089390C2033'
+	
+	배포요청목록 = { 
+		DefaultHttpClient client = new DefaultHttpClient();
+		SchemeRegistry sr = client.getConnectionManager().getSchemeRegistry();
+		Scheme scheme;
+		if(host.getSchemeName().equals("http")){
+			scheme = new Scheme("http", host.getPort(), PlainSocketFactory.getSocketFactory());
+		}
+		else{
+			scheme = new Scheme("https", host.getPort(), getSSLSocketFactory());
+		}
+		sr.register(scheme);
+		client.getAuthSchemes().register("ntlm", new NTLMSchemeFactory());
+		println "[$id] / [$password]"
+		NTCredentials creds = new NTCredentials( id, password,"210.93.129.57","210.93.129.57");
+		client.getParams().setAuthenticationPreemptive(true);
+		client.getState().setCredentials(AuthScope.ANY, creds);
+//		List<String> authpref = new ArrayList<String>();
+//        authpref.add("NTLM");
+//		client.getParams().setParameter("http.auth.target-scheme-pref", authpref);
+		PostMethod method = new PostMethod(serviceUrl);
+		
+		def body = """<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+<soap:Body><GetListItems xmlns="http://schemas.microsoft.com/sharepoint/soap/"><listName>9DEF62BC-C18D-401C-91E3-7089390C2033</listName><rowLimit>500</rowLimit>
+<query><Query><Where><Eq><FieldRef Name="Status" /><Value Type="Text">재신청</Value></Eq></Where><OrderBy><FieldRef Name='ID' Ascending='False'></FieldRef></OrderBy></Query></query>
+</GetListItems></soap:Body></soap:Envelope>"""	
+		print body
+		
+		byte[] data = body.getBytes('UTF-8')
+		method.setRequestBody(new ByteArrayInputStream(data))
+		method.setRequestHeader('Authorization', 'NTLM TlRMTVNTUAABAAAABbIIoA0ADQAgAAAADQANAC0AAAAyMTAuOTMuMTI5LjU3MjEwLjkzLjEyOS41Nw==');
+		method.setRequestHeader('Host', '210.93.129.57');
+		method.setRequestHeader('Content-Length',"${data.size()}")
+//		method.setRequestHeader('Host','210.93.129.57')
+		method.setRequestHeader('Content-Type','text/xml; charset=utf-8')
+	
+		method.setRequestHeader('SOAPAction','"http://schemas.microsoft.com/sharepoint/soap/GetListItems"')
+	
+		client.executeMethod(method);
+		String soapResponse = new String(method.getResponseBody(), "ks_c_5601-1987");
+		println soapResponse
+		xml =  new XmlSlurper().parseText(soapResponse).declareNamespace(
+			soap:'http://schemas.xmlsoap.org/soap/envelope/',
+			xsi:"http://www.w3.org/2001/XMLSchema-instance" ,
+			xsd:"http://www.w3.org/2001/XMLSchema",
+			s:'uuid:BDC6E3F0-6DA3-11d1-A2A3-00AA00C14882',
+			dt:'uuid:C2F41010-65B3-11d1-A29F-00AA00C14882',
+			rs:'urn:schemas-microsoft-com:rowset',
+			z:'#RowsetSchema',
+		
+		)
+		rows =  xml.'soap:Body'.'GetListItemsResponse'.'GetListItemsResult'.'listitems'.'rs:data'.'z:row'
+		return rows.collect { row ->	new 배포요청(row) }
+	}
+	
+	return this
+}
+
+
+task ceresTest << {
+	def ceres = ceresProxyTest("build01","build01").배포요청목록()
+}

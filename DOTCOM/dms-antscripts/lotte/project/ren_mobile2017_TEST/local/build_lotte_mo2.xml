@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lotte_mo" basedir=".">
+	<!-- ================================================== -->
+	<!-- properties -->
+	<!-- ================================================== -->
+	<property name="srv" value="${TARGET_SERVER}"/>
+	
+	<property file="build_lotte_mo2_${srv}.properties" />
+		
+	<property name="java.dir" value="C:/Program Files (x86)/Java/jdk1.6.0_25"/>
+	<property name="jeus.dir" value="C:/TmaxSoft/JEUS6.0/lib"/>
+	
+	<property name="project"       value="mo2"/>
+	<property name="project.dir"       value="ren_mobile2017_TEST"/>
+	<property name="branches.dir"          value="branches/PROJECT/${project.dir}"/>
+	<property name="lotte2010.dir"          value="lotte2010/${branches.dir}/${project}"/>
+	<property name="lotteframework2010.dir" value="lotteframework2010/${branches.dir}"/>
+	<property name="mo.src.dir"       value="${wrkspc}/${lotte2010.dir}"/>
+	<property name="mo.src.java.dir"  value="${mo.src.dir}/src"/>
+	<property name="mo.src.class.dir" value="${mo.src.dir}/webapp/WEB-INF/classes"/>
+	<property name="mo.cmm.dir"       value="${wrkspc}/${lotteframework2010.dir}"/>	
+	<property name="mo.pkg.dir"       value="${wrkspc}"/>
+	
+	<property name="tar.name" value="${project}_${project.dir}_PROJECT"/>
+	<property name="web.work.log" value="${wrkspc}/deploy_web.log"/>
+	<property name="was.work.log" value="${wrkspc}/deploy_was.log"/>
+	
+	<!-- server inmo -->
+	<property name="user.id"  value="jeus"/>
+	<!-- <property name="user.pwd" value="8Yqi4q(1=Z"/> -->
+	
+	<!-- document root -->
+	<property name="docroot"  value="/h2010/mo2"/>
+	
+	<property name="init.cmd"  value="${project.dir}${project}init ${tar.name}"/>
+	<property name="deploy.cmd"  value="${project.dir}${project}deploy ${tar.name}"/>
+	
+	
+	
+	<!-- **************************************************************** -->
+	<!-- BUILD -->
+	<!-- **************************************************************** -->
+	<target name="build">
+		<antcall target="compile" />
+	</target>	
+	
+	
+	
+	<!-- **************************************************************** -->
+	<!-- COMPILE mo -->
+	<!-- **************************************************************** -->	
+	<path id="classpath">
+		<fileset dir="${mo.src.dir}/webapp/WEB-INF/lib">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="${java.dir}/jre/lib">
+			<include name="rt.jar" />
+		</fileset>
+		<fileset dir="${jeus.dir}/system">
+			<include name="*.jar" />
+		</fileset>
+	</path>
+	
+	<target name="compile">
+		<delete includeemptydirs="true">
+			<fileset dir="${mo.src.class.dir}" includes="**/*"/>
+    	</delete>
+		<javac srcdir="${mo.src.java.dir}"
+		       destdir="${mo.src.class.dir}"
+			failonerror="false" errorProperty="isBuildError"
+		       classpathref="classpath"
+		       encoding="UTF-8" 
+		       debug="on"
+		       nowarn="on" 
+		/>
+		<copy todir="${mo.src.class.dir}">
+			<fileset dir="${mo.src.java.dir}">
+				<include name="*.properties"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	
+	
+	<!-- **************************************************************** -->
+	<!-- PACKAGING -->
+	<!-- **************************************************************** -->
+	<target name="package">
+		<antcall target="tar.web" />
+		<antcall target="tar.was" />
+	</target>
+	<target name="tar.web">
+		<delete file="${mo.pkg.dir}/${tar.name}_WEB.tar" />
+		<tar destfile="${mo.pkg.dir}/${tar.name}_WEB.tar" longfile="gnu">
+			<tarfileset dir="${wrkspc}/${lotte2010.dir}">
+				<include name="/webroot/**"/>
+				<exclude name="**/.svn/**"/>
+			</tarfileset>
+		</tar>
+	</target>
+	
+	<target name="tar.was">
+		<delete file="${mo.pkg.dir}/${tar.name}_WAS.tar" />
+		<tar destfile="${mo.pkg.dir}/${tar.name}_WAS.tar" longfile="gnu">
+			<tarfileset dir="${wrkspc}/${lotte2010.dir}">
+				<include name="/webapp/**"/>
+				<exclude name="**/.svn/**"/>
+			</tarfileset>
+		</tar>
+	</target>
+	
+	
+	
+	<!-- **************************************************************** -->
+	<!-- DEPLOY -->
+	<!-- **************************************************************** -->	
+	<target name="deploy.server">
+		<antcall target="clean.was.server"/>
+		<antcall target="clean.web.server"/>
+		<antcall target="send.was"/>
+		<antcall target="send.web"/>
+		<antcall target="copy.was.server"/>
+		<antcall target="copy.web.server"/>
+		<antcall target="chmod"/>
+	</target>
+
+	
+	<!-- ================================================== -->
+	<!-- INIT --> 
+	<!-- ================================================== -->
+	<target name="clean.was.server">
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${was.work.log}"
+			command="cd deploy;./${init.cmd}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${was.work.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />	
+	</target>
+	
+	<target name="clean.web.server">
+		<sshexec host="${web.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${was.work.log}"
+			command="cd deploy;./${init.cmd}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${was.work.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />	
+	</target>
+	
+	
+	<!-- ================================================== -->
+	<!-- SEND --> 
+	<!-- ================================================== -->
+	<target name="send.web">
+		<scp todir="${user.id}:${user.pwd}@${web.ip}:${docroot}" trust="true">
+			<fileset dir="${mo.pkg.dir}">
+				<include name="${tar.name}_WEB.tar"></include>
+			</fileset>
+		</scp>
+	</target>
+	
+	<target name="send.was">
+		<scp todir="${user.id}:${user.pwd}@${was.ip}:${docroot}" trust="true">
+			<fileset dir="${mo.pkg.dir}">
+				<include name="${tar.name}_WAS.tar"></include>
+			</fileset>
+		</scp>
+	</target>
+	
+	
+	
+	<!-- ================================================== -->
+	<!-- COPY	 --> 
+	<!-- ================================================== -->	
+	<target name="copy.was.server">
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${was.work.log}"
+			command="cd deploy;./${deploy.cmd}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${was.work.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />		
+	</target>
+	
+	
+	<target name="copy.web.server">
+		<sshexec host="${web.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${was.work.log}"
+			command="cd deploy;./${deploy.cmd}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${was.work.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />		
+	</target>	
+	
+	<target name="check_remote_work" unless="isSuccess">
+		<fail message="원격지 작업이 실패하였습니다..." />
+	</target>	
+	
+	<target name="chmod">
+				<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+					trust="true" verbose="false" output="${was.work.log}"
+					command="chmod -R 775 /h2010/mo2/webapp/;chmod -R 775 /h2010/mo2/webroot/" />
+		</target>	
+
+	
+	
+	<!-- **************************************************************** -->
+	<!-- restart jeus -->
+	<!-- **************************************************************** -->	
+	<target name="restart"> <!-- test server only -->
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${was.work.log}"
+			command="ja downcon ${con.name1};ja startcon ${con.name1}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${was.work.log}" substring="Succeeded to start" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />			
+	</target>
+
+	<target name="restart_linux"> <!-- test server only -->
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${was.work.log}"
+			command="/usr2/jeus6/bin/jeusadmin `hostname` -Uadministrator -Pjeusadmin downcon ${con.name1};/usr2/jeus6/bin/jeusadmin `hostname` -Uadministrator -Pjeusadmin startcon ${con.name1};" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${was.work.log}" substring="Succeeded to start" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />			
+	</target>	
+</project>

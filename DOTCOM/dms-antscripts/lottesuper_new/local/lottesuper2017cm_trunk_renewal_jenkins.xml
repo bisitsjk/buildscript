@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottesuper2017cm_trunk_renewal_jenkins">
+	
+	<!-- **************************************************************** -->
+	<!-- PROPERTY -->
+	<!-- **************************************************************** -->
+	<echo>PROPERTY FILE : ${ant.project.name}.${deploy.phase}.properties</echo>
+	
+	<!-- 공통 Jenkins 경로는 service 로 구분 -->
+	<property name="hdsnWrkSpPath" value="E:/jenkins-lottesuper/jobs/${service}_2017_PRJ_RENEWAL_TRUNK/workspace"/>
+	
+	<!-- 공통파일이 서비스별로 복사가 되어야하므로 libservie로 구분 -->
+	<property name="svrLibPath" value="project/${libservice}/WEB-INF/lib"/>
+	
+	<property name="comm.deploy.id" value="lotte-super-commons"/>
+	<property file="${deployer.home.dir}/scripts/${ant.project.name}.${deploy.phase}.properties"/>
+	<property name="src.jar.path" value="lotte-super-commons/dist" />
+	<property name="comm.jar.nm" value="lottesuper-commons.jar" />
+	<property name="user.id" value="${svrUserId}"/>
+	<property name="user.pwd" value="${svrUserPassword}"/>
+	
+	<target name="run">
+		<echo>♠ BUILD </echo>
+		<antcall target="build" />
+		<antcall target="pack" />
+	</target>
+	
+	<target name="check_remote_work" unless="isSuccess">
+		<fail message="원격지 작업이 실패하였습니다..." />
+	</target>
+	
+		
+	<!-- #### SSH JESU RESTART ####--><!-- 기존 Job 에는 재기동하지 않았슴. 재기동하지 않은 이유는? -->
+	<target name="ssh_restart_jeus" depends="check_exist" if="isRestart">
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${jeus.restart.log}"
+			command="jdown;jboot" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${jeus.restart.log}" substring="Succeeded to start ${con_mobile}" casesensitive="true" /><!-- 만약에 이 target 을 쓴다면 con_mobile 을 무엇으로 대체할지 결정해야함 -->
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>jeus restart 작업이 완료되었습니다...</echo>
+	</target>
+
+	
+
+	
+	<!-- **************************************************************** -->
+	<!-- CHECK -->
+	<!-- **************************************************************** -->
+		
+	<!-- file file = E:/jenkins-lottesuper/jobs/${service}_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-commons/dist/lottesuper-commons.jar -->
+	<target name="check_jar">
+		<echo>♠ common jar가 있는지 확인합니다.</echo>
+		<condition property="existJar">
+			<resourceexists><file file="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${src.jar.path}/${comm.jar.nm}" /></resourceexists>
+		</condition>
+	</target>
+	
+	<!-- **************************************************************** -->	
+	<!-- UPDATE -->
+	<!-- **************************************************************** -->
+	<target name="update" if="isValid">
+		<echo>♠ trunk, branches를 update합니다.</echo>
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="update"/>
+		</java>
+	</target>
+	
+	
+	
+	<target name="check_exist"> 	<!--source type check-->
+		<condition property="isExistClass">
+			<or>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/project/back/WEB-INF/dynamic_classes"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/project/back/WEB-INF/classes"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/project/back/WEB-INF/lib"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/project/back/WEB-INF/x2config"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/project/back/WEB-INF/x2scenario"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/project/back/WEB-INF/config.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/project/back/WEB-INF/config-dev.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/project/back/WEB-INF/config-test.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/project/back/WEB-INF/config-real.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/project/back/WEB-INF/jeus-web-dd.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/project/back/WEB-INF/jeus-web-dd-dev.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/project/back/WEB-INF/jeus-web-dd-test.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/project/back/WEB-INF/jeus-web-dd-real.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/project/back/WEB-INF/web.xml"/></resourceexists>
+			</or>
+		</condition>
+		<condition property="isExistJsp">
+			<or>
+				<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/project/mobile/WEB-INF/jsp"/></resourceexists>
+				<resourcecount when="greater" count="0">
+					<filelist dir="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/project/mobile" files="*.jsp,*.html"/>
+				</resourcecount>				
+			</or>
+		</condition>
+		
+		<condition property="isJspAndClass">
+			<and>
+				<istrue value="${isExistClass}"/>
+				<istrue value="${isExistJsp}"/>
+			</and>
+		</condition>
+		<condition property="isJsp">
+			<and>
+				<isfalse value="${isExistClass}"/>
+				<istrue value="${isExistJsp}"/>
+			</and>
+		</condition>
+		<condition property="isClass">
+				<istrue value="${isExistClass}"/>
+		</condition>
+		<condition property="isExist">
+			<or>
+				<istrue value="${isExistClass}"/>
+				<istrue value="${isExistJsp}"/>
+			</or>
+		</condition>		
+		<condition property="isRestart">
+				<istrue value="${isClass}"/>
+		</condition>
+		<echo>isJsp : ${isJsp} </echo>
+		<echo>isClass : ${isClass} </echo>
+		<echo>isJspAndClass : ${isJspAndClass} </echo>
+		<echo>jeus restart - >> ${isRestart}</echo>
+	</target>
+	
+	
+			
+	<!-- **************************************************************** -->
+	<!-- BUILD -->
+	<!-- **************************************************************** -->
+	
+	<!-- java.home.dir = C:/Program Files (x86)/Java/jdk1.6.0_25 -->
+	<!-- java.home.dir = C:/Program Files (x86)/Java/jdk1.6.0_25/jre/lib/rt.jar -->
+	<!-- jeus.home.dir = C:/TmaxSoft/JEUS6.0 -->
+	<echo>java.home.dir : ${java.home.dir}</echo>
+	<path id="classpath">
+		<!--
+		<fileset dir="${java.home.dir}/jre/lib">
+			
+			<include name="rt.jar" />
+			<include name="jce.jar" />
+			<include name="*.jar" />
+		</fileset>
+		-->
+		<fileset dir="${jeus.home.dir}/lib/datasource">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="${jeus.home.dir}/lib/system">
+			<include name="*.jar" />
+		</fileset>
+		<!-- E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL_TRUNK/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-commons/lib/*.jar -->
+		<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcLibPath}">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}">
+			<include name="*.jar" />
+		</fileset>
+	</path>
+	
+	<!--<target name="build" if="isValid">-->
+	<target name="build">
+		<antcall target="compile" />
+		<antcall target="jar" />
+	</target>	
+	
+	<echo>hdsnBranchPath=${hdsnBranchPath}</echo>
+	<echo>srcdir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcJavaPath}"</echo>
+	
+	<!-- 서비스별로 경로 틀리게 service 로 구분 -->
+	<!-- E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL_TRUNK/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-commons/build -->
+	<!-- E:/jenkins-lottesuper/jobs/FRONT_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-commons/build -->
+	<!-- E:/jenkins-lottesuper/jobs/MOBILE_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-commons/build -->
+	<!-- E:/jenkins-lottesuper/jobs/BATCH_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-commons/build -->
+	<!-- E:/jenkins-lottesuper/jobs/LOTTEBATCH_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-commons/build -->
+	<target name="compile">
+		<mkdir dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}" />
+		<delete includeemptydirs="true">
+			<!-- E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL_TRUNK/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-commons/build/**/* -->
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}" includes="**/*"/>
+    	</delete>
+
+		<!-- srcdir = E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL_TRUNK/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-commons/src -->
+		<!-- destdir = E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL_TRUNK/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-commons/build -->
+		<!-- copy todir=E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL_TRUNK/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-commons/build -->
+		<!-- fileset dir=E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL_TRUNK/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-commons/src/**/**/*.xml -->
+		<javac source="1.6" 
+			target="1.6" 
+			srcdir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcJavaPath}"
+			classpathref="classpath"
+			destdir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			fork="true" 
+			memoryMaximumSize="256m"
+			includeantruntime="false"/>
+			
+		<!-- XML 복사 -->
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcJavaPath}">
+				<!--
+				<include name="**/**/*.xml" />
+				<include name="**/**/*.properties" />
+				-->
+				<include name="**/*" />
+				<exclude name="**/*.java" />
+		    </fileset>
+		</copy>
+	</target>
+	
+	<!-- mkdir dir =  E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL_TRUNK/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-commons/dist -->
+	<!-- fileset dir =  E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL_TRUNK/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-commons/dist/**/* -->
+
+	<!-- jar encoding="UTF-8" destfile="E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL_TRUNK/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-commons/dist/lottesuper-commons.jar" -->
+	<!--
+			<fileset dir="E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL_TRUNK/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-commons/build" />
+			<fileset dir="E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL_TRUNK/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-commons/src">
+						<include name="**/**/*.java" />
+						<include name="**/**/*.xml" />
+	-->
+	<target name="jar">
+		<mkdir dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${src.jar.path}" />
+		<delete includeemptydirs="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${src.jar.path}" includes="**/*"/>
+    	</delete>
+		<jar encoding="UTF-8" destfile="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${src.jar.path}/${comm.jar.nm}">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}" />
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcJavaPath}">
+				<include name="**/**/*.java" />
+				<include name="**/**/*.xml" />
+				<include name="**/**/*.properties" />
+			</fileset>
+		</jar>
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- PACK -->
+	<!-- **************************************************************** -->
+
+	<target name="pack">
+		<antcall target="pack_jar" />
+	</target>
+	
+	<!-- 서비스별로 경로 틀리게 service 로 구분 -->
+	<!-- E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL_TRUNK/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-commons/build -->
+	<!-- E:/jenkins-lottesuper/jobs/FRONT_2017_PRJ_RENEWAL_TRUNK/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-commons/build -->
+	<!-- E:/jenkins-lottesuper/jobs/MOBILE_2017_PRJ_RENEWAL_TRUNK/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-commons/build -->
+	<!-- E:/jenkins-lottesuper/jobs/BATCH_2017_PRJ_RENEWAL_TRUNK/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-commons/build -->
+	<!-- E:/jenkins-lottesuper/jobs/LOTTEBATCH_2017_PRJ_RENEWAL_TRUNK/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-commons/build -->
+	<!-- Dist 아래 있는 특정 jar 처리 -->
+	
+	<!-- 서비스별로 경로가 틀려야하므로 주의 -->
+	<!-- copy todir     = "E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL_TRUNK/workspace/lottesup2011/pack/PROJECT/lotte-super-commons/project/back/WEB-INF/lib" -->
+	<!-- copy todir     = "E:/jenkins-lottesuper/jobs/BATCH_2017_PRJ_RENEWAL_TRUNK/workspace/lottesup2011/pack/PROJECT/lotte-super-commons/project/batch/WEB-INF/lib" -->
+	<!-- copy todir     = "E:/jenkins-lottesuper/jobs/FRONT_2017_PRJ_RENEWAL_TRUNK/workspace/lottesup2011/pack/PROJECT/lotte-super-commons/project/front/WEB-INF/lib" -->
+	<!-- copy todir     = "E:/jenkins-lottesuper/jobs/MOBILE_2017_PRJ_RENEWAL_TRUNK/workspace/lottesup2011/pack/PROJECT/lotte-super-commons/project/mobile/WEB-INF/lib" -->
+		
+	<!-- fileset dir       =  "E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL_TRUNK/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-commons/dist -->
+	<!-- include name =  "lottesuper-commons.jar" -->
+	
+	<target name="pack_jar" depends="check_jar" if="existJar">
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${comm.deploy.id}/${svrLibPath}">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${src.jar.path}">
+				<include name="${comm.jar.nm}"/>
+		    </fileset>
+		</copy>
+	</target>
+	
+		
+</project>

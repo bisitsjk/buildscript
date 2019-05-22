@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="LECS_Build">
+	<import file="build_env.xml"/>
+	<import file="build_check.xml"/>
+	<import file="build_checkout.xml"/>
+	<import file="build_build.xml"/>
+	<import file="build_build_tst.xml"/>
+	<import file="build_build_stg.xml"/>
+	<import file="build_build_prd.xml"/>
+	<import file="build_deploy.xml"/>
+	<import file="build_deploy_tst.xml"/>
+	<import file="build_deploy_stg.xml"/>
+	<import file="build_deploy_prd.xml"/>
+	<import file="build_restart.xml"/>
+	<import file="build_restart_tst.xml"/>
+	<import file="build_restart_stg.xml"/>
+	<import file="build_restart_prd.xml"/>
+	<import file="build_css.xml"/>
+	<import file="build_jspc.xml"/>
+		
+	
+	<target name="init">
+		<mkdir dir="${build.product.dir}" />
+		<mkdir dir="${build.test.dir}" />
+		<mkdir dir="${build.test.dir}" />
+		<antcall target="init_project" />
+	</target>
+
+	<target name="env" description="한글Test" >
+			<echo taskname="한글Test2">한글 출력A</echo>
+	</target>
+	<target name="test1" description="한글Test">
+				<echo taskname="한글Test2">ABCDEA</echo>
+		</target>
+
+	<target name="clean" depends="clean-project">
+		<delete includeemptydirs="true">
+            <fileset dir="build">
+                <include name="**/*"/>
+                <exclude name="src/**"/>
+            </fileset>
+        </delete>
+		<delete dir="${dist.dir}" />
+		<delete dir="${doc.dir}" />
+		<delete file="velocity.log" />
+		<delete file="${build.dir}/*.zip"/>
+	</target>
+
+	<!-- Sub Project에서 오버라이드 해서 사용할 clean-->
+	<target name="clean-project">
+	</target>
+
+	
+
+
+	<target name="doc" depends="">
+		<echo>Documentation creation finished</echo>
+	</target>
+
+	<target name="apidoc">
+		<mkdir dir="build/doc/api/" />
+		<copy todir="build/doc/api">
+			<fileset dir="${basedir}/build/src/LECS-Library/build/doc/api">
+				<include name="**/*" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="test-report">
+		<mkdir dir="build/doc/test-report" />
+		<junitreport todir="build/doc/test-report">
+			<fileset dir="build" includes="**/TEST-*.xml" />
+			<report format="frames" todir="build/doc/test-report" />
+		</junitreport>
+	</target>
+
+	<target name="pmd">
+		<mkdir dir="build/doc/pmd/" />
+		<pmd shortFilenames="true">
+			<ruleset>rulesets/lecs_ruleset.xml</ruleset>
+			<ruleset>basic</ruleset>
+			<formatter type="html" toFile="build/doc/pmd/pmd_report.html" />
+			<formatter type="xml" toFile="build/doc/pmd/pmd_report.xml" />
+
+			<fileset dir="build/src/">
+				<include name="**/*.java" />
+				<exclude name="**/*Test.java" />
+				<exclude name="**/src_interface/**/*.java" />
+				<exclude name="*test*" />
+				<exclude name="*Test*" />
+			</fileset>
+		</pmd>
+	</target>
+
+	<target name="pmd-report">
+		<xslt in="build/doc/pmd/pmd_report.xml" style="pmd_xslt/lecs-pmd-report.xslt" out="build/doc/pmd/pmd_report2.html" />
+		<xslt in="build/doc/pmd/pmd_report.xml" style="pmd_xslt/only-prio1.xslt" out="build/doc/pmd/pmd_report_p1.html" />
+		<xslt in="build/doc/pmd/pmd_report.xml" style="pmd_xslt/only-prio2.xslt" out="build/doc/pmd/pmd_report_p2.html" />
+		<xslt in="build/doc/pmd/pmd_report.xml" style="pmd_xslt/only-prio3.xslt" out="build/doc/pmd/pmd_report_p3.html" />
+		<xslt in="build/doc/pmd/pmd_report.xml" style="pmd_xslt/only-prio4.xslt" out="build/doc/pmd/pmd_report_p4.html" />
+		<xslt in="build/doc/pmd/pmd_report.xml" style="pmd_xslt/only-prio5.xslt" out="build/doc/pmd/pmd_report_p5.html" />
+	</target>
+
+	<target name="indexpage">
+		<echo file="build/doc/index.html">
+			&lt;html&gt; &lt;head&gt;
+			&lt;title&gt; LECS Project &lt;/title&gt;
+
+			&lt;/head&gt;
+
+			&lt;body&gt; 
+			Created time: ${DSTAMP} ${TSTAMP} &lt;br&gt;
+			
+			&lt;br&gt; 
+			
+			&lt;li&gt;  &lt;a href="./api/index.html"&gt;	Javadoc&lt;/a&gt; 
+			&lt;li&gt;	&lt;a href="./pmd/pmd_report.html"&gt;PMD Report&lt;/a&gt;
+			&lt;li&gt;	&lt;a href="./pmd/pmd_report2.html"&gt;PMD Report 2&lt;/a&gt;
+			&lt;li&gt;	&lt;a href="./test-report/index.html"&gt;Unit Test Report&lt;/a&gt; 
+
+
+			&lt;/body&gt; &lt;/html&gt;
+		</echo>
+	</target>
+
+	<target name="doc-project">
+	</target>
+
+
+	<!-- WMS -->
+		<target name="deploy-wms-stg">
+			<antcall target="deploy-wms-webapp">
+				<param name="address" value="${stg3}" />
+			</antcall>
+		</target>
+
+		<target name="deploy-wms-prd">
+			<antcall target="deploy-wms-webapp">
+				<param name="address" value="${batchapp}" />
+			</antcall>
+		</target>
+
+		<target name="deploy-wms-webapp">
+			<antcall target="deploy-target">
+				<param name="remote.address" value="${address}" />
+				<param name="deploy.material" value="LECS-Platform-LPS_webapp.zip" />
+				<param name="deploy.path" value="/lotte/lecs/webapp/wms/" />
+				<param name="remove.old" value="yes" />
+			</antcall>
+		</target>
+
+
+
+	<target name="ppp">
+		<echo message="PPP" />
+	</target>
+
+	<target name="threadtest">
+		<groovy>
+<![CDATA[		
+			t = Thread.start {
+					ant.antcall(target:"ppp")
+			}
+			t2 = Thread.start {
+					ant.antcall(target:"ppp")
+			}
+			t.join()
+			t2.join()
+			
+]]>			
+		</groovy>
+	</target>
+
+	<!-- sckim end -->
+
+	<target name="thread-work">
+		<groovy>
+			<arg value="${cmds}" />
+<![CDATA[			
+			lines = args[0].split("\n")
+			threads = []
+			lines.each { line ->
+				cmds = line.split(",")
+			
+				threads += Thread.start {
+					cmds.each { cmd ->
+						if ("".equals(cmd)){
+							return
+						}
+						ant.project.executeTarget(cmd.trim())
+					}
+				}
+			}
+			threads.each { thread ->
+				thread.join()
+			}
+]]>			
+		</groovy>
+	</target>
+
+
+	<target name="deploy-doc">
+		<!--
+		<scp todir="${deploy.id}@${deploy.server}:${deploy.doc.path}" password="${deploy.password}">
+			<fileset dir="build/doc" includes="**/*" />
+		</scp>
+		-->
+	</target>
+
+</project>
+
+

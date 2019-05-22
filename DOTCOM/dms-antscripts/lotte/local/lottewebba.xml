@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottewebba">
+	<import file="./lotteweb.xml"/>
+    <!-- **************************************************************** -->
+	<!-- PROPERTY -->
+	<!-- **************************************************************** -->	
+	<property name="deploy.id.prefix" value="BA"/>
+	<property name="init.cmd"     value="bainit"/>
+	<property name="copy.cmd"     value="badeploy"/>
+	<property name="backup.cmd"   value="babackup"/>
+	<property name="rollback.cmd" value="barollback"/>
+
+	
+	<!-- **************************************************************** -->
+	<!-- CHECK -->
+	<!-- **************************************************************** -->	
+	<target name="check_common">
+		<echo>♠ 공통 배포ID가 있는지 확인합니다. : ${comm.deploy.id}</echo>
+		<substring property="deploy.id.suffix" string="${deploy.id}" start="2" end="16"/>
+		<condition property="existCommon">
+			<and>
+				<contains string="${comm.deploy.id}" substring="CM_" casesensitive="true" />
+				<length   string="${comm.deploy.id}" when="greater" length="15"/>
+				<contains string="${comm.deploy.id}" substring="${deploy.id.suffix}"/>
+			</and>
+		</condition>
+	</target>
+		
+	<target name="check_exist">
+		<condition property="isExist">
+			<resourceexists>
+				<file file="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/JAVA_APP"/>
+			</resourceexists>
+		</condition>
+		<condition property="isExistCommon">
+			<and>
+				<isfalse value="${isExist}"/>
+				<istrue value="${isExistCommon}"/>
+			</and>
+		</condition>
+	</target>
+	
+	<target name="check_host">
+		<condition property="isValidServer">
+			<or>
+				<equals arg1="10.149.193.60" arg2="${host.ip}"/>
+				<equals arg1="211.233.44.17" arg2="${host.ip}"/>
+				<equals arg1="211.233.44.19" arg2="${host.ip}"/>
+				<equals arg1="211.172.253.250" arg2="${host.ip}"/>
+				<equals arg1="10.149.142.102" arg2="${host.ip}"/>
+				<equals arg1="10.149.142.87" arg2="${host.ip}"/>
+				<equals arg1="10.149.142.63" arg2="${host.ip}"/>
+				<equals arg1="10.149.142.98" arg2="${host.ip}"/>
+				<equals arg1="10.149.142.61" arg2="${host.ip}"/>
+				<equals arg1="10.149.142.62" arg2="${host.ip}"/>
+			</or>
+		</condition>
+	</target>	
+		
+	
+<!-- **************************************************************** -->
+<!-- MAIN -->
+<!-- **************************************************************** -->
+	<target name="phase2.1">
+		<echo>================================================================================</echo>
+		<antcall target="accept"/>
+		<antcall target="merge"/>
+		<antcall target="clean"/>
+		<antcall target="build"/>
+		<antcall target="pack"/>
+		<echo>================================================================================</echo>
+	</target>
+	
+	<target name="phase2.2">
+		<echo>================================================================================</echo>
+		<echo>${MESSAGES}</echo>
+		<property name="deploy.id" value="${main.deploy.id}"/>
+		<property name="user.id"   value="xclass"/>
+		<propertyvalue property="user.pwd" value="${user.id}"/>
+		<fixcrlf srcdir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}" 
+			includes="JAVA_APP/*.sh,JAVA_APP/bin/*" 
+			encoding="utf-8" eol="unix" eof="remove"/>
+		<antcall target="backup"/>
+		<antcall target="send"/>
+		<echo>================================================================================</echo>
+	</target>
+	
+	<target name="phase2.4">
+		<echo>================================================================================</echo>
+		<property name="deploy.id" value="${main.deploy.id}"/>
+		<antcall target="notice_success"/>
+		<antcall target="record"/>
+		<echo>================================================================================</echo>
+	</target>
+	
+	<target name="phase3.1">
+		<echo>================================================================================</echo>
+		<antcall target="accept_real"/>
+		<antcall target="merge"/>
+		<antcall target="clean"/>
+		<antcall target="build"/>
+		<antcall target="pack"/>
+		<echo>================================================================================</echo>
+	</target>	
+	
+	<target name="phase3.2">
+		<echo>================================================================================</echo>
+		<property name="deploy.id" value="${main.deploy.id}"/>
+		<property name="user.id"   value="xclass"/>
+		<propertyvalue property="user.pwd" value="${user.id}"/>
+		<fixcrlf srcdir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}" 
+			includes="JAVA_APP/*,JAVA_APP/bin/*" 
+			encoding="utf-8" eol="unix" eof="remove"/>
+		<antcall target="backup"/>
+		<antcall target="send"/>
+		<echo>================================================================================</echo>
+	</target>
+	
+	<target name="phase3.3">
+		<echo>================================================================================</echo>
+		<property name="deploy.id" value="${main.deploy.id}"/>
+		<antcall target="record"/>
+		<echo>================================================================================</echo>
+	</target>
+	
+	<target name="phase3.4">
+		<echo>================================================================================</echo>
+		<property name="deploy.id" value="${main.deploy.id}"/>
+		<property name="user.id"   value="xclass"/>
+		<propertyvalue property="user.pwd" value="${user.id}"/>
+		<antcall target="rollback"/> 
+		<echo>================================================================================</echo>
+	</target>
+	
+		
+	<!-- **************************************************************** -->
+	<!-- BUILD -->
+	<!-- build -->
+	<!-- javac 전에 <record name="${log.path}/${deploy.id}_BUILD.log" action="start"/> 구문 삽입         -->
+	<!-- javac 안에 failonerror="false" errorProperty="isBuildError" 구문 삽입 -->
+	<!-- javac 후에 <record name="${log.path}/${deploy.id}_BUILD.log" action="stop"/> 구문 삽입           -->
+	<!-- fail task 앞에 <antcall target="notice_fail"/> 구문 삽입 -->
+	<!-- 마지막에 <fail if="${isBuildError}" message="컴파일 오류가 발생했습니다." /> 구문 삽입 -->
+	<!-- errorProerty 이름과 fail task의 if attribute에 사용되는 property 이름은 동일해야 함 -->
+	<!-- **************************************************************** -->
+	<target name="clean">
+	    <mkdir dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}" />
+		
+		<delete includeemptydirs="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}" includes="**/*"/>
+    	</delete>
+	</target>
+	
+	<target name="build" depends="set_id">
+		<path id="classpath">
+			<fileset dir="${java.home.dir}/jre/lib">
+				<include name="rt.jar" />
+			</fileset>
+			<fileset dir="${comm.wrksp.path}/${comm.svn.repos.name}/${hdsnBranchPath}/${comm.ref.path}">
+				<include name="*.jar" />
+			</fileset>
+			<fileset dir="${comm.wrksp.path}/${comm.svn.repos.name}/${hdsnBranchPath}/${comm.lib.path}">
+				<include name="*.jar" />
+				<exclude name="commons-pionnet.jar" />
+				<exclude name="commons-interfaces.jar" />
+				<exclude name="commons-pricemgr.jar" />
+			</fileset>
+			<fileset dir="${comm.wrksp.path}/${comm.svn.repos.name}/${hdsnBranchPath}/${comm.pdk.path}">
+				<include name="*.jar" />
+			</fileset>
+			<fileset dir="${comm.wrksp.path}/${comm.svn.repos.name}/${hdsnBranchPath}/${comm.ifc.path}">
+				<include name="*.jar" />
+			</fileset>
+			<fileset dir="${comm.wrksp.path}/${comm.svn.repos.name}/${hdsnBranchPath}/${comm.prm.path}">
+				<include name="*.jar" />
+			</fileset>			
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcLibPath}">
+				<include name="*.jar" />
+				<exclude name="commons-pionnet.jar" />
+				<exclude name="commons-interfaces.jar" />
+				<exclude name="commons-pricemgr.jar" />
+			</fileset>
+		</path>
+		<record name="${log.path}/${deploy.id}_BUILD.log" action="start"/>
+		<javac  
+			srcdir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcJavaPath}"
+			classpathref="classpath"
+			destdir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}"
+			failonerror="false" errorProperty="isBuildError"
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			fork="true"
+			nowarn="on"
+			memoryMaximumSize="256m" />		
+		<record name="${log.path}/${deploy.id}_BUILD.log" action="stop"/>
+		<antcall target="notice_fail"/>
+		<fail if="${isBuildError}" message="컴파일 오류가 발생했습니다." />
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcJavaPath}">
+				<include name="**/**/*.xml"/>
+		    </fileset>
+		</copy>		
+	</target>			
+	
+	
+	<!-- **************************************************************** -->
+	<!-- PACK -->
+	<!-- **************************************************************** -->
+	<target name="pack.jar" depends="check_common" if="${existCommon}">
+		<waitfor maxwait="5000" checkevery="1000" timeoutproperty="isTimeout">
+			<resourcecount when="greater" count="0">
+				<fileset dir="${comm.wrksp.path}/${comm.svn.repos.name}/${hdsnPackPath}/${comm.deploy.id}/${svrLibPath}">
+					<include name="*.*"/>
+			    </fileset>
+			</resourcecount>
+		</waitfor>
+		<echo>Timeout : ${isTimeout}</echo>
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/${svrLibPath}">
+			<fileset dir="${comm.wrksp.path}/${comm.svn.repos.name}/${hdsnPackPath}/${comm.deploy.id}/${svrLibPath}">
+				<include name="*.*"/>
+		    </fileset>
+		</copy>
+	</target>
+	
+	
+	<!-- **************************************************************** -->
+	<!-- BACKUP -->
+	<!-- **************************************************************** -->
+	
+
+	<!-- **************************************************************** -->
+	<!-- SEND  -->
+	<!-- **************************************************************** -->	
+	<target name="send" depends="check_host" if="${isValidServer}">
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${svrDocRoot}" trust="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}">
+				<include name="JAVA_APP/**/*"></include>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</scp>
+	</target>	
+	
+	
+	<!-- **************************************************************** -->
+	<!-- DEPLOY -->
+	<!-- **************************************************************** -->	
+
+		
+	<!-- **************************************************************** -->
+	<!-- ROLLBACK -->
+	<!-- **************************************************************** -->
+	<target name="rollback" depends="check_host" if="${isValidServer}">
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${svrDocRoot}" trust="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}_backup">
+				<include name="JAVA_APP/**/*"></include>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</scp>
+	</target>
+</project>

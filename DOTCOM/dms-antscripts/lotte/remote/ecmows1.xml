@@ -1,0 +1,411 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="ecmows1">
+<!-- ================================================== -->
+<!-- 공통 -->
+<!-- ================================================== -->
+	<property name="dep.id" value="${DEPLOY_ID}" />	
+	<property name="source.dir" value="/ncontents/src/${dep.id}" />
+	<property name="java5.home"  value="/usr/java1.5" />
+	<property name="java.home"  value="/usr/java1.6" />
+	<property name="ant.home"   value="/ncontents/src/apache-ant-1.8.2" />
+	<property name="deployer.home" value="/ncontents/src/deployer" />
+	<property name="docroot"    value="/h2010" />
+	<property name="user.id"    value="jeus" />
+	<property file="user_pwd.properties" />
+	
+	
+<!-- ================================================== -->
+<!-- MO  -->
+<!-- ================================================== -->
+
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->
+	<target name="mo.checkValid">
+		<condition property="mo.isValid" value="true" else="false">
+			<and>
+				<or>
+					<contains string="${hostname}" substring="www"/>
+		            <contains string="${hostname}" substring="ecevtweb"/>
+		            <contains string="${hostname}" substring="ecmo1"/>
+					<contains string="${hostname}" substring="ecmo2"/>
+					<contains string="${hostname}" substring="ecmo3"/>
+					<contains string="${hostname}" substring="ecmo4"/>
+					<contains string="${hostname}" substring="ecmo5"/>
+					<contains string="${hostname}" substring="ecmo6"/>
+					<contains string="${hostname}" substring="ecmo7"/>
+					<contains string="${hostname}" substring="ecmo8"/>
+					<contains string="${hostname}" substring="ecmo9"/>
+					<contains string="${hostname}" substring="ecmo10"/>
+					<contains string="${hostname}" substring="ecmo11"/>
+					<contains string="${hostname}" substring="ecmo12"/>
+					<contains string="${hostname}" substring="hercules"/>
+		            <contains string="${hostname}" substring="ecevtwas"/>
+		            <contains string="${hostname}" substring="ecmows"/>
+				</or>
+				<contains string="${dep.id}" substring="MO_20" casesensitive="true" />
+			</and>
+		</condition>
+		<echo>hostname `${hostname}` is ${mo.isValid}</echo>
+	</target>
+	
+	<target name="mo.goFail" depends="mo.checkValid" unless="${mo.isValid}">
+		<fail message="Hostname or deploy ID is wrong."/>
+	</target>
+			
+	<target name="mo.checkExist">
+		<condition property="mo.isWebHost" value="true" else="false">
+			<or>
+				<contains string="${hostname}" substring="www"/>
+	            <contains string="${hostname}" substring="ecevtweb"/>
+	            <contains string="${hostname}" substring="ecmo1"/>
+				<contains string="${hostname}" substring="ecmo2"/>
+				<contains string="${hostname}" substring="ecmo3"/>
+				<contains string="${hostname}" substring="ecmo4"/>
+				<contains string="${hostname}" substring="ecmo5"/>
+				<contains string="${hostname}" substring="ecmo6"/>
+				<contains string="${hostname}" substring="ecmo7"/>
+				<contains string="${hostname}" substring="ecmo8"/>
+				<contains string="${hostname}" substring="ecmo9"/>
+				<contains string="${hostname}" substring="ecmo10"/>
+				<contains string="${hostname}" substring="ecmo11"/>
+				<contains string="${hostname}" substring="ecmo12"/>
+			</or>
+		</condition>
+		<condition property="mo.isWasHost" value="true" else="false">
+			<or>
+				<contains string="${hostname}" substring="hercules"/>
+	            <contains string="${hostname}" substring="ecevtwas"/>
+	            <contains string="${hostname}" substring="ecmows"/>
+			</or>
+		</condition>
+		<condition property="mo.isExistWebroot" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/mo/webroot"/>
+				</resourceexists>
+				<istrue value="${mo.isWebHost}"/>
+			</and>
+		</condition>
+		<condition property="mo.isExistWebapp" value="true" else="false">
+			<and>
+				<resourcecount when="greater" count="0">
+					<fileset dir="${source.dir}/mo" casesensitive="yes">
+						<include name="webapp/**"/>
+						<exclude name="webapp/WEB-INF/classes/**"/>
+						<exclude name="webapp/WEB-INF/lib/**"/>
+						<exclude name="webapp/WEB-INF/spring/**"/>
+						<exclude name="webapp/WEB-INF/config/**"/>
+						<exclude name="webapp/WEB-INF/mapping/**"/>
+						<exclude name="webapp/WEB-INF/*.xml"/>
+					</fileset>
+				</resourcecount>				
+				<istrue value="${mo.isWasHost}"/>
+			</and>
+		</condition>
+		<condition property="mo.isExistWebinf" value="true" else="false">
+			<and>
+				<resourcecount when="greater" count="0">
+					<fileset dir="${source.dir}/mo" casesensitive="yes">
+						<include name="webapp/WEB-INF/classes/**"/>
+						<include name="webapp/WEB-INF/lib/**"/>
+						<include name="webapp/WEB-INF/spring/**"/>
+						<include name="webapp/WEB-INF/config/**"/>
+						<include name="webapp/WEB-INF/mapping/**"/>
+						<include name="webapp/WEB-INF/*.xml"/>
+					</fileset>
+				</resourcecount>
+				<istrue value="${mo.isWasHost}"/>
+			</and>
+		</condition>
+		<condition property="mo.isJspAndClass" value="true" else="false">
+			<and>
+				<istrue value="${mo.isExistWebapp}"/>
+				<istrue value="${mo.isExistWebinf}"/>
+			</and>
+		</condition>
+		<condition property="mo.isJsp" value="true" else="false">
+			<and>
+				<istrue value="${mo.isExistWebapp}"/>
+				<isfalse value="${mo.isExistWebinf}"/>
+			</and>
+		</condition>
+		<condition property="mo.isClass" value="true" else="false">
+			<and>
+				<isfalse value="${mo.isExistWebapp}"/>
+				<istrue value="${mo.isExistWebinf}"/>
+			</and>
+		</condition>
+		<condition property="mo.isWeb" value="true" else="false">
+			<istrue value="${mo.isExistWebroot}"/>
+		</condition>
+		<condition property="mo.isWas" value="true" else="false">
+			<or>
+				<istrue value="${mo.isExistWebapp}"/>
+				<istrue value="${mo.isExistWebinf}"/>
+			</or>
+		</condition>
+	</target>	
+			
+	<!-- ================================================== -->
+	<!-- init -->
+	<!-- ================================================== -->
+	<target name="mo.init" depends="mo.goFail">
+		<delete dir="${source.dir}/mo" />
+		<mkdir dir="${source.dir}" />
+	</target>
+		
+	<!-- ================================================== -->
+	<!-- backup -->
+	<!-- ================================================== -->
+	<target name="mo.backupWeb" if="${mo.isWeb}">
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte15.jar">
+			<arg value="${source.dir}"/>
+			<arg value="/h2010"/>
+			<arg value="${source.dir}_backup"/>
+		</java>
+	</target>
+	
+	<target name="mo.backupWas" if="${mo.isWas}">
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte.jar">
+			<arg value="${source.dir}"/>
+			<arg value="/h2010"/>
+			<arg value="${source.dir}_backup"/>
+		</java>
+	</target>	
+	
+	<target name="mo.backup">
+		<!-- check hostname -->
+        <condition property="mo.isWebHost">
+        	<or>
+            	<contains string="${hostname}" substring="www8"/>
+        		<contains string="${hostname}" substring="www13"/>
+        		<contains string="${hostname}" substring="www14"/>
+            	<contains string="${hostname}" substring="ecmo1"/>
+        		<contains string="${hostname}" substring="ecmo2"/>
+        		<contains string="${hostname}" substring="ecmo3"/>
+        		<contains string="${hostname}" substring="ecmo4"/>
+        		<contains string="${hostname}" substring="ecmo5"/>
+        		<contains string="${hostname}" substring="ecmo6"/>
+        		<contains string="${hostname}" substring="ecmo7"/>
+        		<contains string="${hostname}" substring="ecmo8"/>
+				<contains string="${hostname}" substring="ecmo9"/>
+				<contains string="${hostname}" substring="ecmo10"/>
+				<contains string="${hostname}" substring="ecmo11"/>
+				<contains string="${hostname}" substring="ecmo12"/>
+        	</or>
+        </condition>
+        <condition property="mo.isWasHost">
+            <or>
+                <contains string="${hostname}" substring="hercules5"/>
+            	<contains string="${hostname}" substring="hercules6"/>
+            	<contains string="${hostname}" substring="hercules11"/>
+            	<contains string="${hostname}" substring="hercules12"/>
+            	<contains string="${hostname}" substring="hercules13"/>
+            	<contains string="${hostname}" substring="hercules14"/>
+                <contains string="${hostname}" substring="ecmows"/>
+            </or>
+        </condition>
+		<!-- check tar files -->
+        <condition property="mo.isProcWeb">
+        	<and>
+	        	<istrue value="${mo.isWebHost}"/>
+	        	<not>
+	            	<resourceexists><file file="${source.dir}/backup/mo/${dep.id}_WEB.tar"/></resourceexists>
+	        	</not>
+        	</and>
+        </condition>
+		<condition property="mo.isProcWas">
+			<and>
+				<istrue value="${mo.isWasHost}"/>
+				<not>
+            		<resourceexists><file file="${source.dir}/backup/mo/${dep.id}_WAS.tar"/></resourceexists>
+				</not>
+			</and>
+        </condition>
+		
+		<antcall target="mo.fullbackup_web"/>
+		<antcall target="mo.fullbackup_was"/>
+	</target>
+	
+    <target name="mo.fullbackup_web" if="${mo.isProcWeb}">
+        <mkdir dir="${source.dir}/backup/mo"/>
+        <tar longfile="gnu" destfile="${source.dir}/backup/mo/${dep.id}_WEB.tar">
+            <tarfileset dir="/h2010/mo" filemode="664" dirmode="775">
+            	<exclude name="webroot/contents/**"/>
+            	<exclude name="**/*.tar"/>
+                <exclude name="**/*.zip"/>
+            </tarfileset>
+        </tar>
+    </target>
+	
+    <target name="mo.fullbackup_was" if="${mo.isProcWas}">
+        <mkdir dir="${source.dir}/backup/mo"/>
+        <tar longfile="gnu" destfile="${source.dir}/backup/mo/${dep.id}_WAS.tar">
+            <tarfileset dir="/h2010/mo" filemode="664" dirmode="775">            	
+                <exclude name="**/*.tar"/>
+                <exclude name="**/*.zip"/>
+            </tarfileset>
+        </tar>
+    </target>	
+		
+	<!-- ================================================== -->
+	<!-- deploy -->
+	<!-- ================================================== -->
+	<target name="mo.deploy" depends="mo.goFail,mo.checkExist">
+		<tstamp><format property="mo.time1" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${mo.time1}] ==========</echo>
+		<antcall target="mo.logBeginWeb"/>
+		<antcall target="mo.backupWeb"/>
+		<antcall target="mo.copyWeb"/>
+		<antcall target="mo.logEndWeb"/>
+		<tstamp><format property="mo.time2" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${mo.time2}] ==========</echo>
+		<antcall target="mo.logBeginWas"/>
+		<antcall target="mo.backupWas"/>
+		<antcall target="mo.copyClass"/>
+		<antcall target="mo.copyJsp"/>
+		<antcall target="mo.logEndWas"/>
+		<tstamp><format property="mo.time3" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${mo.time3}] ==========</echo>
+	</target>
+	
+	<target name="mo.copyWeb" if="${mo.isExistWebroot}">
+        <echo message="WAS webapp(jsp)"/>
+        <copy todir="/h2010/mo/webroot" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/mo/webroot">
+	        	<include name="**/*"/>
+            </fileset>
+        </copy>
+    </target>
+
+	<target name="mo.copyJsp" if="${mo.isExistWebapp}">
+        <echo message="WAS webapp(jsp)"/>
+        <copy todir="/h2010/mo/webapp" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/mo/webapp">
+            	<include name="**/*"/>
+				<exclude name="WEB-INF/classes/**"/>
+				<exclude name="WEB-INF/lib/**"/>
+				<exclude name="WEB-INF/spring/**"/>
+            	<exclude name="WEB-INF/config/**"/>
+				<exclude name="WEB-INF/mapping/**"/>
+				<exclude name="WEB-INF/*.xml"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <target name="mo.copyClass" if="${mo.isExistWebinf}">
+        <echo message="WAS web-inf(class, xml, properties and etc)"/>
+        <copy todir="/h2010/mo/webapp/WEB-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/mo/webapp/WEB-INF">
+            	<include name="classes/**"/>
+				<include name="lib/**"/>
+				<include name="spring/**"/>
+            	<include name="config/**"/>
+				<include name="mapping/**"/>
+				<include name="*.xml"/>            	
+            </fileset>
+        </copy>
+    </target>
+	
+	<target name="mo.logBeginWeb" if="${mo.isWeb}">
+		<java jvm="${java.home}/bin/java" fork="true"
+	          failonerror="false" spawn="false"
+	          jar="${deployer.home}/bin/deploylog15.jar">
+	        <arg value="20101130_1"/>
+	        <arg value="${dep.id}"/>
+	        <arg value="${hostname}"/>
+	        <arg value="B"/>
+	    </java>
+	</target>
+	
+	<target name="mo.logEndWeb" if="${mo.isWeb}">
+		<java jvm="${java.home}/bin/java" fork="true"
+	          failonerror="false" spawn="false"
+	          jar="${deployer.home}/bin/deploylog15.jar">
+	        <arg value="20101130_1"/>
+	        <arg value="${dep.id}"/>
+	        <arg value="${hostname}"/>
+	        <arg value="E"/>
+	    </java>
+	</target>
+	
+	<target name="mo.logBeginWas" if="${mo.isWas}">
+		<java jvm="${java.home}/bin/java" fork="true"
+	          failonerror="false" spawn="false"
+	          jar="${deployer.home}/bin/deploylog.jar">
+	        <arg value="20101130_1"/>
+	        <arg value="${dep.id}"/>
+	        <arg value="${hostname}"/>
+	        <arg value="B"/>
+	    </java>
+	</target>
+	
+	<target name="mo.logEndWas" if="${mo.isWas}">
+		<java jvm="${java.home}/bin/java" fork="true"
+	          failonerror="false" spawn="false"
+	          jar="${deployer.home}/bin/deploylog.jar">
+	        <arg value="20101130_1"/>
+	        <arg value="${dep.id}"/>
+	        <arg value="${hostname}"/>
+	        <arg value="E"/>
+	    </java>
+	</target>	
+	
+	<!-- ================================================== -->
+	<!-- rollback -->
+	<!-- ================================================== -->
+	<target name="mo.rollback" depends="mo.goFail,mo.checkExist">
+		<tstamp><format property="mo.time4" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${mo.time4}] ==========</echo>
+		<antcall target="mo.rollbackWeb"/>
+		<tstamp><format property="mo.time5" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${mo.time5}] ==========</echo>
+		<antcall target="mo.rollbackClass"/>
+		<antcall target="mo.rollbackJsp"/>
+		<tstamp><format property="mo.time6" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${mo.time6}] ==========</echo>
+	</target>
+	
+	<target name="mo.rollbackWeb" if="${mo.isExistWebroot}">
+        <echo message="webroot"/>
+        <copy todir="/h2010/mo/webroot" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/mo/webroot">
+	        	<include name="**/*"/>
+            </fileset>
+        </copy>
+    </target>
+
+	<target name="mo.rollbackJsp" if="${mo.isExistWebapp}">
+        <echo message="webapp"/>
+        <copy todir="/h2010/mo/webapp" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/mo/webapp">
+            	<include name="**/*"/>
+				<exclude name="WEB-INF/classes/**"/>
+				<exclude name="WEB-INF/lib/**"/>
+				<exclude name="WEB-INF/spring/**"/>
+            	<exclude name="WEB-INF/config/**"/>
+				<exclude name="WEB-INF/mapping/**"/>
+				<exclude name="WEB-INF/*.xml"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <target name="mo.rollbackClass" if="${mo.isExistWebinf}">
+        <echo message="webapp/WEB-INF"/>
+        <copy todir="/h2010/mo/webapp/WEB-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/mo/webapp/WEB-INF">
+            	<include name="classes/**"/>
+				<include name="lib/**"/>
+				<include name="spring/**"/>
+            	<include name="config/**"/>
+				<include name="mapping/**"/>
+				<include name="*.xml"/>            	
+            </fileset>
+        </copy>
+    </target>	
+</project>

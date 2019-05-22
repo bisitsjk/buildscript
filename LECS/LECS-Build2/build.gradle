@@ -1,0 +1,65 @@
+subprojects { 
+	apply plugin: 'java' 
+	
+	configurations {
+		compileJava {
+			ext.compilerArgs = ['-Xlint:unchecked'] 
+		}
+	}
+	
+	dependencies {
+		compile fileTree("${project(':LECS-Library').projectDir}/lib").include("**/*.jar")
+		compile fileTree("${project(':LECS-Library').projectDir}/lib_test").include("**/*.jar")
+	}	
+
+	sourceSets {
+	    main {
+	        java {
+	            srcDir 'src'
+	        }
+	        resources {
+	            srcDir 'src'
+	        }
+	    }
+	}
+	
+	[compileJava, compileTestJava]*.options*.fork([memoryMaximumSize:"512m"])
+	[compileJava, compileTestJava]*.options*.encoding = "UTF-8"
+	
+	
+	
+	// 각 서브 프로젝트를 평가하기전에 수행 되는 클로저. 
+	// 각 서브 프로젝트에 LECS-Library를 의존성 주입한다.
+	beforeEvaluate { prj ->
+		if ( prj.name != "LECS-Library")
+		project.dependencies.add("compile", project(':LECS-Library'))
+	}
+}
+
+project(':LECS-Library') {
+	sourceSets {
+	    main {
+	        java {
+	            srcDir 'src_common'
+				srcDir 'src_platform_api'
+				srcDir 'src_platform_component'
+				srcDir 'src_interface/java'
+				srcDir 'src_store'
+	        }
+	        resources {
+	            srcDir 'src_common'
+				srcDir 'src_platform_api'
+				srcDir 'src_platform_component'
+				srcDir 'src_interface/java'
+				srcDir 'src_store'
+	        }
+	    }
+	}
+}
+
+
+
+
+task hello << {
+	libs.each { println it}
+}

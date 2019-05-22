@@ -1,0 +1,383 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="ecmows5">
+<!-- ================================================== -->
+<!-- 공통 -->
+<!-- ================================================== -->
+	<property name="dep.id" value="${DEPLOY_ID}" />	
+	<property name="source.dir" value="/ncontents/src/${dep.id}" />
+	<property name="java5.home"  value="/usr/java1.5" />
+	<property name="java.home"  value="/usr/java1.6" />
+	<property name="ant.home"   value="/ncontents/src/apache-ant-1.8.2" />
+	<property name="deployer.home" value="/ncontents/src/deployer" />
+	<property name="docroot"    value="/h2010" />
+	<property name="user.id"    value="jeus" />
+	<property file="user_pwd.properties" />
+	
+	
+<!-- ================================================== -->
+<!-- MCGL - Mobile China Global -->
+<!-- ================================================== -->
+
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->
+	<target name="mc.checkValid">
+		<condition property="mc.isValid" value="true" else="false">
+			<and>
+				<or>
+					<contains string="${hostname}" substring="ecmo3"/>
+					<contains string="${hostname}" substring="ecmo4"/>
+					<contains string="${hostname}" substring="ecmo5"/>
+		            <contains string="${hostname}" substring="ecmows5"/>
+					<contains string="${hostname}" substring="ecmows6"/>
+		            <contains string="${hostname}" substring="ecmows7"/>
+				</or>
+				<contains string="${dep.id}" substring="MC_20" casesensitive="true" />
+			</and>
+		</condition>
+		<echo>hostname `${hostname}` is ${mc.isValid}</echo>
+	</target>
+	
+	<target name="mc.goFail" depends="mc.checkValid" unless="${mc.isValid}">
+		<fail message="Hostname or deploy ID is wrong."/>
+	</target>
+			
+	<target name="mc.checkExist">
+		<condition property="mc.isWebHost" value="true" else="false">
+			<or>
+				<contains string="${hostname}" substring="ecmo3"/>
+				<contains string="${hostname}" substring="ecmo4"/>
+				<contains string="${hostname}" substring="ecmo5"/>
+			</or>
+		</condition>
+		<condition property="mc.isWasHost" value="true" else="false">
+			<or>
+	            <contains string="${hostname}" substring="ecmows5"/>
+				<contains string="${hostname}" substring="ecmows6"/>
+				<contains string="${hostname}" substring="ecmows7"/>
+			</or>
+		</condition>
+		<condition property="mc.isExistWebroot" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/mcgl/webroot"/>
+				</resourceexists>
+				<istrue value="${mc.isWebHost}"/>
+			</and>
+		</condition>
+		<condition property="mc.isExistWebapp" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/mcgl/webapp"/>
+				</resourceexists>
+				<istrue value="${mc.isWasHost}"/>
+			</and>
+		</condition>
+		<condition property="mc.isExistAppinf" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/mcgl/APP-INF"/>
+				</resourceexists>
+				<istrue value="${mc.isWasHost}"/>
+			</and>
+		</condition>
+		<condition property="mc.isExistCommon" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/common/conf"/>
+				</resourceexists>
+				<istrue value="${mc.isWasHost}"/>
+			</and>
+		</condition>		
+		<condition property="mc.isJspAndClass" value="true" else="false">
+			<and>
+				<istrue value="${mc.isExistWebapp}"/>
+				<istrue value="${mc.isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="mc.isJsp" value="true" else="false">
+			<and>
+				<istrue value="${mc.isExistWebapp}"/>
+				<isfalse value="${mc.isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="mc.isClass" value="true" else="false">
+			<and>
+				<isfalse value="${mc.isExistWebapp}"/>
+				<istrue value="${mc.isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="mc.isWeb" value="true" else="false">
+			<istrue value="${mc.isExistWebroot}"/>
+		</condition>
+		<condition property="mc.isWas" value="true" else="false">
+			<or>
+				<istrue value="${mc.isExistWebapp}"/>
+				<istrue value="${mc.isExistAppinf}"/>
+				<istrue value="${mc.isExistCommon}"/>
+			</or>
+		</condition>
+		<condition property="mc.isCommon" value="true" else="false">
+			<istrue value="${mc.isExistCommon}"/>
+		</condition>		
+	</target>	
+			
+	<!-- ================================================== -->
+	<!-- init -->
+	<!-- ================================================== -->
+	<target name="mc.init" depends="mc.goFail">
+		<delete dir="${source.dir}/mcgl" />
+		<mkdir dir="${source.dir}" />
+	</target>
+		
+	<!-- ================================================== -->
+	<!-- backup -->
+	<!-- ================================================== -->
+	<target name="mc.backupWeb" if="${mc.isWeb}">
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte15.jar">
+			<arg value="${source.dir}"/>
+			<arg value="/h2010"/>
+			<arg value="${source.dir}_backup"/>
+		</java>
+	</target>
+	
+	<target name="mc.backupWas" if="${mc.isWas}">
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte.jar">
+			<arg value="${source.dir}"/>
+			<arg value="/h2010"/>
+			<arg value="${source.dir}_backup"/>
+		</java>
+	</target>
+	
+	<target name="mc.backup">
+		<!-- check tar files -->
+        <condition property="mc.isProcWeb">
+        	<and>
+        		<or>
+	            	<contains string="${hostname}" substring="ecmo3"/>
+	        		<contains string="${hostname}" substring="ecmo4"/>
+	        		<contains string="${hostname}" substring="ecmo5"/>
+	        	</or>
+	        	<not>
+	            	<resourceexists><file file="${source.dir}/backup/mcgl/${dep.id}_WEB.tar"/></resourceexists>
+	        	</not>
+        	</and>
+        </condition>
+		<condition property="mc.isProcWas">
+			<and>
+				<or>
+	                <contains string="${hostname}" substring="ecmows5"/>
+	            	<contains string="${hostname}" substring="ecmows6"/>
+	                <contains string="${hostname}" substring="ecmows7"/>
+	            </or>
+				<not>
+            		<resourceexists><file file="${source.dir}/backup/mcgl/${dep.id}_WAS.tar"/></resourceexists>
+				</not>
+			</and>
+        </condition>
+		
+		<antcall target="mc.fullbackup_web"/>
+		<antcall target="mc.fullbackup_was"/>
+	</target>
+	
+    <target name="mc.fullbackup_web" if="${mc.isProcWeb}">
+        <mkdir dir="${source.dir}/backup/mcgl"/>
+        <tar longfile="gnu" destfile="${source.dir}/backup/mcgl/${dep.id}_WEB.tar">
+            <tarfileset dir="/h2010/mcgl" filemode="664" dirmode="775">
+                <exclude name="**/*.tar"/>
+                <exclude name="**/*.zip"/>
+            </tarfileset>
+        </tar>
+    </target>
+	
+    <target name="mc.fullbackup_was" if="${mc.isProcWas}">
+        <mkdir dir="${source.dir}/backup/mcgl"/>
+        <tar longfile="gnu" destfile="${source.dir}/backup/mcgl/${dep.id}_WAS.tar">
+            <tarfileset dir="/h2010/mcgl" filemode="664" dirmode="775">            	
+                <exclude name="**/*.tar"/>
+                <exclude name="**/*.zip"/>
+            </tarfileset>
+        </tar>
+    </target>	
+		
+	<!-- ================================================== -->
+	<!-- deploy -->
+	<!-- ================================================== -->
+	<target name="mc.deploy" depends="mc.goFail,mc.checkExist">
+		<tstamp><format property="mc.time1" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${mc.time1}] ==========</echo>
+		<antcall target="mc.logBeginWeb"/>
+		<antcall target="mc.backupWeb"/>
+		<antcall target="mc.copyWeb"/>
+		<antcall target="mc.logEndWeb"/>
+		<tstamp><format property="mc.time2" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${mc.time2}] ==========</echo>
+		<antcall target="mc.logBeginWas"/>
+		<antcall target="mc.backupWas"/>
+		<antcall target="mc.copyCommon"/>
+		<antcall target="mc.copyClass"/>
+		<antcall target="mc.copyJsp"/>
+		<antcall target="mc.logEndWas"/>
+		<tstamp><format property="mc.time3" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${mc.time3}] ==========</echo>
+	</target>
+	
+	<target name="mc.copyWeb" if="${mc.isExistWebroot}">
+        <echo message="WEB webroot"/>
+        <copy todir="/h2010/mcgl/webroot" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/mcgl/webroot">
+	        	<include name="**/*"/>
+            </fileset>
+        </copy>
+    </target>
+
+	<target name="mc.copyJsp" if="${mc.isExistWebapp}">
+        <echo message="WAS webapp(jsp)"/>
+        <copy todir="/h2010/mcgl/webapp" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/mcgl/webapp">
+            	<include name="**/*"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <target name="mc.copyClass" if="${mc.isExistAppinf}">
+        <echo message="WAS app-inf(class, xml, properties and etc)"/>
+        <copy todir="/h2010/mcgl/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/mcgl/APP-INF">
+            	<include name="**/*"/>           	
+            </fileset>
+        </copy>
+    </target>
+	
+    <target name="mc.copyCommon" if="${mc.isExistCommon}">
+		<echo message="========================================"/>
+		<copy todir="/h2010/common/conf" overwrite="yes" verbose="true">
+			<fileset dir="${source.dir}/common/conf" 
+			         includes="**/*"
+				     excludes="*.properties,**/*.tar,**/*.bak,**/*.zip"/>
+		</copy>
+    	<copy file="${source.dir}/common/conf/CancelRefund.real.properties" 
+    		tofile="/h2010/common/conf/CancelRefund.properties" overwrite="yes" verbose="true" failonerror="false"></copy>
+    	<copy file="${source.dir}/common/conf/Mcash.real.properties" 
+    		tofile="/h2010/common/conf/Mcash.properties" overwrite="yes" verbose="true" failonerror="false"></copy>
+    	<copy file="${source.dir}/common/conf/MCash_Cancel.real.properties" 
+    		tofile="/h2010/common/conf/MCash_Cancel.properties" overwrite="yes" verbose="true" failonerror="false"></copy>
+    	<copy file="${source.dir}/common/conf/webt.real.properties" 
+    		tofile="/h2010/common/conf/webt.properties" overwrite="yes" verbose="true" failonerror="false"></copy>
+    </target>	
+	
+	<target name="mc.logBeginWeb" if="${mc.isWeb}">
+		<java jvm="${java.home}/bin/java" fork="true"
+	          failonerror="false" spawn="false"
+	          jar="${deployer.home}/bin/deploylog15.jar">
+	        <arg value="20101130_1"/>
+	        <arg value="${dep.id}"/>
+	        <arg value="${hostname}"/>
+	        <arg value="B"/>
+	    </java>
+	</target>
+	
+	<target name="mc.logEndWeb" if="${mc.isWeb}">
+		<java jvm="${java.home}/bin/java" fork="true"
+	          failonerror="false" spawn="false"
+	          jar="${deployer.home}/bin/deploylog15.jar">
+	        <arg value="20101130_1"/>
+	        <arg value="${dep.id}"/>
+	        <arg value="${hostname}"/>
+	        <arg value="E"/>
+	    </java>
+	</target>
+	
+	<target name="mc.logBeginWas" if="${mc.isWas}">
+		<java jvm="${java.home}/bin/java" fork="true"
+	          failonerror="false" spawn="false"
+	          jar="${deployer.home}/bin/deploylog.jar">
+	        <arg value="20101130_1"/>
+	        <arg value="${dep.id}"/>
+	        <arg value="${hostname}"/>
+	        <arg value="B"/>
+	    </java>
+	</target>
+	
+	<target name="mc.logEndWas" if="${mc.isWas}">
+		<java jvm="${java.home}/bin/java" fork="true"
+	          failonerror="false" spawn="false"
+	          jar="${deployer.home}/bin/deploylog.jar">
+	        <arg value="20101130_1"/>
+	        <arg value="${dep.id}"/>
+	        <arg value="${hostname}"/>
+	        <arg value="E"/>
+	    </java>
+	</target>	
+	
+	<!-- ================================================== -->
+	<!-- rollback -->
+	<!-- ================================================== -->
+	<target name="mc.rollback" depends="mc.goFail,mc.checkExist">
+		<tstamp><format property="mc.time4" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${mc.time4}] ==========</echo>
+		<antcall target="mc.rollbackWeb"/>
+		<tstamp><format property="mc.time5" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${mc.time5}] ==========</echo>
+		<antcall target="mc.rollbackClass"/>
+		<antcall target="mc.rollbackJsp"/>
+		<tstamp><format property="mc.time6" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${mc.time6}] ==========</echo>
+	</target>
+	
+	<target name="mc.rollbackWeb" if="${mc.isExistWebroot}">
+        <echo message="webroot"/>
+        <copy todir="/h2010/mcgl/webroot" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/mcgl/webroot">
+	        	<include name="**/*"/>
+            </fileset>
+        </copy>
+    </target>
+
+	<target name="mc.rollbackJsp" if="${mc.isExistWebapp}">
+        <echo message="webapp"/>
+        <copy todir="/h2010/mcgl/webapp" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/mcgl/webapp">
+            	<include name="**/*"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <target name="mc.rollbackClass" if="${mc.isExistAppinf}">
+        <echo message="APP-INF"/>
+        <copy todir="/h2010/mcgl/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/mcgl/APP-INF">
+            	<include name="**/*"/>
+            </fileset>
+        </copy>
+    </target>	
+	
+	<!-- ================================================== -->
+	<!-- untar for open -->
+	<!-- ================================================== -->	
+	<target name="mc.untarWeb">
+		<delete>
+			<dirset dir="/h2010/mcgl">
+				<include name="z_webroot"/>
+			</dirset>
+		</delete>
+		<move file="/h2010/mcgl/webroot"  tofile="/h2010/mcgl/z_webroot"/>
+		<untar src="${source.dir}/${dep.id}_WEB.tar" dest="/h2010/mcgl" overwrite="yes"/>
+	</target>
+	
+	<target name="mc.untarWas">
+		<delete>
+			<dirset dir="/h2010/mcgl">
+				<include name="z_webapp"/>
+				<include name="z_APP-INF"/>
+			</dirset>
+		</delete>
+		<move file="/h2010/mcgl/webapp"  tofile="/h2010/mcgl/z_webapp"/>
+		<move file="/h2010/mcgl/APP-INF" tofile="/h2010/mcgl/z_APP-INF"/>
+		<untar src="${source.dir}/${dep.id}_WAS.tar" dest="/h2010/mcgl" overwrite="yes"/>
+	</target>
+</project>

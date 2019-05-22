@@ -1,0 +1,21 @@
+version: 0.0
+os: linux
+files:
+- source: /pack/
+  destination: /usr1/home/jeus/deploy/
+
+permissions:
+- object: /esuper/
+  pattern: "**"
+  owner: jeus
+  group: www
+  mode: 644
+
+hooks:
+  ApplicationStop:
+   - location: scripts/aws_fo1_Stop.sh
+     timeout: 120
+  ApplicationStart:
+   - location: scripts/aws_fo1_Start.sh
+     timeout: 120
+     

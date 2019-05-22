@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="sync lotte gl" basedir=".">
+	<!-- ================================================== -->
+	<!-- properties -->
+	<!-- ================================================== -->
+	<property name="srv" value="${TARGET_SERVER}"/>
+	
+	<!-- set property -->
+	<property file="com_lotte_gl_${srv}.properties" />
+	
+	<!-- real server info -->
+	<property name="ecws1.ip"  value="10.149.144.75"/>
+	<property name="ecweb1.ip"  value="211.172.253.120"/>
+	<property name="user.id"  value="jeus"/>
+	<!-- <property name="user.pwd" value="8Yqi4q(1=Z"/> -->
+	
+	<!-- deploy id -->
+	<property name="prefix.dep.id" value="GL_" />
+	<tstamp><format property="infix.dep.id" pattern="yyyyMMdd"/></tstamp>
+	<property name="suffix.dep.id" value="_SYNC" />
+	<property name="dep.id" value="${prefix.dep.id}${infix.dep.id}${suffix.dep.id}" />		
+	
+	<!-- log file -->
+	<property name="backup.was.log" value="../logs/${dep.id}_BACKUP_WAS.log" />
+	<property name="backup.web.log" value="../logs/${dep.id}_BACKUP_WEB.log" />
+	<property name="sync.was.log"   value="../logs/${dep.id}_SYNC_WAS.log" />
+	<property name="sync.web.log"   value="../logs/${dep.id}_SYNC_WEB.log" />
+	
+	<!-- remote command -->
+	<property name="backup.cmd" value="glbackup" />
+	<property name="sync.cmd" value="glsync" />
+	
+	<!-- container name -->
+	<property name="container" value="${name}" />
+	
+	
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->
+	<target name="check_remote_work" unless="isSuccess">
+		<fail message="원격지 작업이 실패하였습니다..." />
+	</target>
+	
+	<target name="check_test2">
+		<condition property="isTest2">
+			<equals arg1="${srv}" arg2="tst2"/>
+		</condition>
+	</target>
+	
+	<!-- ================================================== -->
+	<!-- backup(source) -->
+	<!-- ================================================== -->
+	<target name="backup_was">
+		<echo>=================================================================================== WAS backup 시작 ==========</echo>
+		<antcall target="zip_was"/>
+		<echo>=================================================================================== WAS backup 종료 ==========</echo>
+	</target>
+	
+	<target name="backup_web">
+		<echo>=================================================================================== 웹서버 backup 시작 ==========</echo>
+		<antcall target="zip_web"/>
+		<echo>=================================================================================== 웹서버 backup 종료 ==========</echo>
+	</target>
+	
+	<target name="zip_was">
+		<sshexec host="${ecws1.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${backup.was.log}"
+			command="cd deploy;./${backup.cmd} ${dep.id}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${backup.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+	</target>
+	
+	<target name="zip_web">
+		<sshexec host="${ecweb1.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${backup.web.log}"
+			command="cd deploy;./${backup.cmd} ${dep.id}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${backup.web.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+	</target>
+	
+	
+	<!-- ================================================== -->
+	<!-- get zip file and unzip at docroot(target) -->
+	<!-- ================================================== -->	
+	<target name="sync">
+		<echo>=================================================================================== WEB/WAS sync sources 시작 ==========</echo>
+		<antcall target="get_and_unzip_was"/>
+		<echo>=================================================================================== WEB/WAS sync sources 종료 ==========</echo>
+	</target>
+		
+	<target name="sync_was">
+		<echo>=================================================================================== WAS sync sources 시작 ==========</echo>
+		<antcall target="get_and_unzip_was"/>
+		<echo>=================================================================================== WAS sync sources 종료 ==========</echo>
+	</target>
+
+	<target name="sync_web">
+		<echo>=================================================================================== 웹서버 sync sources 시작 ==========</echo>
+		<antcall target="get_and_unzip_web"/>
+		<echo>=================================================================================== 웹서버 sync sources 종료 ==========</echo>
+	</target>
+			
+	<target name="get_and_unzip_was">
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${sync.was.log}"
+			command="cd deploy;./${sync.cmd} ${dep.id};ja downcon ${container};ja startcon ${container}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${sync.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+	</target>
+
+	<target name="get_and_unzip_web" depends="check_test2" unless="${isTest2}">
+		<sshexec host="${web.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${sync.web.log}"
+			command="cd deploy;./${sync.cmd} ${dep.id}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${sync.web.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+	</target>
+
+</project>

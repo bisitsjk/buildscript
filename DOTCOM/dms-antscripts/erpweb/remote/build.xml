@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="erpweb_remote">
+	<!-- macrodef -->
+	<macrodef name="targetname">
+		<attribute name="property"/>
+		<attribute name="loglevel" default="3"/>
+		<sequential>
+			<script language="javascript">
+				self.getProject().setNewProperty("@{property}", self.getOwningTarget());
+			</script>
+		</sequential>
+	</macrodef>
+	
+	<macrodef name="propertyvalue">
+		<attribute name="property"/>
+		<attribute name="value"/>
+		<sequential>
+			<property name="@{property}" value="${@{value}}"/>
+		</sequential>
+	</macrodef>
+	
+	<!-- id, password -->
+	<property name="user.id"			value="jeus"/>
+	<property name="user.pwd"			value="6sUvCHdV$!"/>
+
+	
+	
+	<!-- ============================================ -->
+	<!-- TEST -->
+	<!-- ============================================ -->	
+	<property name="weberpdev"			value="10.129.100.122"/>
+			
+	<property name="script.file.path"	value="/usr1/home/xclass/deploy/script"/>	
+	
+	<target name="build">
+		<property name="host.name" value="${TARGET_HOST_NAME}"/>
+		<propertyvalue property="host.ip" value="${host.name}"/>
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${script.file.path}" trust="true">
+			<fileset dir=".">
+				<include name="${host.name}.xml"></include>
+			</fileset>
+		</scp>
+	</target>
+	
+	
+	
+	<!-- ============================================ -->
+	<!-- CM(fo,gl), FO, GL, MO, BO, MPO -->
+	<!-- ============================================ -->
+	<property name="sapweb"				value="121.254.239.82"/>
+	
+	<property name="script2.file.path"	value="/usr1/home/xclass/deploy/script"/>
+	
+	<target name="build2">
+		<property name="host.name" value="${TARGET_HOST_NAME}"/>
+		<propertyvalue property="host.ip" value="${host.name}"/>
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${script2.file.path}" trust="true">
+			<fileset dir=".">
+				<include name="${host.name}.xml"></include>
+			</fileset>
+		</scp>
+	</target>
+</project>

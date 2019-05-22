@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lecs20.deploy" basedir="."><!-- Global Param: ${target} -->
+	
+	<property file="pwd.properties" />
+	
+	<target name="CLEAN_DEV">
+		<delete dir="E:\hudson-lecs2\jobs\2.UPDATE_DEV\workspace\src\LECS-Batch"/>
+		<delete dir="E:\hudson-lecs2\jobs\2.UPDATE_DEV\workspace\src\app"/>				
+	</target>
+
+	<target name="JK.CLEAN_DEV">
+		<delete dir="E:\jenkins-lecs2jenkins\jobs\2.JK.UPDATE_DEV\workspace\src\LECS-Batch"/>
+		<delete dir="E:\jenkins-lecs2jenkins\jobs\2.JK.UPDATE_DEV\workspace\src\app"/>				
+	</target>
+
+	<target name="SVN3.CLEAN_DEV">
+		<delete dir="/Source/lecs2/jobs/2.JK.UPDATE_DEV/workspace/src/LECS-Batch"/>
+		<delete dir="/Source/lecs2/jobs/2.JK.UPDATE_DEV/workspace/src/app"/>				
+	</target>
+	
+	<target name="CLEAN_TST">
+		<delete dir="E:\hudson-lecs2\jobs\03.UPDATE_TST\workspace\src\LECS-Batch"/>
+		<delete dir="E:\hudson-lecs2\jobs\03.UPDATE_TST\workspace\src\app"/>
+	</target>
+	
+	<target name="JK.CLEAN_TST">
+		<delete dir="E:\jenkins-lecs2jenkins\jobs\03.JK.UPDATE_TST\workspace\src\LECS-Batch"/>
+		<delete dir="E:\jenkins-lecs2jenkins\jobs\03.JK.UPDATE_TST\workspace\src\app"/>
+	</target>
+	
+	<target name="CLEAN_PRD">
+		<delete dir="E:\hudson-lecs2\jobs\03.UPDATE_PRD\workspace\src\LECS-Batch"/>
+		<delete dir="E:\hudson-lecs2\jobs\03.UPDATE_PRD\workspace\src\app"/>
+	</target>
+	
+	<target name="JK.CLEAN_PRD">
+		<delete dir="E:\jenkins-lecs2jenkins\jobs\03.JK.UPDATE_PRD\workspace\src\LECS-Batch"/>
+		<delete dir="E:\jenkins-lecs2jenkins\jobs\03.JK.UPDATE_PRD\workspace\src\app"/>
+	</target>
+	
+	<target name="RESTART.SERVERS.FO">
+		<telnet server="${fo.server.ip}" userid="jeus" password="${jeuspwd}" port="23">
+			<write>jdown</write>
+			<read>jeusexit successful</read>
+			<write>jboot</write>
+			<read>virtual host name of this manager : </read>
+		</telnet>
+	</target>
+	
+	<target name="DR.SSH.RESTART.SERVERS">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="sh ~/scripts/restart.sh" trust="true" verbose="false" timeout="20000" failonerror="false"/>
+	</target>
+	
+	<target name="DR.SSH.START.SERVERS">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="/usr2/jeus6/bin/jboot;sleep 5" trust="true" verbose="false" timeout="20000" failonerror="false"/>
+	</target>
+	
+	<target name="TELNET.TAIL">
+		<telnet userid="jeus" password="${jeuspwd}" server="${fo.server.ip}" timeout="10000">
+			<write>cd /usr2/jeus-log/`hostname`</write>
+			<read>/usr2/jeus-log/`hostname`</read>
+		</telnet>
+	</target>
+	
+	<target name="SSH.RESTART.CONS">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin downcon" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin startcon" trust="true"/>
+	</target>
+	
+	<target name="SSH.DOWNCON">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="sh ~/scripts/downcon.sh" trust="true" verbose="false"/>
+	</target>
+			
+	<target name="TST1.SSH.CON.RESTART">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin downcon lecs20stg1_bo" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin startcon lecs20stg1_bo" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin downcon lecs20stg1_lps" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin startcon lecs20stg1_lps" trust="true"/>
+	</target>
+			
+	<target name="TST2.SSH.CON.RESTART">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin downcon lecs20stg2_muji" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin startcon lecs20stg2_muji" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin downcon lecs20stg2_nf" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin startcon lecs20stg2_nf" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin downcon lecs20stg2_nike" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin startcon lecs20stg2_nike" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin downcon lecs20stg2_mnf" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin startcon lecs20stg2_mnf" trust="true"/>
+	</target>
+	
+	<target name="TST3.SSH.CON.RESTART">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin downcon lecs20stg2_kiehls" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin startcon lecs20stg2_kiehls" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin downcon lecs20stg2_uniqlo" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin startcon lecs20stg2_uniqlo" trust="true"/>
+	</target>	
+	
+	<target name="DISK_CLEAN">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}"
+		command="sh ~/scripts/diskclean.sh" trust="true"/>
+	</target>
+	
+	<target name="TMP.DELETE">
+		<delete dir="E:\usr3\lecs20\mergeTool\merge"/>
+	</target>
+	
+	<target name="SVN3.TMP.DELETE">
+		<delete dir="/Source/lecs20/mergeTool/merge"/>
+	</target>
+	
+	<target name="TMP.DELETE.SVN3">
+		<delete dir="/usr3/mergeTool/merge"/>
+	</target>
+	
+	<target name="TELNET.JBOOT">
+		<telnet userid="jeus" password="${jeuspwd}" server="${fo.server.ip}" timeout="20">
+			<write>jboot</write>
+			<read>virtual host name of this manager :</read>
+		</telnet>
+	</target>
+	
+	<target name="TST2.TELNET.JBOOT">
+		<telnet userid="jeus" password="${jeuspwd}" server="${fo.server.ip}" timeout="10000">
+			<write>jboot</write>
+			<read>virtual host name of this manager :</read>
+		</telnet>
+	</target>
+	
+	<target name="TST2.SSH.DOWNCON">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin downcon lecs20stg2_yo" trust="true"/>
+	</target>
+	
+	<target name="CHG.ENCODING">
+		<native2ascii src="/usr3/lecs/apache-tomcat-8.0.27/webapps/jenkins/workspace/Uniqlo.Member.Store.TST/build" dest="/usr3/lecs/apache-tomcat-8.0.27/webapps/jenkins/workspace/Uniqlo.Member.Store.TST/build" encoding="UTF-8">
+			<include name="**/*.gradle"/>	
+		</native2ascii>
+	</target>
+	
+	<target name="TEST.SSH">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="ls" trust="true"/>
+	</target>
+	
+	<target name="JK.TST.AWS.TEMP.DIR.DELETE">
+		<delete dir="E:/jenkins-lecs2jenkins/jobs/NikePhase2.AWS/workspace/AWSWAR"/>
+		<mkdir dir="E:/jenkins-lecs2jenkins/jobs/NikePhase2.AWS/workspace/AWSWAR"/>
+		<delete dir="E:/jenkins-lecs2jenkins/jobs/NikePhase2.AWS/workspace/AWSWEB"/>
+		<mkdir dir="E:/jenkins-lecs2jenkins/jobs/NikePhase2.AWS/workspace/AWSWEB"/>
+		<delete dir="E:/jenkins-lecs2jenkins/jobs/NikePhase2.AWS/workspace/AWSIMG"/>
+		<mkdir dir="E:/jenkins-lecs2jenkins/jobs/NikePhase2.AWS/workspace/AWSIMG"/>
+	</target>
+
+    <target name="JK.TST.AWS.COMMON.COPY">
+    	<copy file="E:\jenkins-lecs2jenkins\jobs\NikePhase2.AWS\workspace\src\app\classes\config\spring\bean\common.xml.nikeaws" tofile="E:\jenkins-lecs2jenkins\jobs\NikePhase2.AWS\workspace\build\build\LECS-Store-Nike\app\WEB-INF\classes\config\spring\bean\common.xml"/>
+    	<copy file="E:\jenkins-lecs2jenkins\jobs\NikePhase2.AWS\workspace\src\app\classes\config\spring\bean\common.xml.nikeaws" tofile="E:\jenkins-lecs2jenkins\jobs\NikePhase2.AWS\workspace\build\build\LECS-Store-Nike\app\WEB-INF\classes\config\spring\bean\common.xml"/>
+    </target>
+	
+	<target name="JK.TST.NIKE.AWS.WAR.FILECOPY">	
+		<copy todir="E:\jenkins-lecs2jenkins\jobs\NikePhase2.AWS\workspace\AWSWAR">
+			<fileset dir="E:\jenkins-lecs2jenkins\jobs\NikePhase2.AWS\workspace\build\build\LECS-Store-Nike">
+				<include name="LECS-Store-Nike-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="JK.TST.NIKE.AWS.WEB.FILECOPY">	
+		<copy todir="E:\jenkins-lecs2jenkins\jobs\NikePhase2.AWS\workspace\AWSWEB">
+			<fileset dir="E:\jenkins-lecs2jenkins\jobs\NikePhase2.AWS\workspace\build\build\LECS-Store-Nike">
+				<include name="LECS-Store-Nike-CONTENT*.tar"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="JK.TST.NIKE.AWS.IMG.FILECOPY">	
+		<copy todir="E:\jenkins-lecs2jenkins\jobs\NikePhase2.AWS\workspace\AWSIMG">
+			<fileset dir="E:\jenkins-lecs2jenkins\jobs\NikePhase2.AWS\workspace\build\build\LECS-Store-Nike">
+				<include name="LECS-Store-Nike-IMAGE*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+    <target name="JK.TST.AWS.UPLOAD.WAR">
+   		<sshexec host="10.149.140.5" username="jeus" keyfile="E:\AWSKEY\dev-nike-jeus.pem" command="rm ~/deploy/prj/was/ROOT.war"  trust="true"/>
+		<scp file="E:\jenkins-lecs2jenkins\jobs\NikePhase2.AWS\workspace\AWSWAR\ROOT.war" todir="jeus@10.149.140.5:~/deploy/prj/was" keyfile="E:\AWSKEY\dev-nike-jeus.pem" passphrase="success" trust="true"/>
+    </target>
+	
+    <target name="JK.TST.AWS.UPLOAD.WEB">
+   		<sshexec host="10.149.140.5" username="jeus" keyfile="E:\AWSKEY\dev-nike-jeus.pem" command="rm ~/deploy/prj/web/nike-contents.tar"  trust="true"/>
+		<scp file="E:\jenkins-lecs2jenkins\jobs\NikePhase2.AWS\workspace\AWSWEB\nike-contents.tar" todir="jeus@10.149.140.5:~/deploy/prj/web" keyfile="E:\AWSKEY\dev-nike-jeus.pem" passphrase="success" trust="true"/>
+    </target>
+	
+	<target name="JK.TST.UPLOAD.NIKE.IMG">
+		<scp file="E:\jenkins-lecs2jenkins\jobs\NikePhase2.AWS\workspace\AWSIMG\nike_image_tst.zip" remoteTofile="jeus:${jeuspwd}@211.115.120.42:/lotte/lecsDocs/temp/nike_image_tst.zip" trust="true"/>
+	</target>
+	
+	<target name="TST.DEPLOY.NIKE.IMG">
+		<sshexec host="211.115.120.42" username="jeus" password="${jeuspwd}" command="unzip -o -q /lotte/lecsDocs/temp/nike_image_tst.zip -d /lotte/lecsDocs/images/NKS1" trust="true"/>
+	</target>
+	
+    <target name="AWS.TEST.SSH">
+   		<sshexec host="10.149.140.5" username="jeus" password="${jeuspwd}" command="ls"  trust="true"/>
+    </target>
+	
+	
+	<target name="CodeDeploy.WAS.CopyFile">	
+		<copy todir="E:\jenkins-lecs2jenkins\jobs\NikePhase2.AWS\workspace\build\build\LECS-Store-Nike" tofile="ROOT.war">
+			<fileset dir="E:\jenkins-lecs2jenkins\jobs\NikePhase2.AWS\workspace\build\build\LECS-Store-Nike">
+				<include name="LECS-Store-Nike-IMAGE*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	
+</project>

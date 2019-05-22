@@ -1,0 +1,539 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<project name="mpartnerlottedotcom">
+	<property name="ant.home.dir" value="/usr1/home/jeus/deploy/apache-ant-1.8.2"/>	
+	<property name="dep.id" value="${DEPLOY_ID}"/>
+	
+	<!-- SET PROPERTY -->
+	<property file="test_lotte.properties" />
+	
+	<!-- test server info -->
+	<property name="test.web.ip" value="10.149.193.49"/>
+	<property name="test.was.ip" value="10.149.193.60"/>
+	<property name="test.user.id" value="jeus"/>
+	<!-- <property name="test.user.pwd" value="8Yqi4q(1=Z"/> -->
+	
+	<!-- test2 server info -->
+	<property name="test2.ip" value="10.149.193.56"/>
+	<property name="test2.user.id" value="jeus"/>
+	<!-- <property name="test2.user.pwd" value="8Yqi4q(1=Z"/> -->
+	
+	<!-- nas server info -->
+	<property name="host.ip" value="121.254.239.80"/>
+	<property name="user.id" value="jeus"/>
+	<!-- <property name="user.pwd" value="8Yqi4q(1=Z"/> -->
+
+	<property name="request.mp.dir" value="${workspace}/request/mpartner"/>
+	<property name="test.bo.dir" value="/usr1/home/jeus/deploy/src"/>
+	<property name="nas.bo.dir" value="/ncontents/deploy"/>
+	
+	<property name="log.file"     value="${workspace}/remote_work.log"/>
+	
+	<!-- container name -->
+	<property name="inst.dir" value="/usr2/apache-tomcat/instance/" />
+	<property name="instance21" value="mpo21" />
+	<property name="tomcat.check" value="ps -ef | grep tomcat" />
+				
+	<!-- tasks -->
+	<target name="copy_to_nas" depends="param_check">
+		<antcall target="param_check"/>
+		<antcall target="rmdir"/>
+		<antcall target="mkdir"/>
+		<antcall target="send"/>
+	</target>
+	
+	<!-- validate -->
+	<target name="param_check"><!-- 파라미터 검사 -->
+		<echo>파라미터 DEPLOY_ID 값을 검사합니다.</echo>
+		<condition property="isValid">
+		    <and>
+				<length string="${dep.id}" when="greater" length="15"/>
+				<contains string="${dep.id}" substring="MP_" casesensitive="true"/>
+			</and>
+		</condition>
+		<fail unless="${isValid}" message="파라미터 DEPLOY_ID의 값이 유효하지 않습니다."/>
+	</target>
+	
+	<!-- 소스 검사용 dirset -->
+	<dirset id="webdirs" dir="${request.mp.dir}/${dep.id}">
+		<include name="mpo/webroot" />
+	</dirset>
+	
+	<dirset id="wasdirs" dir="${request.mp.dir}/${dep.id}">
+		<include name="mpo/APP-INF" />
+		<include name="mpo/webapp" />
+		<include name="common/conf" />
+	</dirset>
+	
+	<target name="source_check"><!-- 소스 검사 -->
+		<echo>배포할 소스가 있는지 검사합니다.</echo>
+		<condition property="isWebSrc">
+			<resourcecount refid="webdirs" when="greater" count="0" />
+		</condition>
+		<condition property="isWasSrc">
+			<resourcecount refid="wasdirs" when="greater" count="0" />
+		</condition>
+		<condition property="isExistSrc">
+			<or>
+				<istrue value="${isWebSrc}" />
+				<istrue value="${isWasSrc}" />
+			</or>
+		</condition>
+		<echo>Web Source : ${isWebSrc}</echo>
+		<echo>WAS Source : ${isWasSrc}</echo>
+		<fail unless="${isExistSrc}" message="배포할 소스가 존재하지 않습니다."/>
+	</target>
+	
+	<target name="zipfile_check">
+		<echo>소스가 들어있는 압축파일(ZIP)이 존재하는지 검사합니다.</echo>
+		<condition property="isWebZip">
+			<resourceexists>
+				<file file="${request.mp.dir}/${dep.id}/${dep.id}_WEB.zip" />
+			</resourceexists>
+		</condition>
+		<condition property="isWasZip">
+			<resourceexists>
+				<file file="${request.mp.dir}/${dep.id}/${dep.id}_WAS.zip" />
+			</resourceexists>
+		</condition>
+		<condition property="isExistZip">
+			<or>
+				<istrue value="${isWebZip}" />
+				<istrue value="${isWasZip}" />
+			</or>
+		</condition>
+		<fail unless="${isExistZip}" message="소스가 들어있는 압축파일(ZIP)이 존재하지 않습니다."/>
+	</target>
+	
+	<target name="check_remote_work" unless="isSuccess">
+		<fail message="원격지 작업이 실패하였습니다..." />
+	</target>
+	
+	
+	
+	<!-- 2012.03.21 -->
+	<!-- ftp가 먹통입니다. 그래서 -->
+	<!-- 테스트 서버만 zip으로 묶어서 보냅니다. -->
+	<target name="zipfile_web" if="${isWebSrc}">
+		<delete file="${request.mp.dir}/${dep.id}/${dep.id}_WEB.zip" />
+		<zip destfile="${request.mp.dir}/${dep.id}/${dep.id}_WEB.zip"
+		     basedir="${request.mp.dir}/${dep.id}"
+		     includes="mpo/webroot/**"
+		     excludes="**/.svn/**" />
+	</target>
+	
+	<target name="zipfile_was" if="${isWasSrc}">
+		<delete file="${request.mp.dir}/${dep.id}/${dep.id}_WAS.zip" />
+		<zip destfile="${request.mp.dir}/${dep.id}/${dep.id}_WAS.zip"
+		     basedir="${request.mp.dir}/${dep.id}"
+		     includes="mpo/APP-INF/classes/**, 
+		               mpo/APP-INF/conf/**, 
+		               mpo/APP-INF/lib/**, 
+		               mpo/webapp/**,
+		               common/**"
+		     excludes="**/.svn/**" />
+	</target>
+		
+	<target name="send_to_web" if="${isWebZip}">
+		<ftp action="mkdir" passive="yes" verbose="yes"
+		     server="${test.web.ip}" userid="${test.user.id}" password="${test.user.pwd}"
+		     remotedir="${test.bo.dir}/${dep.id}">
+		</ftp>
+		<ftp server="${test.web.ip}" userid="${test.user.id}" password="${test.user.pwd}"
+		     remotedir="${test.bo.dir}/${dep.id}"
+		     action="put" passive="yes" verbose="yes">
+			<fileset dir="${request.mp.dir}/${dep.id}">
+				<include name="${dep.id}_WEB.zip"></include>
+			</fileset>
+		</ftp>
+	</target>
+	
+	<target name="send_to_was" if="${isWasZip}">
+		<ftp action="mkdir" passive="yes" verbose="yes"
+		     server="${test.was.ip}" userid="${test.user.id}" password="${test.user.pwd}"
+		     remotedir="${test.bo.dir}/${dep.id}">
+		</ftp>
+		<ftp server="${test.was.ip}" userid="${test.user.id}" password="${test.user.pwd}"
+		     remotedir="${test.bo.dir}/${dep.id}"
+		     action="put" passive="yes" verbose="yes">
+			<fileset dir="${request.mp.dir}/${dep.id}">
+				<include name="${dep.id}_WAS.zip"></include>
+			</fileset>
+		</ftp>
+	</target>
+	
+	<target name="send_to_test2" >
+		<ftp action="mkdir" passive="yes" verbose="yes"
+		     server="${test2.ip}" userid="${test2.user.id}" password="${test2.user.pwd}"
+		     remotedir="${test.bo.dir}/${dep.id}">
+		</ftp>
+		<ftp server="${test2.ip}" userid="${test2.user.id}" password="${test2.user.pwd}"
+		     remotedir="${test.bo.dir}/${dep.id}"
+		     action="put" passive="yes" verbose="yes">
+			<fileset dir="${request.mp.dir}/${dep.id}">
+				<include name="${dep.id}_WEB.zip"></include>
+				<include name="${dep.id}_WAS.zip"></include>
+			</fileset>
+		</ftp>
+	</target>
+	
+	<!-- 요까지는 로컬에서 수행됩니다. -->
+	
+	
+	<!-- 여기부터는 원격지(테스트서버)에서 수행하는 부분입니다. -->
+	<target name="host_source_check"><!-- 서버 호스트 검사 -->
+		<condition property="isWebServer">
+			<equals arg1="${hostname}" arg2="ecbotst"/>
+		</condition>
+		<condition property="isWasServer">
+			<equals arg1="${hostname}" arg2="ecbowstst"/>
+		</condition>
+		<echo>${hostname}</echo>
+		<condition property="isWEB">
+		  <and>
+			<equals arg1="${hostname}" arg2="ecbotst"/>
+			<resourceexists><file file="${test.bo.dir}/${dep.id}/mpo/webroot"/></resourceexists>
+		  </and>
+		</condition>
+		<echo>${isWEB}</echo>
+		<condition property="isJSP">
+		  <and>
+			<equals arg1="${hostname}" arg2="ecbowstst"/>
+			<resourceexists><file file="${test.bo.dir}/${dep.id}/mpo/webapp"/></resourceexists>
+		  </and>
+		</condition>
+		<echo>${isJSP}</echo>
+		<condition property="isCLASS">
+		  <and>
+			<equals arg1="${hostname}" arg2="ecbowstst"/>
+			<resourceexists><file file="${test.bo.dir}/${dep.id}/mpo/APP-INF"/></resourceexists>
+		  </and>
+		</condition>
+		<echo>${isCLASS}</echo>
+		<condition property="isCOMM">
+		  <and>
+			<equals arg1="${hostname}" arg2="ecbowstst"/>
+			<resourceexists><file file="${test.bo.dir}/${dep.id}/common/conf"/></resourceexists>
+		  </and>
+		</condition>
+		<echo>${isCOMM}</echo>
+	</target>	
+	
+	<target name="web_job" depends="unzipfile_web, host_source_check">
+		<antcall target="backup_web" />
+		<antcall target="copy_web" />
+	</target>
+	
+	<target name="was_job" depends="unzipfile_was, host_source_check">
+		<antcall target="backup_was" />
+		<antcall target="copy_jsp" />
+		<antcall target="copy_class" />
+		<antcall target="copy_common" />
+	</target>
+	
+	<target name="unzipfile_web">
+	  <delete dir="${test.bo.dir}/${dep.id}/mpo" includeEmptyDirs="true"/>
+		<unzip src="${test.bo.dir}/${dep.id}/${dep.id}_WEB.zip"
+		       dest="${test.bo.dir}/${dep.id}"/>
+	</target>
+	
+	<target name="unzipfile_was">
+	  <delete dir="${test.bo.dir}/${dep.id}/mpo" includeEmptyDirs="true"/>
+		<unzip src="${test.bo.dir}/${dep.id}/${dep.id}_WAS.zip"
+		       dest="${test.bo.dir}/${dep.id}" />
+	</target>
+	
+	<target name="backup_web">
+		<java jvm="/usr/java1.6/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home.dir}/bin/lotte.jar">
+			<arg value="${test.bo.dir}/${dep.id}"/>
+			<arg value="/h2010"/>
+			<arg value="${test.bo.dir}/${dep.id}_backup"/>
+		</java>
+	</target>
+	
+	<target name="backup_was">
+		<java jvm="/usr/java1.6/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home.dir}/bin/lotte.jar">
+			<arg value="${test.bo.dir}/${dep.id}"/>
+			<arg value="/h2010"/>
+			<arg value="${test.bo.dir}/${dep.id}_backup"/>
+		</java>
+	</target>
+	
+	<target name="copy_web" if="isWEB">
+		<copy todir="/h2010/mpo/webroot" overwrite="yes">
+      <fileset dir="${test.bo.dir}/${dep.id}/mpo/webroot" excludes="**/*.bak,**/*.tar"/>
+    </copy>
+	</target>
+	
+	<target name="copy_jsp" if="isJSP">
+		<copy todir="/h2010/mpo/webapp" overwrite="yes">
+            <fileset dir="${test.bo.dir}/${dep.id}/mpo/webapp" excludes="**/*.bak,**/*.tar"/>
+        </copy>
+	</target>
+	
+	<target name="copy_class" if="isCLASS">
+        <copy todir="/h2010/mpo/APP-INF" overwrite="yes">
+            <fileset dir="${test.bo.dir}/${dep.id}/mpo/APP-INF" excludes="**/*.bak,**/*.tar"/>
+        </copy>
+	</target>
+	
+	<target name="copy_common" if="isCOMM">
+		<copy todir="/h2010/common" overwrite="yes">
+            <fileset dir="${test.bo.dir}/${dep.id}/common" excludes="**/*.bak,**/*.tar"/>
+        </copy>
+	</target>
+	
+	<target name="deploy_web" depends="source_check" if="isWebSrc">
+		<sshexec host="${test.web.ip}" username="${test.user.id}" password="${test.user.pwd}" 
+			trust="true" verbose="false" output="${log.file}"
+			command="cd deploy;./get ${dep.id}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${log.file}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<!--
+		<telnet server="${test.web.ip}" userid="${test.user.id}" password="${test.user.pwd}" timeout="10">
+			<read>/jeus]%</read>
+			<write>cd deploy</write>
+			<read>/deploy]%</read>
+			<write>./get ${dep.id}</write>
+			<read>/deploy]%</read>
+			<write>exit</write>
+		</telnet>
+		-->
+	</target>
+	
+	<target name="deploy_was" depends="source_check" if="isWasSrc">
+		<sshexec host="${test.was.ip}" username="${test.user.id}" password="${test.user.pwd}" 
+			trust="true" verbose="false" output="${log.file}"
+			command="cd deploy;./get ${dep.id}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${log.file}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<!--
+		<telnet server="${test.was.ip}" userid="${test.user.id}" password="${test.user.pwd}">
+			<read>/jeus]%</read>
+			<write>cd deploy</write>
+			<read>/deploy]%</read>
+			<write>./get ${dep.id}</write>
+			<read>/deploy]%</read>
+			<write>ja downcon ${con_mpo}</write>
+			<read>/deploy]%</read>
+			<write>ja startcon ${con_mpo}</write>
+			<read>/deploy]%</read>
+			<write>exit</write>
+		</telnet>
+		-->
+	</target>
+	
+	<target name="deploy_test2">
+		<sshexec host="${test2.ip}" username="${test2.user.id}" password="${test2.user.pwd}" 
+			trust="true" verbose="false" output="${log.file}"
+			command="cd deploy;./get ${dep.id}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${log.file}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<!--
+		<telnet server="${test2.ip}" userid="${test2.user.id}" password="${test2.user.pwd}">
+			<read>/jeus]%</read>
+			<write>cd deploy</write>
+			<read>/deploy]%</read>
+			<write>./get ${dep.id}</write>
+			<read>/deploy]%</read>
+			<write>ja downcon ${con2_mpo}</write>
+			<read>/deploy]%</read>
+			<write>ja startcon ${con2_mpo}</write>
+			<read>/deploy]%</read>
+			<write>exit</write>
+		</telnet>
+		-->
+	</target>
+	
+	<!-- NAS 작업들 -->
+	<target name="rmdir" if="${isValid}">
+		<!-- 0. REMOVE DIR -->
+		<!-- ftp로는 지워지지 않아 telnet으로 대체 -->
+		<telnet server="${host.ip}" userid="${user.id}" password="${user.pwd}">
+			<read>/jeus]%</read>
+			<write>cd ${nas.bo.dir}</write>
+			<read>${nas.bo.dir}]%</read>
+			<write>\rm -rf ${dep.id}/mpo</write>
+			<read>${nas.bo.dir}]%</read>
+			<write>exit</write>
+		</telnet>
+	</target>
+	
+	<target name="mkdir" if="${isValid}">
+		<!-- 1. MAKE DIR -->
+		<ftp action="mkdir" passive="yes" verbose="yes"
+		     server="${host.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${nas.bo.dir}/${dep.id}">
+		</ftp>
+	</target>
+	
+	<target name="send" if="${isValid}">
+		<!-- 2. FTP (from local to nas) -->
+		<echo>WEB</echo>
+		<ftp server="${host.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${nas.bo.dir}/${dep.id}"
+		     action="put" passive="yes" verbose="yes">
+			<fileset dir="${request.mp.dir}/${dep.id}">
+				<include name="mpo/webroot/**/*.*"></include>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</ftp>
+		<echo></echo>
+		<echo>WAS - JSP</echo>
+		<ftp server="${host.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${nas.bo.dir}/${dep.id}"
+		     action="put" passive="yes" verbose="yes">
+			<fileset dir="${request.mp.dir}/${dep.id}">
+				<include name="mpo/webapp/**/*.jsp"></include>
+				<include name="mpo/webapp/**/*.htm"></include>
+				<include name="mpo/webapp/**/*.html"></include>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</ftp>
+		<echo></echo>
+		<echo>WAS - CLASS/XML (jeus restarting required)</echo>
+		<ftp server="${host.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${nas.bo.dir}/${dep.id}"
+		     action="put" passive="yes" verbose="yes">
+			<fileset dir="${request.mp.dir}/${dep.id}">
+				<include name="mpo/webapp/WEB-INF/web.xml"></include>
+				<include name="mpo/APP-INF/classes/**/*.class"></include>
+				<include name="mpo/APP-INF/conf/spring/*.xml"></include>
+				<include name="mpo/APP-INF/conf/sqlmap/**/*.xml"></include>
+				<include name="mpo/APP-INF/conf/message/*.properties"></include>
+				<include name="mpo/APP-INF/conf/*.properties"></include>
+				<include name="mpo/APP-INF/lib/*.jar"></include>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</ftp>
+		<echo></echo>
+		<echo>WAS - COMMON (jeus restarting required)</echo>
+		<ftp server="${host.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${nas.bo.dir}/${dep.id}"
+		     action="put" passive="yes" verbose="yes">
+			<fileset dir="${request.mp.dir}/${dep.id}">
+				<include name="common/conf/**/**"></include>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</ftp>
+	</target>
+	
+	<!-- 로그를 쌓아요 -->
+	<target name="beginlog">
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/deploylog.jar">
+			<arg value="20101130_1"/>
+			<arg value="${dep.id}"/>
+			<arg value="${hostname}"/>
+			<arg value="B"/>
+		</java>
+	</target>
+	
+	<target name="endlog">
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/deploylog.jar">
+			<arg value="20101130_1"/>
+			<arg value="${dep.id}"/>
+			<arg value="${hostname}"/>
+			<arg value="E"/>
+		</java>
+	</target>
+	
+	
+	<!-- **************************************************************** -->
+	<!-- source type check -->
+	<!-- **************************************************************** -->
+	<target name="source_type_check">
+		<condition property="isWEB">
+			<resourceexists><file file="${request.mp.dir}/${dep.id}/mpo/webroot"/></resourceexists>
+		</condition>
+		<echo>${isWEB}</echo>
+		<condition property="isJSP">
+			<resourceexists><file file="${request.mp.dir}/${dep.id}/mpo/webapp"/></resourceexists>
+		</condition>
+		<echo>${isJSP}</echo>
+		<condition property="isCLASS">
+			<resourceexists><file file="${request.mp.dir}/${dep.id}/mpo/APP-INF"/></resourceexists>
+		</condition>
+		<echo>${isCLASS}</echo>
+		<condition property="isCOMM">
+			<resourceexists><file file="${request.mp.dir}/${dep.id}/common/conf"/></resourceexists>
+		</condition>
+		<echo>${isCOMM}</echo>
+	</target>
+	
+	
+	<!-- **************************************************************** -->
+	<!-- jeus restart -->
+	<!-- **************************************************************** -->
+	<target name="shutdown_tomcat">
+			<sshexec host="${test.was.ip}" username="${test.user.id}" password="${test.user.pwd}" 
+				trust="true" verbose="false" output="${log.file}"
+				command="${inst.dir}${instance11}/bin/shutdown.sh;"/>
+		</target>
+		
+		<target name="start_tomcat"> 
+			<sshexec host="${test.was.ip}" username="${test.user.id}" password="${test.user.pwd}" 
+				trust="true" verbose="false" output="${log.file}"
+				command="${inst.dir}${instance11}/bin/start.sh;"/>
+		</target>
+					
+		<target name="was_status_check"> 
+			<sshexec host="${test.was.ip}" username="${test.user.id}" password="${test.user.pwd}" 
+				trust="true" verbose="false" output="${log.file}"
+				command="${tomcat.check}" />
+			<condition property="isSuccess">
+				<and>
+					<resourcecontains resource="${log.file}" substring="/usr2/apache-tomcat/insta"     casesensitive="true" />
+				</and>
+			</condition>
+			<antcall target="check_remote_work" />
+		</target>
+	
+	<target name="shutdown_tomcat2">
+		<sshexec host="${test2.ip}" username="${test2.user.id}" password="${test2.user.pwd}" 
+			trust="true" verbose="false" output="${log.file}"
+			command="${inst.dir}${instance21}/bin/shutdown.sh;"  />
+	</target>
+	
+	<target name="start_tomcat2"> 
+		<sshexec host="${test2.ip}" username="${test2.user.id}" password="${test2.user.pwd}" 
+			trust="true" verbose="false" output="${log.file}"
+			command="${inst.dir}${instance21}/bin/start.sh;" />
+	</target>
+				
+	<target name="was_status_check2"> 
+		<sshexec host="${test2.ip}" username="${test2.user.id}" password="${test2.user.pwd}" 
+			trust="true" verbose="false" output="${log.file}"
+			command="${tomcat.check}" />
+		<condition property="isSuccess">
+			<and>
+				<resourcecontains resource="${log.file}" substring="/usr2/apache-tomcat/insta"     casesensitive="true" />
+			</and>
+		</condition>
+		<antcall target="check_remote_work" />
+	</target>
+	
+	<target name="restart_jeus" depends="source_type_check" if="isCLASS"> <!-- for test server only -->
+		<sshexec host="${server.ip}" username="${test.user.id}" password="${test.user.pwd}" 
+			trust="true" verbose="false" output="${log.file}"
+			command="ja downcon ${con.name};ja startcon ${con.name}" />
+		<condition property="isSuccess">
+			<and>
+				<resourcecontains resource="${log.file}" substring="Succeeded to start ${con.name}"     casesensitive="true" />
+			</and>
+		</condition>
+		<antcall target="check_remote_work" />
+	</target>
+</project>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottesuper_Ftp_Test_jenkins">
+
+<target name="ftp_test">
+		<ftp server="${was.ip}" userid="xclass" password="w&uch6raDa*r"
+		     remotedir="/usr1/home/xclass/deploy/test"
+		     action="put"
+			 passive="yes">
+			<fileset dir="E:/hudson-lottesuper/jobs/LOTTESUPER_COMMONS_1_TEST_BUILD/workspace/lottesuper2011/pack/REAL/CM_20160122_1853_backup">
+				<include name="project/back/**/*"></include>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</ftp>
+</target>
+</project>

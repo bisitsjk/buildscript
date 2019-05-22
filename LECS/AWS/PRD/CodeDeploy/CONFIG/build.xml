@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lecs20.deploy" basedir="."><!-- Global Param: ${target} -->
+	
+	<property name="path" value="E:/jenkins-lecs2jenkins/jobs/AWS.CONFIG.COPY/workspace/PACKCONFIG" />
+	
+	<!-- FILECOPY -->
+		
+	<target name="copy.cd.src">	
+		<copy todir="${path}">
+			<fileset dir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/build/pack"/>
+		</copy>
+	</target>
+	
+    <target name="AWS.CONFIG.COPY.STG.PRD">
+		<delete dir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG"/>
+		<mkdir dir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG"/>
+		<delete dir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/PACKCONFIG"/>
+		<mkdir dir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/PACKCONFIG"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_common/config/system/lecs/config_lecs.xml.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_common/config/system/lecs/config_lecs.xml.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_common/config/system/salt/config_salt.xml.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_common/config/system/salt/config_salt.xml.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_platform_component/config/spring/bean/common.xml.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_platform_component/config/spring/bean/common.xml.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_interface/java/interfaces.properties.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_interface/java/interfaces.properties.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_interface/java/CancelRefund.properties.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_interface/java/CancelRefund.properties.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_interface/java/Mcash.properties.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_interface/java/Mcash.properties.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Platform-LPS/src/config/system/lps/config_lps.xml.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Platform-LPS/src/config/system/lps/config_lps.xml.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Store-Muji/src/config/system/muji/config_muji.xml.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Store-Muji/src/config/system/muji/config_muji.xml.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Store-New-Uniqlo/src/config/system/uniqlo/config_uniqlo.xml.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Store-New-Uniqlo/src/config/system/uniqlo/config_uniqlo.xml.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Store-New-Uniqlo-FR-API/src/config/system/uniqlooa/config_uniqlooa.xml.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Store-New-Uniqlo-FR-API/src/config/system/uniqlooa/config_uniqlooa.xml.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Platform-LPS/src/config/log4j/log4j.xml.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG/LECS-Platform-LPS" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Platform-LPS/src/config/log4j/log4j.xml.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG/LECS-Platform-LPS" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Store-Muji/src/config/log4j/log4j.xml.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG/LECS-Store-Muji" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Store-Muji/src/config/log4j/log4j.xml.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG/LECS-Store-Muji" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Store-New-Uniqlo/src/config/log4j/log4j.xml.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG/LECS-Store-New-Uniqlo" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Store-New-Uniqlo/src/config/log4j/log4j.xml.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG/LECS-Store-New-Uniqlo" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Store-New-Uniqlo-FR-API/src/config/log4j/log4j.xml.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG/LECS-Store-New-Uniqlo-FR-API" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Store-New-Uniqlo-FR-API/src/config/log4j/log4j.xml.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG/LECS-Store-New-Uniqlo-FR-API" overwrite="true"/>
+
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Store-GU/src/config/system/gu/config_gu.xml.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Store-GU/src/config/system/gu/config_gu.xml.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+    	
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Store-GU/src/config/log4j/log4j.xml.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG/LECS-Store-GU" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Store-GU/src/config/log4j/log4j.xml.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG/LECS-Store-GU" overwrite="true"/>
+
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_common/config/spring/common/spring_properties.properties.display.uniqlo.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_common/config/spring/common/spring_properties.properties.display.uniqlo.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_common/config/spring/common/spring_properties.properties.main.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_common/config/spring/common/spring_properties.properties.main.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+    	
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_common/config/spring/common/spring_properties.properties.display.gu.prd" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>
+    	<copy file="E:/jenkins-lecs2jenkins/jobs/AWS.UPDATE.PRD/workspace/src/LECS-Library/src_common/config/spring/common/spring_properties.properties.display.gu.stg" todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG" overwrite="true"/>    	
+    	
+		<zip destfile="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/PACKCONFIG/config.zip" basedir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/DEPLOYCONFIG"/>
+    </target>
+	
+</project>

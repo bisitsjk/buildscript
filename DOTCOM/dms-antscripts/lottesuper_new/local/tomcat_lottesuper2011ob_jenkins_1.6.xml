@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="tomcat_lottesuper2011ob_jenkins_1.6">
+    <!-- **************************************************************** -->
+	<!-- PROPERTY -->
+	<!-- **************************************************************** -->
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties" />
+	<property file="${deployer.home.dir}/scripts/${ant.project.name}.${deploy.phase}.properties"/>
+	<property name="user.id" value="${svrUserId}"/>
+	<property name="user.pwd" value="${svrUserPassword}"/>
+	
+	<!-- **************************************************************** -->
+	<!-- BUILD -->
+	<!-- **************************************************************** -->
+	<target name="build">
+		<echo>공통소스 = E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_OCEANBATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-ocean-batch/lib</echo>
+		
+		<path id="classpath">
+			<fileset dir="${java.home.dir}/jre/lib">
+				<include name="rt.jar" />
+			</fileset>
+			<fileset dir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_OCEANBATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-ocean-batch/lib">
+				<include name="*.jar" />
+			</fileset>
+		</path>
+		
+		<delete dir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_OCEANBATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-ocean-batch/build" />
+	    <mkdir dir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_OCEANBATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-ocean-batch/build" />
+
+		<javac source="1.6"
+			target="1.6"
+			srcdir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_OCEANBATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-ocean-batch/src"
+			classpathref="classpath"
+			destdir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_OCEANBATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-ocean-batch/build"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			fork="true" 
+			memoryMaximumSize="256m"
+			includeantruntime="false"/>	
+		
+		<antcall target="pack_jar"/>
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- PACK -->
+	<!-- **************************************************************** -->
+	
+	<target name="pack_jar">		
+		<delete includeemptydirs="true">
+			<fileset dir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_OCEANBATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-ocean-batch/dist" includes="**/*" />
+    	</delete>
+
+		<jar encoding="UTF-8" destfile="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_OCEANBATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-ocean-batch/dist/lottesuper-batch.jar">
+			<fileset dir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_OCEANBATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-ocean-batch/build" />
+		</jar>
+	</target>
+	
+</project>

@@ -1,0 +1,11 @@
+apply plugin:com.smokejumperit.gradle.ClassLoadersPlugin
+apply plugin:com.smokejumperit.gradle.ExecPlugin
+
+buildscript {
+  repositories {
+    mavenRepo urls:'http://repo.smokejumperit.com'
+  }
+  dependencies {
+    classpath 'com.smokejumperit:gradle-plugins:0.8.2'
+  }
+}

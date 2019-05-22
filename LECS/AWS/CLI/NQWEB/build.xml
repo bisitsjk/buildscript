@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lecs.deploy" basedir="."><!-- Global Param: ${target} -->
+
+	<taskdef resource="net/sf/antcontrib/antlib.xml" />
+	
+	<target name="aws.init.dir">
+		<delete dir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/awsscript"/>
+		<mkdir dir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/awsscript"/>				
+	</target>
+	
+	<target name="aws.filecopy">	
+		<copy todir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/awsscript">
+			<fileset dir="E:/jenkins-lecs2jenkins/jobs/${JOB_NAME}/workspace/build/pack"/>
+		</copy>
+	</target>
+
+</project>

@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottesuper2011bo_test">
+	<property name="deploy.id" value="${DEPLOY_ID}"/>
+	<property name="deploy.dir" value="/usr1/home/jeus/deploy"/>
+	<property name="app.dir" value="project/back"/>
+	
+	<property name="base.dir" value="/esuper/project"/>
+	<property name="back.dir" value="${base.dir}/back"/>
+	<property name="mback.dir" value="${base.dir}/mback"/>
+	<property name="partner.dir" value="${base.dir}/partner"/>
+	
+	<property name="source.dir" value="${deploy.dir}/${deploy.id}"/>
+	
+	<!-- deploy id ( for test only ) -->
+	<property name="prefix.dep.id" value="BO_" />
+	<property name="infix.dep.id" value="_TEST_" />
+	
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->		
+	<target name="check_test_deploy_id">
+		<condition property="isTestOnly">
+		  <and>
+			<length string="${deploy.id}" when="greater" length="10"/>
+			<contains string="${deploy.id}" substring="${prefix.dep.id}" casesensitive="true"/>
+			<contains string="${deploy.id}" substring="${infix.dep.id}" casesensitive="true"/>
+		  </and>
+		</condition>
+		<echo>TEST DEPLOY ID ${deploy.id} / Valid ${isTestOnly}</echo>
+	</target>
+	
+	<target name="check_host">
+		<condition property="isHost">
+			<contains string="${hostname}" substring="esptstb"/>
+		</condition>
+		<echo>hostname is `${hostname}`</echo>
+	</target>
+	
+	<target name="check_valid" depends="check_host" unless="isHost">
+		<fail message="배포 대상 서버가 아닙니다."/>
+	</target>
+	
+	<target name="check_x2config">
+		<echo>x2config.xml 파일이 있는지 확인합니다.</echo>
+		<condition property="existX2config">
+			<resourceexists><file file="${source.dir}/${app.dir}/WEB-INF/x2config/x2config.xml" /></resourceexists>
+		</condition>
+		<echo>x2config.xml : ${existX2config}</echo>
+	</target>	
+	
+    <target name="check_x2config_mpick">
+        <echo> checking  x2config_mpicking.xml file ......</echo>
+        <condition property="existX2config_mpick">
+            <resourceexists><file file="${source.dir}/${app.dir}/WEB-INF/x2config/x2configMpicking.xml" /></resourceexists>
+        </condition> 
+        <echo> x2config-mpicking.xml : ${existX2config_mpick} ></echo>
+    </target>
+    
+    <target name="check_log4jconfig_mpick">
+        <echo> checking log4jconfig_mpicking.xml file.....</echo>
+        <condition property="existLog4jconfig_mpick">  
+            <resourceexists><file file="${source.dir}/${app.dir}/WEB-INF/x2config/log4jconfigMpicking.xml"/></resourceexists> 
+        </condition>
+        <echo> log4jconfig-mpicking.xml : ${existLog4jconfig_mpick} ></echo>
+    </target>
+
+    <target name="check_x2config_partner">
+        <echo> checking x2config_partner.xml .....</echo> 
+        <condition property="existX2config_partner">
+            <resourceexists><file file="${source.dir}/${app.dir}/WEB-INF/x2config/x2configPartner.xml" /></resourceexists>
+        </condition>
+        <echo> x2config-partner.xml : ${existX2config_partner} ></echo>
+    </target>
+
+    <target name="check_log4jconfig_partner">
+        <echo> checking log4jconfig_partner.xml file.....</echo>
+        <condition property="existLog4jconfig_partner">
+            <resourceexists><file file="${source.dir}/${app.dir}/WEB-INF/x2config/log4jconfigPartner.xml"/></resourceexists> 
+        </condition>
+        <echo> log4jconfig-partner.xml : ${existLog4jconfig_partner} ></echo>
+    </target>
+
+    <target name="check_removeConfig">
+        <echo> Searching remove config file........</echo>
+        <condition property="isRemove_config">
+            <or>
+            <resourceexists><file file="${back.dir}/WEB-INF/x2config/x2configMpicking.xml"/></resourceexists>
+            <resourceexists><file file="${back.dir}/WEB-INF/x2config/x2configPartner.xml"/></resourceexists>
+            <resourceexists><file file="${back.dir}/WEB-INF/x2config/log4jconfigMpicking.xml"/></resourceexists>
+            <resourceexists><file file="${back.dir}/WEB-INF/x2config/log4jconfigPartner.xml"/></resourceexists>
+            <resourceexists><file file="${mback.dir}/WEB-INF/x2config/x2configMpicking.xml"/></resourceexists>
+            <resourceexists><file file="${mback.dir}/WEB-INF/x2config/x2configPartner.xml"/></resourceexists>  
+            <resourceexists><file file="${mback.dir}/WEB-INF/x2config/log4jconfigMpicking.xml"/></resourceexists>
+            <resourceexists><file file="${mback.dir}/WEB-INF/x2config/log4jconfigPartner.xml"/></resourceexists>
+            <resourceexists><file file="${partner.dir}/WEB-INF/x2config/x2configMpicking.xml"/></resourceexists>
+            <resourceexists><file file="${partner.dir}/WEB-INF/x2config/x2configPartner.xml"/></resourceexists>
+            <resourceexists><file file="${partner.dir}/WEB-INF/x2config/log4jconfigMpicking.xml"/></resourceexists>
+            <resourceexists><file file="${partner.dir}/WEB-INF/x2config/log4jconfigPartner.xml"/></resourceexists>
+            </or>
+        </condition>
+        <echo> find out junk File : ${isRemove_config} </echo> 
+    </target>
+
+	<!-- ================================================== -->
+	<!-- only test deploy -->
+	<!-- ================================================== -->	
+	<target name="test_deploy_was" depends="check_test_deploy_id">
+		<antcall target="rename_was" />
+		<antcall target="copy_was" />
+	</target>
+		
+	<!-- ================================================== -->
+	<!-- init -->
+	<!-- ================================================== -->
+	<target name="init">
+		<antcall target="check_valid" />
+		<antcall target="delete_sources" />
+		<antcall target="make_directory" />
+	</target>
+	
+	<target name="delete_sources">
+		<echo>Target directory `${source.dir}/project`...</echo>
+		<delete dir="${source.dir}/project" />
+	</target>
+	
+	<target name="make_directory">
+		<echo>Target directory `${source.dir}`...</echo>
+		<mkdir dir="${source.dir}" />
+	</target>
+	
+	<!-- ================================================== -->
+	<!-- rename (for test only) -->
+	<!-- ================================================== -->	
+	<target name="rename_was" if="isTestOnly">
+		<echo>change lotte-super-bos to project</echo>
+		<exec executable="mv" dir="${source.dir}">
+			<arg value="lotte-super-bos" />
+			<arg value="project" />
+		</exec>
+		<echo>change WebContent to back</echo>
+		<exec executable="mv" dir="${source.dir}/project">
+			<arg line="WebContent back" />
+		</exec>
+	</target>
+
+	<!-- ================================================== -->
+	<!-- copy -->
+	<!-- ================================================== -->
+	<target name="copy_was" depends="check_x2config">
+		<echo>url replace and file copy to docroot</echo>	
+		<copy todir="${back.dir}" failonerror="false" overwrite="true" verbose="true">
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="static-root/**/*"/>
+				<include name="ubireport/**/*"/>
+				<include name="WEB-INF/**/*"/>
+				<include name="WiseGrid/**/*"/>
+				<include name="index.html"/>
+		    </fileset>
+		</copy>		
+		<antcall target="replace_pro2mpick" />
+		<copy todir="${mback.dir}" failonerror="false" overwrite="true" verbose="true">
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="static-root/**/*"/>
+				<include name="ubireport/**/*"/>
+				<include name="WEB-INF/**/*"/>
+				<include name="WiseGrid/**/*"/>
+				<include name="index.html"/>
+		    </fileset>
+		</copy>		
+		<antcall target="replace_mpick2partner" />
+		<copy todir="${partner.dir}" failonerror="false" overwrite="true" verbose="true">
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="static-root/**/*"/>
+				<include name="ubireport/**/*"/>
+				<include name="WEB-INF/**/*"/>
+				<include name="WiseGrid/**/*"/>
+				<include name="index.html"/>
+		    </fileset>
+		</copy>
+		<antcall target="replace_partner2pro" />
+
+        <antcall target="x2configMpicking.xml" />  
+        <antcall target="log4jconfigMpicking.xml" /> 
+        <antcall target="x2configPartner.xml" />
+        <antcall target="log4jconfigPartner.xml" />
+        <antcall target="remove_junkFile"/>
+
+	</target>
+	
+    <target name="x2configMpicking.xml" depends="check_x2config_mpick" if="existX2config_mpick">
+        <move file="${source.dir}/${app.dir}/WEB-INF/x2config/x2configMpicking.xml" tofile="${mback.dir}/WEB-INF/x2config/x2config.xml" overwrite="true" />
+    </target>
+
+    <target name="log4jconfigMpicking.xml" depends="check_log4jconfig_mpick" if="existLog4jconfig_mpick">
+        <move file="${source.dir}/${app.dir}/WEB-INF/x2config/log4jconfigMpicking.xml" tofile="${mback.dir}/WEB-INF/x2config/log4jconfig.xml" overwrite="true" /> 
+    </target>
+  
+    <target name="x2configPartner.xml" depends="check_x2config_partner" if="existX2config_partner">
+         <move file="${source.dir}/${app.dir}/WEB-INF/x2config/x2configPartner.xml" tofile="${partner.dir}/WEB-INF/x2config/x2config.xml" overwrite="true" />
+    </target>
+  
+    <target name="log4jconfigPartner.xml" depends="check_log4jconfig_partner" if="existLog4jconfig_partner">
+        <move file="${source.dir}/${app.dir}/WEB-INF/x2config/log4jconfigPartner.xml" tofile="${partner.dir}/WEB-INF/x2config/log4jconfig.xml" overwrite="true" />
+    </target>
+
+    <target name="remove_junkFile" depends="check_removeConfig" if="isRemove_config">
+        <delete file="${back.dir}/WEB-INF/x2config/x2configMpicking.xml"/>
+        <delete file="${back.dir}/WEB-INF/x2config/x2configPartner.xml"/>
+        <delete file="${back.dir}/WEB-INF/x2config/log4jconfigMpicking.xml"/>
+        <delete file="${back.dir}/WEB-INF/x2config/log4jconfigPartner.xml"/>
+        <delete file="${mback.dir}/WEB-INF/x2config/x2configMpicking.xml"/> 
+        <delete file="${mback.dir}/WEB-INF/x2config/x2configPartner.xml"/>
+        <delete file="${mback.dir}/WEB-INF/x2config/log4jconfigMpicking.xml"/>
+        <delete file="${mback.dir}/WEB-INF/x2config/log4jconfigPartner.xml"/>
+        <delete file="${partner.dir}/WEB-INF/x2config/x2configMpicking.xml"/>
+        <delete file="${partner.dir}/WEB-INF/x2config/x2configPartner.xml"/>
+        <delete file="${partner.dir}/WEB-INF/x2config/log4jconfigMpicking.xml"/>
+        <delete file="${partner.dir}/WEB-INF/x2config/log4jconfigPartner.xml"/>
+    </target>
+  
+	<target name="replace_pro2mpick" if="existX2config">
+		<!-- protest를 있으면 mpickingtest:2443으로 변경 -->
+		<replace dir="${source.dir}/${app.dir}" value="mpickingtest.lottesuper.co.kr:2443">
+			<include name="WEB-INF/x2config/x2config.xml"/>
+			<replacetoken>protest.lottesuper.co.kr</replacetoken>
+		</replace>
+		<replace dir="${source.dir}/${app.dir}" value="/esuper/project/mback">
+			<include name="WEB-INF/x2config/x2config.xml"/>
+			<replacetoken>/esuper/project/back</replacetoken>
+		</replace>
+	</target>
+	<target name="replace_mpick2partner" if="existX2config">
+		<!-- mpickingtest:2443이 있으면 partnertest로 변경 -->
+		<replace dir="${source.dir}/${app.dir}" value="partnertest.lottesuper.co.kr">
+			<include name="WEB-INF/x2config/x2config.xml"/>
+			<replacetoken>mpickingtest.lottesuper.co.kr:2443</replacetoken>
+		</replace>
+		<replace dir="${source.dir}/${app.dir}" value="/esuper/project/partner">
+			<include name="WEB-INF/x2config/x2config.xml"/>
+			<replacetoken>/esuper/project/mback</replacetoken>
+		</replace>
+	</target>
+	<target name="replace_partner2pro" if="existX2config">
+		<!-- partnertest / mpickingtest:2443이 있으면 protest로 변경 -->
+		<replace dir="${source.dir}/${app.dir}" value="protest.lottesuper.co.kr">
+			<include name="WEB-INF/x2config/x2config.xml"/>
+			<replacetoken>partnertest.lottesuper.co.kr</replacetoken>
+		</replace>
+		<replace dir="${source.dir}/${app.dir}" value="/esuper/project/back">
+			<include name="WEB-INF/x2config/x2config.xml"/>
+			<replacetoken>/esuper/project/partner</replacetoken>
+		</replace>	
+	</target>
+	
+</project>

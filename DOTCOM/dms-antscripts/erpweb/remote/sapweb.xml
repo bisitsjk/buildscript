@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="sapweb">
+<!-- ================================================== -->
+<!-- 공통 -->
+<!-- ================================================== -->
+	<property name="dep.id" value="${DEPLOY_ID}" />	
+	<property name="source.dir" value="/usr1/home/xclass/deploy/src/${dep.id}" />
+	<property name="java.home"  value="/usr/java1.6" />
+	<property name="ant.home"   value="/usr1/home/xclass/deploy/apache-ant-1.8.2" />
+	<property name="docroot"    value="/lotte" />
+	<property name="user.id"    value="xclass" />
+	<property name="user.pwd"   value="sSVmk@z*!5" />
+	
+
+<!-- ================================================== -->
+<!-- ERP WEB  -->
+<!-- ================================================== -->
+	
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->
+	<target name="ew.checkValid">
+		<condition property="ew.isValid" value="true" else="false">
+			<and>
+				<contains string="${hostname}" substring="sapweb"/>
+				<contains string="${dep.id}" substring="EW_20" casesensitive="true" />
+			</and>
+		</condition>
+		<echo>hostname `${hostname}` is ${ew.isValid}</echo>
+	</target>
+	
+	<target name="ew.goFail" depends="ew.checkValid" unless="${ew.isValid}">
+		<fail message="Hostname or deploy ID is wrong."/>
+	</target>
+			
+	<target name="ew.checkExist">
+		<condition property="ew.isWebHost" value="true" else="false">
+			<contains string="${hostname}" substring="sapweb"/>
+		</condition>
+		<condition property="ew.isWasHost" value="true" else="false">
+			<contains string="${hostname}" substring="sapweb"/>
+		</condition>
+		<condition property="ew.isExistWebroot" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/ess/webroot"/>
+				</resourceexists>
+				<istrue value="${ew.isWebHost}"/>
+			</and>
+		</condition>
+		<condition property="ew.isExistWebapp" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/ess/webapp"/>
+				</resourceexists>
+				<istrue value="${ew.isWasHost}"/>
+			</and>
+		</condition>
+		<condition property="ew.isExistWebinf" value="true" else="false">
+			<and>
+				<resourceexists>
+					<file file="${source.dir}/ess/webapp/WEB-INF"/>
+				</resourceexists>
+				<istrue value="${ew.isWasHost}"/>
+			</and>
+		</condition>
+		<condition property="ew.isJspAndClass" value="true" else="false">
+			<and>
+				<istrue value="${ew.isExistWebapp}"/>
+				<istrue value="${ew.isExistWebinf}"/>
+			</and>
+		</condition>
+		<condition property="ew.isJsp" value="true" else="false">
+			<and>
+				<istrue value="${ew.isExistWebapp}"/>
+				<isfalse value="${ew.isExistWebinf}"/>
+			</and>
+		</condition>
+		<condition property="ew.isClass" value="true" else="false">
+			<and>
+				<isfalse value="${ew.isExistWebapp}"/>
+				<istrue value="${ew.isExistWebinf}"/>
+			</and>
+		</condition>
+		<condition property="ew.isWeb" value="true" else="false">
+			<istrue value="${ew.isExistWebroot}"/>
+		</condition>
+		<condition property="ew.isWas" value="true" else="false">
+			<or>
+				<istrue value="${ew.isExistWebapp}"/>
+				<istrue value="${ew.isExistWebinf}"/>
+			</or>
+		</condition>
+	</target>
+
+	<!-- ================================================== -->
+	<!-- init -->
+	<!-- ================================================== -->
+	<target name="ew.init" depends="ew.goFail">
+		<delete dir="${source.dir}/ess" />
+		<mkdir dir="${source.dir}" />
+	</target>
+		
+	<!-- ================================================== -->
+	<!-- backup -->
+	<!-- ================================================== -->
+	<target name="ew.backupWeb" if="${ew.isWeb}">
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte15.jar">
+			<arg value="${source.dir}"/>
+			<arg value="${docroot}"/>
+			<arg value="${source.dir}_backup"/>
+		</java>
+	</target>	
+	
+	<target name="ew.backupWas" if="${ew.isWas}">
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte15.jar">
+			<arg value="${source.dir}"/>
+			<arg value="${docroot}"/>
+			<arg value="${source.dir}_backup"/>
+		</java>
+	</target>		
+		
+	<!-- ================================================== -->
+	<!-- deploy -->
+	<!-- ================================================== -->
+	<target name="ew.deploy" depends="ew.goFail,ew.checkExist">
+		<tstamp><format property="ew.time1" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${ew.time1}] ==========</echo>
+		<antcall target="ew.logBeginWeb"/>
+		<antcall target="ew.backupWeb"/>
+		<antcall target="ew.copyWeb"/>
+		<antcall target="ew.logEndWeb"/>
+		<tstamp><format property="ew.time2" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${ew.time2}] ==========</echo>
+		<antcall target="ew.logBeginWas"/>
+		<antcall target="ew.backupWas"/>
+		<antcall target="ew.copyClass"/>
+		<antcall target="ew.copyJsp"/>
+		<antcall target="ew.logEndWas"/>
+		<tstamp><format property="ew.time3" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${ew.time3}] ==========</echo>
+	</target>
+
+	<target name="ew.copyWeb" if="${ew.isExistWebroot}">
+        <echo message=""/>
+        <copy todir="${docroot}/ess/webroot" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/ess/webroot"
+                     includes="**/*"/>
+        </copy>
+	</target>
+	
+	<target name="ew.copyJsp" if="${ew.isExistWebapp}">
+        <echo message=""/>
+        <copy todir="${docroot}/ess/webapp" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/ess/webapp"
+                     includes="**/* " excludes="WEB-INF/*"/>
+        </copy>
+    </target>
+
+    <target name="ew.copyClass" if="${ew.isExistWebinf}">
+        <echo message=""/>
+        <copy todir="${docroot}/ess/webapp/WEB-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/ess/webapp/WEB-INF"
+                     includes="**/*"/>
+        </copy>
+    </target>
+	
+	<target name="ew.logBeginWeb" if="${ew.isWeb}">
+		<java jvm="${java.home}/bin/java" fork="true"
+	          failonerror="false" spawn="false"
+	          jar="${deployer.home}/bin/deploylog15.jar">
+	        <arg value="20150805_1"/>
+	        <arg value="${dep.id}"/>
+	        <arg value="${hostname}"/>
+	        <arg value="B"/>
+	    </java>
+	</target>
+	
+	<target name="ew.logEndWeb" if="${ew.isWeb}">
+		<java jvm="${java.home}/bin/java" fork="true"
+	          failonerror="false" spawn="false"
+	          jar="${deployer.home}/bin/deploylog15.jar">
+	        <arg value="20150805_1"/>
+	        <arg value="${dep.id}"/>
+	        <arg value="${hostname}"/>
+	        <arg value="E"/>
+	    </java>
+	</target>
+	
+	<target name="ew.logBeginWas" if="${ew.isWas}">
+		<java jvm="${java.home}/bin/java" fork="true"
+	          failonerror="false" spawn="false"
+	          jar="${deployer.home}/bin/deploylog15.jar">
+	        <arg value="20150805_1"/>
+	        <arg value="${dep.id}"/>
+	        <arg value="${hostname}"/>
+	        <arg value="B"/>
+	    </java>
+	</target>
+	
+	<target name="ew.logEndWas" if="${ew.isWas}">
+		<java jvm="${java.home}/bin/java" fork="true"
+	          failonerror="false" spawn="false"
+	          jar="${deployer.home}/bin/deploylog15.jar">
+	        <arg value="20150805_1"/>
+	        <arg value="${dep.id}"/>
+	        <arg value="${hostname}"/>
+	        <arg value="E"/>
+	    </java>
+	</target>	
+	
+
+	<!-- ================================================== -->
+	<!-- rollback -->
+	<!-- ================================================== -->
+	<target name="ew.rollback" depends="ew.goFail,ew.checkExist">
+		<tstamp><format property="ew.time4" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${ew.time4}] ==========</echo>
+		<antcall target="ew.rollbackWeb"/>
+		<tstamp><format property="ew.time5" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${ew.time5}] ==========</echo>
+		<antcall target="ew.rollbackClass"/>
+		<antcall target="ew.rollbackJsp"/>
+		<tstamp><format property="ew.time6" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${ew.time6}] ==========</echo>
+	</target>
+
+	<target name="ew.rollbackWeb" if="${ew.isExistWebroot}">
+        <echo message="rollback"/>
+        <copy todir="${docroot}/ess/webroot" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/ess/webroot"
+                     includes="**/*"/>
+        </copy>
+	</target>
+	
+	<target name="ew.rollbackJsp" if="${ew.isExistWebapp}">
+        <echo message=""/>
+        <copy todir="${docroot}/ess/webapp" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/ess/webapp"
+                     includes="**/*" excludes="WEB-INF/*"/>
+        </copy>
+    </target>
+
+    <target name="ew.rollbackClass" if="${ew.isExistWebinf}">
+        <echo message=""/>
+        <copy todir="${docroot}/ess/webapp/WEB-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/ess/webapp/WEB-INF"
+                     includes="**/*"/>
+        </copy>
+    </target>	
+</project>

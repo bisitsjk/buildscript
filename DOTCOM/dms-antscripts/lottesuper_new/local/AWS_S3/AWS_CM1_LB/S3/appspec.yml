@@ -1,0 +1,21 @@
+version: 0.0
+os: linux
+files:
+- source: /pack/
+  destination: /usr1/home/xclass/deploy/
+
+permissions:
+- object: /esuper/
+  pattern: "**"
+  owner: xclass
+  group: www
+  mode: 777
+
+hooks:
+  ApplicationStop:
+   - location: scripts/aws_cm1_Stop.sh
+     timeout: 120
+  ApplicationStart:
+   - location: scripts/aws_cm1_Start.sh
+     timeout: 120
+     

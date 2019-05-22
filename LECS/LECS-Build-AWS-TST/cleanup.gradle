@@ -1,0 +1,11 @@
+cleanProject = { projectName ->
+	file( 프로젝트_빌드패스(projectName) ).deleteDir()
+}
+
+task clean_library << {	
+	file( 컴파일_목적_위치(Library) ).deleteDir()
+}
+
+task clean_all << {
+	delete(BUILD_DIR)
+}

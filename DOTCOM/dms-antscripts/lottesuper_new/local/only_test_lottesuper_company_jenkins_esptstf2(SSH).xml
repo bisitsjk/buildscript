@@ -1,0 +1,480 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="test_lottesuper_company_jenkins" basedir=".">
+	<!-- ================================================== -->
+	<!-- properties -->
+	<!-- ================================================== -->
+	<property file="D:/deployer/scripts/only_test_lottesuper(SSH).properties" />
+	<property name="dep.id" value="${DEPLOY_ID}"/>
+	
+	<!-- test server info -->
+	<!--Company  test 는 Front 서버에 있음 -->
+	<!--
+	<property name="tst.web.ip" value="10.149.199.31"/>
+	<property name="tst.was.ip" value="10.149.199.31"/>
+	-->
+	<!-- TEST2로 설정 변경 -->
+	<!--
+	<property name="tst.web.ip" value="10.149.199.46"/>
+	<property name="tst.was.ip" value="10.149.199.46"/>
+	-->
+	
+	<property name="tst.web.ip" value="${tst.web.ip}"/>
+	<property name="tst.was.ip" value="${tst.was.ip}"/>
+	<!--
+	<property name="tst.user.id" value="jeus"/>
+	<property name="tst.user.pwd" value="w&uch6raDa*r"/>
+	-->
+	
+	<!-- path -->
+	<!-- E:/jenkins-lottesuper/jobs/ONLY_TEST_LOTTESUPER_COMPANY_esptstf(SSH)/workspace/ONLY_TEST/company -->
+	<property name="request.dir" value="E:/jenkins-lottesuper/jobs/ONLY_TEST_LOTTESUPER_COMPANY_esptstf2(SSH)/workspace/ONLY_TEST/company"/>
+	<property name="dep.dir" value="/usr1/home/jeus/deploy"/>
+	
+	<property name="prefix.dep.id" value="CP_" />
+	<property name="infix.dep.id" value="_TEST_" />
+
+	<property name="init.was.log" value="../logs/${dep.id}_INIT_WAS.log" />
+	<property name="init.web.log" value="../logs/${dep.id}_INIT_WEB.log" />
+	<property name="dep.was.log"  value="../logs/${dep.id}_DEP_WAS.log" />
+	<property name="dep.web.log"  value="../logs/${dep.id}_DEP_WEB.log" />
+	<property name="rollback.was.log" value="../logs/${dep.id}_ROLLBACK_WAS.log" /><!-- 2016/11/25 14:25 추가 -->
+
+	<property name="init.cmd" value="boinit" />
+	<property name="ssh.init.cmd" value="ssh_cpinit" />
+	<property name="dep.cmd"  value="bodeploy" />
+	<property name="ssh.dep.cmd"  value="ssh_cpdeploy" />
+	<property name="ssh.rollback.cmd" value="ssh_cprollback" />
+
+	<!--
+	<property name="con_company"     value="esptstf_companydev" />
+    -->			
+	
+	<patternset id="jsp.src.set">
+		<include name="lotte-super-company/WebContent/WEB-INF/jsp/**/*"></include>
+		<include name="lotte-super-company/WebContent/static-root/**/*"></include>
+		<include name="lotte-super-company/WebContent/WiseGrid/**/*"></include>
+		<include name="lotte-super-company/WebContent/ubireport/**/*"></include>
+		<include name="lotte-super-company/WebContent/index.html"></include>
+		<exclude name="**/.svn/**"></exclude>
+	</patternset>
+	
+	<patternset id="class.src.set">
+		<include name="lotte-super-company/WebContent/WEB-INF/**/*"></include>
+		<exclude name="**/.svn/**"></exclude>
+		<exclude name="lotte-super-company/WebContent/WEB-INF/jsp/**/*"></exclude>
+	</patternset>
+	
+	<patternset id="web.src.set">
+		<exclude name="**/.svn/**"></exclude>
+	</patternset>
+		
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->
+	<target name="ip_check">
+	<echo>echo ${tst.was.ip}</echo>
+	  <condition property="company_tom" value="company11">
+	   		<equals arg1="${tst.was.ip}" arg2="10.149.199.31" />
+	  </condition>
+
+	  <condition property="company_tom" value="company21">
+		   <equals arg1="${tst.was.ip}" arg2="10.149.199.46" />
+	  </condition>
+	</target>
+
+	<target name="check_deploy_id">
+		<condition property="isValid">
+		  <and>
+			<length string="${dep.id}" when="greater" length="10"/>
+			<contains string="${dep.id}" substring="${prefix.dep.id}" casesensitive="true"/>
+			<contains string="${dep.id}" substring="${infix.dep.id}" casesensitive="true"/>
+		  </and>
+		</condition>
+		<echo>배포ID ${dep.id} / 적합성 ${isValid}</echo>
+	</target>
+	
+
+   <!-- request.dir = E:/jenkins-lottesuper/jobs/ONLY_TEST_LOTTESUPER_COMPANY_esptstb/workspace/ONLY_TEST/company -->
+	<target name="check_exist">
+		<condition property="isExistWebapp">
+		  <or>
+			<resourceexists><file file="${request.dir}/${dep.id}/lotte-super-company/WebContent/WEB-INF/jsp"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/${dep.id}/lotte-super-company/WebContent/static-root"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/${dep.id}/lotte-super-company/WebContent/Patrol"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/${dep.id}/lotte-super-company/WebContent/merch"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/${dep.id}/lotte-super-company/WebContent/lotteansim"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/${dep.id}/lotte-super-company/WebContent/lgdacom"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/${dep.id}/lotte-super-company/WebContent/ksnet"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/${dep.id}/lotte-super-company/WebContent/index.html"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/${dep.id}/lotte-super-company/WebContent/404.html"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/${dep.id}/lotte-super-company/WebContent/503.html"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/${dep.id}/lotte-super-company/WebContent/info.html"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/${dep.id}/lotte-super-company/WebContent/xdbhelper_org.jsp"/></resourceexists>
+		  </or>
+		</condition>
+		<condition property="isExistAppinf">
+		  <or>
+			<resourceexists><file file="${request.dir}/${dep.id}/lotte-super-company/WebContent/WEB-INF/classes"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/${dep.id}/lotte-super-company/WebContent/WEB-INF/dynamic_classes"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/${dep.id}/lotte-super-company/WebContent/WEB-INF/lib"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/${dep.id}/lotte-super-company/WebContent/WEB-INF/x2config"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/${dep.id}/lotte-super-company/WebContent/WEB-INF/x2scenario"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/${dep.id}/lotte-super-company/WebContent/WEB-INF/web.xml"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/${dep.id}/lotte-super-company/WebContent/WEB-INF/jeus-web-dd.xml"/></resourceexists>
+		  </or>
+		</condition>
+		<condition property="isJsp">
+			<and>
+				<istrue value="${isExistWebapp}"/>
+				<isfalse value="${isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="isClass">
+			<and>
+				<isfalse value="${isExistWebapp}"/>
+				<istrue value="${isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="isWeb">
+			<resourceexists>
+				<file file="${request.dir}/${dep.id}/lotte-super-company/WebContent/static-root"/>
+			</resourceexists>
+		</condition>
+		<condition property="isWas">
+			<or>
+				<istrue value="${isExistWebapp}"/>
+				<istrue value="${isExistAppinf}"/>
+			</or>
+		</condition>
+
+		<echo>WAS에 배포할 소스 존재여부 : ${isWas}</echo>
+		<echo>WEB 서버에 배포할 소스 존재여부 : ${isWeb}</echo>
+	</target>
+
+	
+	<target name="check_remote_work" unless="isSuccess">
+		<fail message="원격지 작업이 실패하였습니다..." />
+	</target>
+	
+	<target name="check_was_sources" unless="isWas">
+		<echo message="WAS 배포 대상 소스가 없습니다..."/>
+	</target>
+	
+	<target name="ssh_check_was_sources" unless="isWas">
+		<echo message="WAS 배포 대상 소스가 없습니다..."/>
+	</target>
+	
+
+	<target name="check_web_sources" unless="isWeb">
+		<echo message="WEB 서버 배포 대상 소스가 없습니다..."/>
+	</target>
+	
+	<target name="check_valid" unless="isValid">
+		<fail message="DEPLOY_ID가 유효하지 않습니다."/>
+	</target>
+
+	<target name="ssh_check_valid" unless="isValid">
+		<fail message="DEPLOY_ID가 유효하지 않습니다."/>
+	</target>
+
+	
+	<!-- ================================================== -->
+	<!-- transfer -->
+	<!-- ================================================== -->
+	<target name="transfer_was" depends="check_deploy_id, check_exist">
+		<echo>=================================================================================== WAS transfer sources 시작 ==========</echo>
+		<antcall target="check_valid"/>
+		<antcall target="init_was"/>
+		<antcall target="send_was"/>
+		<echo>=================================================================================== WAS transfer sources 종료 ==========</echo>
+	</target>
+
+
+	<!-- ================================================== -->
+	<!-- ssh transfer -->
+	<!-- ================================================== -->
+	<target name="ssh_transfer_was" depends="check_deploy_id, check_exist">
+		<echo>=================================================================================== WAS transfer sources 시작 ==========</echo>
+		<antcall target="ssh_check_valid"/>
+		<antcall target="ssh_init_was"/>
+		<antcall target="ssh_send_was"/>
+		<echo>=================================================================================== WAS transfer sources 종료 ==========</echo>
+	</target>
+
+
+	
+	<target name="transfer_web" depends="check_deploy_id, check_exist">
+		<echo>=================================================================================== 웹서버 transfer sources 시작 ==========</echo>
+		<antcall target="check_valid"/>
+		<antcall target="init_web"/>
+		<antcall target="send_web"/>
+		<echo>=================================================================================== 웹서버 transfer sources 종료 ==========</echo>
+	</target>
+	
+	<target name="init_was" if="isWas">
+		<tstamp>
+			<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>WAS 초기화 작업을 진행합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+		<echo>${tst.was.ip} 접속을 시작합니다... [${conn_time}]</echo>
+		<record name="${init.was.log}" action="start"/>
+		<telnet server="${tst.was.ip}" userid="${tst.user.id}" password="${tst.user.pwd}">
+			<read>/jeus]%</read>
+			<write>cd deploy</write>
+			<read>/jeus/deploy]%</read>
+			<write>./${init.cmd} ${dep.id}</write>
+			<read>/jeus/deploy]%</read>
+			<write>exit</write>
+		</telnet>
+		<record name="${init.was.log}" action="stop"/>
+		<tstamp>
+			<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${tst.was.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<resourcecontains resource="${init.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>WAS 초기화 작업이 완료되었습니다...</echo>
+	</target>
+
+
+
+	<!-- ##### SSH INIT ##### -->
+	<target name="ssh_init_was" if="isWas">
+		<sshexec host="${tst.was.ip}" username="${tst.user.id}" password="${tst.user.pwd}" 
+			trust="true" verbose="false" output="${init.was.log}"
+			command="cd deploy;./${ssh.init.cmd} ${dep.id}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${init.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />			
+	</target>
+
+
+	
+	<target name="init_web" if="isWeb">
+		<tstamp>
+			<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>웹서버 초기화 작업을 진행합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+		<echo>${tst.web.ip} 접속을 시작합니다... [${conn_time}]</echo>
+		<record name="${init.web.log}" action="start"/>
+		<telnet server="${tst.web.ip}" userid="${tst.user.id}" password="${tst.user.pwd}">
+			<read>/jeus]%</read>
+			<write>cd deploy</write>
+			<read>/jeus/deploy]%</read>
+			<write>./${init.cmd} ${dep.id}</write>
+			<read>/jeus/deploy]%</read>
+			<write>exit</write>
+		</telnet>
+		<record name="${init.web.log}" action="stop"/>
+		<tstamp>
+			<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${tst.web.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<resourcecontains resource="${init.web.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>웹서버 초기화 작업이 완료되었습니다...</echo>
+	</target>
+	
+	<target name="send_was" if="isWas">
+		<!-- FTP (from local to nas) -->
+		<echo>WAS - JSP</echo>
+		<ftp server="${tst.was.ip}" userid="${tst.user.id}" password="${tst.user.pwd}"
+		     remotedir="${dep.dir}/${dep.id}"
+		     action="put"
+			 passive="yes">
+			<fileset dir="${request.dir}/${dep.id}">
+				<patternset refid="jsp.src.set"/>
+			</fileset>
+		</ftp>
+		<echo></echo>
+		<echo>WAS - CLASS/XML (jeus restarting required)</echo>
+		<ftp server="${tst.was.ip}" userid="${tst.user.id}" password="${tst.user.pwd}"
+		     remotedir="${dep.dir}/${dep.id}"
+		     action="put"
+			 passive="yes">
+			<fileset dir="${request.dir}/${dep.id}">
+				<patternset refid="class.src.set"/>
+			</fileset>
+		</ftp>
+	</target>
+
+	<!-- dep.dir                  =      /usr1/home/jeus/deploy/ -->
+	<!-- dep.id                   =      BO_20161118_TEST_SYHONG2 -->
+	<!-- request.dir            =      E:/jenkins-lottesuper/jobs/ONLY_TEST_LOTTESUPER_BACKOFFICE_esptstb/workspace/ONLY_TEST/company -->
+	<!-- request.dir/dep.id  =      E:/jenkins-lottesuper/jobs/ONLY_TEST_LOTTESUPER_BACKOFFICE_esptstb/workspace/ONLY_TEST/company/CP_20170117_TEST_HSLIM -->
+	<target name="ssh_send_was"  if="isWas">
+		<scp todir="${tst.user.id}:${tst.user.pwd}@${tst.was.ip}:${dep.dir}/${dep.id}" trust="true">
+			<fileset dir="${request.dir}/${dep.id}">
+				<patternset refid="jsp.src.set"/>			
+			</fileset>
+		</scp>
+		<echo></echo>
+		<echo>WAS - CLASS/XML (jeus restarting required)</echo>
+		<scp todir="${tst.user.id}:${tst.user.pwd}@${tst.was.ip}:${dep.dir}/${dep.id}" trust="true">
+			<fileset dir="${request.dir}/${dep.id}">
+				<patternset refid="class.src.set"/>			
+			</fileset>
+		</scp>
+	</target>	
+
+	
+	<target name="send_web" if="isWeb">
+		<!-- FTP (from local to nas) -->
+		<echo>WEB Server</echo>
+		<ftp server="${tst.web.ip}" userid="${tst.user.id}" password="${tst.user.pwd}"
+		     remotedir="${dep.dir}/${dep.id}"
+		     action="put"
+			 passive="yes">
+			<fileset dir="${request.dir}/${dep.id}">
+				<patternset refid="web.src.set"/>
+			</fileset>
+		</ftp>
+		<echo>...</echo>
+	</target>
+
+	<!-- ================================================== -->
+	<!-- deploy -->
+	<!-- ================================================== -->
+	<target name="deploy_was" depends="check_deploy_id, check_exist">
+		<echo>=================================================================================== deploy was 시작 ==========</echo>
+		<antcall target="check_valid"/>
+		<antcall target="check_was_sources"/>		
+		<antcall target="copy_was"/>
+		<echo>=================================================================================== deploy was 종료 ==========</echo>
+	</target>
+
+
+	<!-- ================================================== -->
+	<!-- ssh deploy -->
+	<!-- ================================================== -->
+	<target name="ssh_deploy_was" depends="check_deploy_id, check_exist,ip_check">
+		<echo>=================================================================================== deploy was 시작 ==========</echo>
+		<antcall target="ssh_check_valid"/>
+		<antcall target="ssh_check_was_sources"/>		
+		<antcall target="ssh_copy_was"/>
+		<echo>=================================================================================== deploy was 종료 ==========</echo>
+	</target>
+
+	
+	<target name="deploy_web" depends="check_deploy_id, check_exist">
+		<echo>=================================================================================== deploy web 시작 ==========</echo>
+		<antcall target="check_valid"/>
+		<antcall target="check_web_sources"/>
+		<antcall target="copy_web"/>
+		<echo>=================================================================================== deploy web 종료 ==========</echo>
+	</target>
+	
+	<target name="copy_was" if="isWas">
+		<tstamp>
+			<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>소스를 복사합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+		<echo>${tst.was.ip} 접속을 시작합니다... [${conn_time}]</echo>
+		<record name="${dep.was.log}" action="start"/>
+		<telnet server="${tst.was.ip}" userid="${tst.user.id}" password="${tst.user.pwd}">
+			<read>/jeus]%</read>
+			<write>cd deploy</write>
+			<read>/deploy]%</read>
+			<write>./${dep.cmd} ${dep.id}</write>
+			<read>/deploy]%</read>
+			<write>ja downcon ${con_pro}</write>
+			<read>/deploy]%</read>
+			<write>ja startcon ${con_pro}</write>
+			<read>/deploy]%</read>
+			<write>ja downcon ${con_partner}</write>
+			<read>/deploy]%</read>
+			<write>ja startcon ${con_partner}</write>
+			<read>/deploy]%</read>
+			<write>ja downcon ${con_mpick}</write>
+			<read>/deploy]%</read>
+			<write>ja startcon ${con_mpick}</write>
+			<read>/deploy]%</read>
+			<write>exit</write>
+		</telnet>
+		<record name="${dep.was.log}" action="stop"/>
+		<tstamp>
+			<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${tst.was.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<resourcecontains resource="${dep.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>원격지 작업이 잘 수행되었습니다...</echo>
+		
+	</target>
+	
+
+
+	<!-- ##### SSH COPY ##### -->
+	<target name="ssh_copy_was"  if="isWas">
+		<sshexec host="${tst.was.ip}" username="${tst.user.id}" password="${tst.user.pwd}"
+			trust="true" verbose="false" output="${dep.was.log}"
+			command="cd deploy;./${ssh.dep.cmd} ${dep.id};cd /usr2/apache-tomcat/instance/${company_tom}/bin;./shutdown.sh;sleep 10;./start.sh" />
+			<!-- command="cd deploy;./${ssh.dep.cmd} ${dep.id};ja downcon ${con_company};ja startcon ${con_company}" /> -->
+		<condition property="isSuccess">
+			<resourcecontains resource="${dep.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />		
+	</target>
+
+	<!-- #### SSH JESU RESTART ####-->
+	<target name="ssh_restart_tomcat" depends="check_exist,ip_check" if="isRestart">	 <!-- only test - restart_jeus -->
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${tomcat.restart.log}"
+			command="cd deploy;./${ssh.dep.cmd} ${dep.id};cd /usr2/apache-tomcat/instance/${company_tom}/bin;./shutdown.sh;sleep 10;./start.sh" />
+	</target>
+			
+	
+<!-- <target name="ssh_restart_jeus" depends="check_exist" if="isRestart">	  only test - restart_jeus
+		<sshexec host="${tst.was.ip}" username="${tst.user.id}" password="${tst.user.pwd}" 
+			trust="true" verbose="false" output="${tomcat.restart.log}"
+			command="ja downcon ${con_pro};ja startcon ${con_pro};ja downcon ${con_partner};ja startcon ${con_partner};ja downcon ${con_mpick};ja startcon ${con_mpick}" />
+	</target> -->
+
+
+	<target name="copy_web" if="isWeb">
+		<tstamp>
+			<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>소스를 복사합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+		<echo>${tst.web.ip} 접속을 시작합니다... [${conn_time}]</echo>
+		<record name="${dep.web.log}" action="start"/>
+		<telnet server="${tst.web.ip}" userid="${tst.user.id}" password="${tst.user.pwd}" timeout="10">
+			<read>/jeus]%</read>
+			<write>cd deploy</write>
+			<read>/deploy]%</read>
+			<write>./${dep.cmd} ${dep.id}</write>
+			<read>/deploy]%</read>
+			<write>exit</write>
+		</telnet>
+		<record name="${dep.web.log}" action="stop"/>
+		<tstamp>
+			<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${tst.web.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<resourcecontains resource="${dep.web.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>원격지 작업이 잘 수행되었습니다...</echo>
+	</target>
+	
+	
+    <target name="ssh_rollback_was">
+		<sshexec host="${tst.was.ip}" username="${tst.user.id}" password="${tst.user.pwd}"
+			trust="true" verbose="false" output="${rollback.was.log}"
+			command="cd deploy;./${ssh.rollback.cmd} ${dep.id}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${rollback.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />		
+	</target>
+
+
+</project>

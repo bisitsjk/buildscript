@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottesuper2011_ftp_front_jenkins_real">
+
+<target name="ftp_real">
+		<ftp server="${was.ip}" userid="jeus" password="w&uch6raDa*r"
+		     remotedir="/usr1/home/jeus/deploy/real"
+		     action="put"
+			 passive="yes">
+			<fileset dir="E:/jenkins-lottesuper/jobs/LOTTESUPER_FRONT_1_TEST_BUILD/workspace/lottesuper2011/pack/TEST/FO_20161019_1330_TEST">
+				<include name="project/front/**/*"></include>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</ftp>
+</target>
+</project>

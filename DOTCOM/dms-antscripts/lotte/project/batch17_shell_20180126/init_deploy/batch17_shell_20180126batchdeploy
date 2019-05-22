@@ -1,0 +1,6 @@
+#!/bin/sh
+
+ANT_HOME=/usr1/home/xclass/deploy/apache-ant-1.8.2
+
+$ANT_HOME/bin/ant -f /usr1/home/xclass/deploy/script/batchprj.xml -listener org.apache.tools.ant.listener.Log4jListener -lib $ANT_HOME/lib -DDEPLOY_ID=$1 -Dhostname=`hostname` deployfortest_batch
+

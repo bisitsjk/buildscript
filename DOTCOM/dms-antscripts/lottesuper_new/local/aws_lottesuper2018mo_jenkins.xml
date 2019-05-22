@@ -1,0 +1,1288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- <project name="lottesuper2011mo_jenkins">  -->
+<project name="aws_lottesuper2018mo_jenkins">
+    <!-- **************************************************************** -->
+	<!-- PROPERTY -->
+	<!-- **************************************************************** -->
+	<property name="deploy.id" value="${DEPLOY_ID}" />
+	<property name="comm.deploy.id" value="${COMM_DEPLOY_ID}" />
+
+	<!-- D:/deployer/scripts/lottesuper2011mo_jenkins.test.properties -->
+	<!-- D:/deployer/scripts/lottesuper2011mo_jenkins.real.properties -->
+	<property file="${deployer.home.dir}/scripts/${ant.project.name}.${deploy.phase}.properties" />
+
+	<!-- pack.real.path = E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/pack/TEST/MO_20160731_1300/project/mobile -->
+	<property name="pack.real.path" value="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/${svrWebappPath}" />
+
+	<property name="comm.wrksp.path" value="E:/jenkins-lottesuper/jobs/LOTTESUPER_COMMONS_1_TEST_BUILD/workspace" />
+	<property name="comm.lib.path" value="lotte-super-commons/lib" />
+	<property name="comm.jar.path" value="lotte-super-commons/dist" />
+	<property name="comm.pack.lib.path" value="project/back/WEB-INF/lib" />
+	<property name="user.id" value="${svrUserId}" />
+	<property name="user.pwd" value="${svrUserPassword}" />
+	
+	
+	<property name="ssh_check_test_deploy_id_was.log" value="../logs/${ant.project.name}/ssh_check_test_deploy_id_was.log" />
+	<property name="init.build.log" value="../logs/${ant.project.name}/${deploy.id}_BUILD.log" />
+	<property name="init.was.log" value="../logs/${ant.project.name}/${deploy.id}_INIT_WAS.log" />
+	<property name="init.web.log" value="../logs/${ant.project.name}/${deploy.id}_INIT_WEB.log" />
+	<property name="dep.was.log" value="../logs/${ant.project.name}/${deploy.id}_DEP_WAS.log" />
+	<property name="dep.web.log" value="../logs/${ant.project.name}/${deploy.id}_DEP_WEB.log" />
+	<property name="tomcat.restart.log" value="../logs/${ant.project.name}/${deploy.id}_TOMCAT_RESTART.log" />
+	<property name="rollback.was.log" value="../logs/${ant.project.name}/${deploy.id}_ROLLBACK_WAS.log" />
+	
+
+	
+	<property name="ssh_check_test_deploy_id_was.cmd" value="ssh_check_test" />
+	<property name="ssh.init.cmd" value="ssh_moinit" /><!-- 2016/12/05 10:29 ssh moinit 추가 -->
+	<property name="ssh.dep.cmd" value="ssh_modeploy" /><!-- 2016/12/05 10:29 ssh deploy 추가 -->
+	<property name="ssh.rollback.cmd" value="ssh_morollback" /><!-- 2016/12/05 10:29 ssh Rollback 추가 -->
+	
+	<property name="init.cmd" value="moinit" />
+	<property name="dep.cmd" value="modeploy" />
+
+	<!--<property name="mobile_tom"     value="mobile11" />-->
+	
+	<!-- 시험배포 자동화용 -->
+	<tstamp><format property="deploy.date" pattern="yyyyMMdd"/></tstamp>
+	<property name="rglr.dep.id" value="MO_${deploy.date}_1330"/>
+	
+	<!-- 첫 접수시 0건이면, 다음 접수시 지각한 건 접수하지 않도록 하기위함 -->
+	<property name="lock.workspace" value="E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_0_TEST_LOCK/workspace" />
+		
+	<!-- properties for pre open begin -->
+	<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/trunk/lotte-super-commons --><!-- 경로가 이상한데? -->
+    <!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_COMMONS_1_TEST_BUILD/workspace/lottesuper2011/trunk/lotte-super-commons --><!-- 이 경로가 맞는것이 아닌가? -->
+	<property name="commons.home.dir" value="${hdsnWrkSpPath}/${svnReposNm}/${hdsnTrunkPath}/lotte-super-commons"/><!-- 경로가 이상함 -->
+	<property name="commons.home.dir" value="${comm.wrksp.path}/${svnReposNm}/${hdsnTrunkPath}/lotte-super-commons"/><!-- 이 경로가 맞는것이 아닌가?  -->
+
+
+
+	<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/trunk/lotte-super-commons/src --><!-- 경로가 이상한데? -->
+	<property name="commons.src.dir" value="${commons.home.dir}/src" />
+
+	<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/trunk/lotte-super-commons/lib --><!-- 경로가 이상한데? -->
+	<property name="commons.lib.dir" value="${commons.home.dir}/lib" />
+
+	<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/trunk/lotte-super-commons/build --><!-- 경로가 이상한데? -->
+	<property name="commons.build.dir" value="${commons.home.dir}/build" />
+
+	<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/trunk/lotte-super-commons/dist --><!-- 경로가 이상한데? -->
+	<property name="commons.pack.dir" value="${commons.home.dir}/dist" />
+
+	<property name="commons.file.name" value="lottesuper-commons.jar" />
+
+
+	<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/trunk/lotte-super-mobile -->
+	<property name="mobile.home.dir" value="${hdsnWrkSpPath}/${svnReposNm}/${hdsnTrunkPath}/lotte-super-mobile" />
+
+
+	<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/trunk/lotte-super-mobile/src -->
+	<property name="src.static.dir" value="${mobile.home.dir}/src" />
+
+	<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/trunk/lotte-super-mobile/src_dynamic -->
+	<property name="src.dynamic.dir" value="${mobile.home.dir}/src_dynamic" />
+
+	<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/trunk/lotte-super-mobile/WebContent -->
+	<property name="context.root.dir" value="${mobile.home.dir}/WebContent" />
+		
+
+	<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/trunk/lotte-super-mobile/WebContent/WEB-INF/lib -->
+	<property name="lib.dir" value="${mobile.home.dir}/WebContent/WEB-INF/lib" />
+
+	<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/pack/TEST/project/mobile -->
+	<property name="pack.dir" value="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/project/mobile" />
+
+	<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/pack/TEST/project/mobile/WEB-INF/classes -->
+	<property name="build.static.dir" value="${pack.dir}/WEB-INF/classes" />
+
+	<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/pack/TEST/project/mobile/WEB-INF/dynamic_classes -->
+	<property name="build.dynamic.dir" value="${pack.dir}/WEB-INF/dynamic_classes" />
+	
+	<property name="dist.dir" value="/esuper/project/mobile" />
+	
+	<!--
+	<property name="tst.server.ip" value="110.45.204.91"/>
+	<property name="tst.server.user.id" value="jeus"/>
+	<property name="tst.server.user.pw" value="w&uch6raDa*r"/>
+	-->
+	
+	<property name="real.server.ip" value="${real.was.ip}"/>
+	<property name="real.server.user.id" value="${svrUserId}"/>
+	<property name="real.server.user.pw" value="${svrUserPassword}"/>
+		
+
+	<!-- D:/deployer/lib/datasource -->
+	<!-- <property name="ojdbc.jar.file" value="${jeus.home.dir}/lib/datasource" /> -->
+	<property name="ojdbc.jar.file" value="${jeus.home.dir}/lib/datasource" />
+	
+	<!-- D:/deployer//lib/system -->
+	<!-- <property name="jeus.system.lib.dir" value="${jeus.home.dir}/lib/system" /> -->
+	
+	<property name="jeus.system.lib.dir" value="${jeus.home.dir}/lib/system" />
+	
+	<!-- properties for pre open end -->
+	
+	<!-- path for pre open begin -->
+	<!-- 경로가 이상함 --> 
+	<path id="app.classpath">
+
+		<!-- D:/deployer/lib/datasource -->
+		<pathelement path="${ojdbc.jar.file}" />
+
+		<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/trunk/lotte-super-mobile/WebContent/WEB-INF/lib -->
+		<fileset dir="${lib.dir}">
+			<include name="*.jar" />
+		</fileset>
+
+		<!-- D:/deployer/lib/system/*.jar -->
+		<fileset dir="${jeus.system.lib.dir}">
+			<include name="*.jar" />
+		</fileset>
+		
+		<!-- D:/deployer/lib/datasource/*.jar -->
+		<fileset dir="${ojdbc.jar.file}">
+			<include name="*.jar" />
+		</fileset>
+
+
+		<!-- ★★★★★★ E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/trunk/lotte-super-commons/lib --><!-- 경로가 이상한데? ★★★★★★ -->
+		<fileset dir="${commons.lib.dir}">
+			<include name="*.jar" />
+		</fileset>
+
+
+		<!-- ★★★★★★ E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/trunk/lotte-super-commons/build --><!-- 경로가 이상한데? ★★★★★★ -->		
+		<dirset dir="${commons.build.dir}"/>
+
+		<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/pack/TEST/project/mobile/WEB-INF/classes -->
+		<dirset dir="${build.static.dir}"/>
+	</path>
+	<!-- path for pre open end -->
+	
+
+	<!-- **************************************************************** -->
+	<!-- MAIN TARGET -->
+	<!-- **************************************************************** -->
+	<target name="run_build">
+		<antcall target="merge" />
+		<antcall target="build" />
+		<antcall target="pack" />
+	</target>
+	
+	<target name="run_deploy">
+		<antcall target="backup_was" />
+		<antcall target="deploy_was" />
+		<antcall target="copy_was" />
+	</target>
+			
+	
+	<!-- **************************************************************** -->
+	<!-- CHECK -->
+	<!-- **************************************************************** -->
+	
+	<target name="ip_check">
+	<echo>echo ${was.ip}</echo>
+	  <condition property="mobile_tom" value="mobile11">
+	   		<equals arg1="${was.ip}" arg2="10.149.199.31" />
+	  </condition>
+
+	  <condition property="mobile_tom" value="mobile21">
+		   <equals arg1="${was.ip}" arg2="10.149.199.46" />
+	  </condition>
+	</target>
+
+	<target name="check_common">
+		<echo>♠ 공통 배포ID가 있는지 확인합니다.</echo>
+		<condition property="existCommon">
+			<and>
+				<contains string="${comm.deploy.id}" substring="CM_" casesensitive="true" />
+				<length string="${comm.deploy.id}" when="greater" length="15"/>
+			</and>
+		</condition>
+	</target>
+	
+	<target name="check_rename1">
+		<condition property="existFile1">
+			<resourceexists><file file="${pack.real.path}/WEB-INF/config-${deploy.phase}.xml" /></resourceexists>
+		</condition>
+		<echo>config-${deploy.phase}.xml : ${existFile1}</echo>
+	</target>
+	<target name="check_rename2">
+		<condition property="existFile2">
+			<resourceexists><file file="${pack.real.path}/WEB-INF/jeus-web-dd-${deploy.phase}.xml" /></resourceexists>
+		</condition>
+		<echo>jeus-web-dd-${deploy.phase}.xml : ${existFile2}</echo>
+	</target>
+	<target name="check_rename3">
+		<condition property="existFile3">
+			<resourceexists><file file="${pack.real.path}/WEB-INF/x2config/x2config-${deploy.phase}.xml" /></resourceexists>
+		</condition>
+		<echo>x2config-${deploy.phase}.xml : ${existFile3}</echo>
+	</target>
+	<target name="check_rename4">
+		<condition property="existFile4">
+			<resourceexists><file file="${pack.real.path}/WEB-INF/x2config/log4jconfig-${deploy.phase}.xml" /></resourceexists>
+		</condition>
+		<echo>log4jconfig-${deploy.phase}.xml : ${existFile4}</echo>
+	</target>
+	<target name="check_rename7">
+		<condition property="existFile7">
+			<resourceexists><file file="${pack.real.path}/WEB-INF/x2config/lgdacom/conf/mall-${deploy.phase}.conf" /></resourceexists>
+		</condition>
+		<echo>mall-${deploy.phase}.conf : ${existFile7}</echo>
+	</target>
+	<target name="check_rename8">
+		<condition property="existFile8">
+			<resourceexists><file file="${pack.real.path}/WEB-INF/x2config/smpi/smpi-${deploy.phase}.properties" /></resourceexists>
+		</condition>
+		<echo>smpi-${deploy.phase}.properties : ${existFile8}</echo>
+	</target>
+	<target name="check_rename9">
+		<condition property="existFile9">
+			<resourceexists><file file="${pack.real.path}/WEB-INF/x2config/pmpi/pmpi-${deploy.phase}.properties" /></resourceexists>
+		</condition>
+		<echo>pmpi-${deploy.phase}.properties : ${existFile9}</echo>
+	</target>	
+	
+	<target name="check_remote_work" unless="isSuccess">
+		<fail message="원격지 작업이 실패하였습니다..." />
+	</target>
+	
+	<target name="check_lock_prop">
+		<condition property="existLockProp">
+			<resourceexists>
+				<!-- 현재 2016-04-19 09:40분 어제일자 MO_20160418_1330_lock.properties 파일 변동이 없음 -->
+				<!-- 금일자 04월19일 MO_20160419_1330_lock.properties 파일이 언제 만들어지는가? -->
+				<file file="${lock.workspace}/${rglr.dep.id}_lock.properties"/>
+			</resourceexists>
+		</condition>
+	</target>
+	<target name="check_exist"> 	<!--source type check-->
+		<condition property="isExistClass">
+			<or>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/mobile/WEB-INF/dynamic_classes"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/mobile/WEB-INF/classes"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/mobile/WEB-INF/lib"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/mobile/WEB-INF/x2config"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/mobile/WEB-INF/x2scenario"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/mobile/WEB-INF/config.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/mobile/WEB-INF/config-dev.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/mobile/WEB-INF/config-test.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/mobile/WEB-INF/config-real.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/mobile/WEB-INF/jeus-web-dd.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/mobile/WEB-INF/jeus-web-dd-dev.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/mobile/WEB-INF/jeus-web-dd-test.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/mobile/WEB-INF/jeus-web-dd-real.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/mobile/WEB-INF/web.xml"/></resourceexists>
+			</or>
+		</condition>
+		<condition property="isExistJsp">
+			<or>
+				<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/mobile/WEB-INF/jsp"/></resourceexists>
+				<resourcecount when="greater" count="0">
+					<filelist dir="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/mobile" files="*.jsp,*.html"/>
+				</resourcecount>				
+			</or>
+		</condition>
+		
+		<condition property="isJspAndClass">
+			<and>
+				<istrue value="${isExistClass}"/>
+				<istrue value="${isExistJsp}"/>
+			</and>
+		</condition>
+		<condition property="isJsp">
+			<and>
+				<isfalse value="${isExistClass}"/>
+				<istrue value="${isExistJsp}"/>
+			</and>
+		</condition>
+		<condition property="isClass">
+			<and>
+				<istrue value="${isExistClass}"/>
+				<isfalse value="${isExistJsp}"/>
+			</and>
+		</condition>
+		<condition property="isExist">
+			<or>
+				<istrue value="${isExistClass}"/>
+				<istrue value="${isExistJsp}"/>
+			</or>
+		</condition>		
+		<condition property="isRestart">
+			<or>
+				<istrue value="${isJspAndClass}"/>
+				<istrue value="${isClass}"/>
+			</or>
+		</condition>
+		<echo>isJsp : ${isJsp} </echo>
+		<echo>isClass : ${isClass} </echo>
+		<echo>isJspAndClass : ${isJspAndClass} </echo>
+		<echo>jeus restart - >> ${isRestart}</echo>
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- LOCK, 접수 : 정기배포, 자동접수 시에만 사용 -->
+	<!-- **************************************************************** -->
+	<target name="set_prop" unless="existLockProp"><!-- unless : ~ 이 아닌한, ~ 제외하면, ~ 하는일 없이는 -->
+		<!-- 금일자 파일이 없으므로 11시에 파일이 만들어지는것으로 보임, 무조건 만들어지네? -->
+		<propertyfile file="${lock.workspace}/${rglr.dep.id}_lock.properties">
+			<entry key="deploy_count" type="int" value="0" />
+			<entry key="first_error" value="false" />
+		</propertyfile>
+	</target>
+		
+	<target name="exec_app">
+		<property file="${lock.workspace}/${rglr.dep.id}_lock.properties" />
+		
+		<condition property="isStop">
+			<equals arg1="${first_error}" arg2="true" trim="true" />
+		</condition>
+		<!-- 4월19일 09:25분 현재 모바일 배포건 요청건이 있는데 어제일자 MO_20160418_1330_lock.properties 변동이 없음-->
+		<!-- 언제 MO_20160419_1330_lock.properties 가 만들어지는가? -->
+		<fail if="${isStop}" message="당일 접수한 배포 건이 없습니다." />		
+		
+		<java jvm="${java.home.dir}/bin/java" fork="yes"
+		      failonerror="false"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar"
+			  errorproperty="error">
+			<arg value="${ant.project.name}"/>
+			<arg value="${rglr.dep.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="accept"/>
+		</java>
+		<condition property="isError">
+			<!-- errorproperty="error 의 string 은 어떤것을 말하는가? -->
+			<length string="${error}" when="greater" length="0" />
+		</condition>
+		
+		<condition property="isFirstError">
+			<and>
+				<istrue value="${isError}" />
+				<!-- isError 가 0 보다 크고 && deploy_count 가 0 과 같다면 isFirstError ? -->
+				<equals arg1="0" arg2="${deploy_count}" trim="true" />
+			</and>
+		</condition>
+		
+		<propertyfile file="${lock.workspace}/${rglr.dep.id}_lock.properties">
+			<entry key="deploy_count" default="0" type="int" operation="+" />
+			<entry key="first_error" value="${isFirstError}" />
+		</propertyfile>
+		
+		<fail if="${isError}" message="." /><!-- isError 면 점을 찍어? , 맨처음 Java 에서 실행후 요청건이 없음을 찍은후 점이 찍힘 -->
+		
+		<record name="${ant.project.name}_param.properties" emacsmode="true" action="start" />
+		<echo>DEPLOY_ID=${rglr.dep.id}</echo>
+		<record name="${ant.project.name}_param.properties" emacsmode="true" action="stop" />
+	</target>
+	
+	<target name="accept" depends="check_lock_prop">
+		<antcall target="set_prop" />
+		<antcall target="exec_app" />
+	</target>
+		
+	<!-- **************************************************************** -->	
+	<!-- MERGE -->
+	<!-- **************************************************************** -->
+	<target name="merge">
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="merge"/>
+		</java> 
+	</target>
+	
+				
+	<!-- **************************************************************** -->
+	<!-- BUILD -->
+	<!-- **************************************************************** -->				
+	<target name="build">
+		 <record name="${init.build.log}" action="start"/> 
+		<!-- 빌드에 필요한 추가정보 획득  -->
+		<!-- 파일로 저장 -->
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="build"/>
+		</java>		
+		<!-- 추가정보가 담겨있는 파일에서 값을 획득 / Java 에서 빌드할때 생성됨 -->
+		<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/MO_20160522_1330.info -->
+		<property file="${hdsnWrkSpPath}/${svnReposNm}/${deploy.id}.info"/>
+		<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/branches/REAL/lotte-super-mobile/src -->
+		<property name="srcStaticJavaPath" value="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcJavaPath1}" />
+		<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/branches/REAL/lotte-super-mobile/src_dynamic -->
+		<property name="srcDynamicJavaPath" value="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcJavaPath0}" />
+		<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/branches/REAL/lotte-super-mobile/WebContent/WEB-INF/classes -->
+		<property name="srcStaticClassesPath" value="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath1}" />
+		<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/branches/REAL/lotte-super-mobile/WebContent/WEB-INF/dynamic_classes -->
+		<property name="srcDynamicClassesPath" value="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath0}" />
+				
+		<path id="classpath">
+			<!-- C:/Program Files (x86)/Java/jdk1.7.0_25/jre/lib/rt.jar -->
+			<fileset dir="${java.home.dir}/jre/lib">
+				<include name="rt.jar" />
+			</fileset>
+
+			<!-- C:/TmaxSoft/JEUS6.0/lib/datasource/*.jar   //20180103 web/was 전환으로 주석 -->
+			
+			<!-- <fileset dir="${jeus.home.dir}/lib/datasource">
+				<include name="*.jar" />
+			</fileset> -->
+			
+			
+			
+			<!-- C:/TmaxSoft/JEUS6.0/lib/system       //20180103 web/was 전환으로 주석-->
+			
+			<!-- <fileset dir="${jeus.home.dir}/lib/system">
+				<include name="*.jar" />
+			</fileset> -->
+			
+			
+			<!-- Tomcat Library Reference -->
+			
+			<fileset dir="${tomcat.home.dir}/lib">
+				<include name="*.jar" />
+			</fileset>
+			
+
+			
+			
+			<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_COMMONS_1_TEST_BUILD/workspace/lottesuper2011/branches/REAL/lotte-super-commons/lib/*.jar -->
+			<!-- 공통 Library Jar 폴더 -->
+			<fileset dir="${comm.wrksp.path}/${svnReposNm}/${hdsnBranchPath}/${comm.lib.path}">
+				<include name="*.jar" />
+			</fileset>
+
+			
+			<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_COMMONS_1_TEST_BUILD/workspace/lottesuper2011/branches/REAL/lotte-super-commons/dist/*.jar -->
+			<!-- 공통 class 파일들을 컴파일하여 만들어지는 Jar 파일 폴더 -->
+			<fileset dir="${comm.wrksp.path}/${svnReposNm}/${hdsnBranchPath}/${comm.jar.path}">
+				<include name="*.jar" />
+			</fileset>
+
+			<!-- 모바일 Library Jar 파일들 -->
+			<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/branches/REAL/lotte-super-mobile/WebContent/WEB-INF/lib/*.jar -->
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcLibPath}">
+				<include name="*.jar" />
+			</fileset>
+
+			<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/branches/REAL/lotte-super-mobile/WebContent/WEB-INF/classes -->				
+			<dirset dir="${srcStaticClassesPath}" />
+
+		    <!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/branches/REAL/lotte-super-mobile/WebContent/WEB-INF/dynamic_classes -->			
+			<dirset dir="${srcDynamicClassesPath}" />
+		</path>
+
+		<mkdir dir="${srcStaticClassesPath}" />
+		<mkdir dir="${srcDynamicClassesPath}" />
+		
+		<!-- static -->
+		<!-- srcStaticClassesPath = E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/branches/REAL/lotte-super-mobile/WebContent/WEB-INF/classes -->
+		<!-- srcStaticJavaPath    = E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/branches/REAL/lotte-super-mobile/src -->
+	    	
+		<javac source="1.7" 
+			target="1.7" 
+			srcdir="${srcStaticJavaPath}"
+			classpathref="classpath"
+			destdir="${srcStaticClassesPath}"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			fork="true" 
+			memoryMaximumSize="256m"
+			includeantruntime="false"/>
+			
+		<!-- dynamic -->
+		<!-- srcDynamicClassesPath = E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/branches/REAL/lotte-super-mobile/WebContent/WEB-INF/dynamic_classes -->
+		<!-- srcStaticJavaPath = E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/branches/REAL/lotte-super-mobile/src_dynamic -->
+		
+		<javac source="1.7"
+			target="1.7"
+			srcdir="${srcDynamicJavaPath}"
+			classpathref="classpath"
+			destdir="${srcDynamicClassesPath}"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			fork="true"
+			memoryMaximumSize="256m"
+			includeantruntime="false"/>  
+
+		<!-- srcDynamicClassesPath = E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/branches/REAL/lotte-super-mobile/WebContent/WEB-INF/dynamic_classes -->
+		<!-- srcStaticJavaPath = E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/branches/REAL/lotte-super-mobile/src_dynamic -->			
+		<copy todir="${srcDynamicClassesPath}">
+			<fileset dir="${srcDynamicJavaPath}">
+				<include name="**/**/*.xml"/>
+		    </fileset>
+		</copy>
+		
+		<record name="${init.build.log}" action="stop"/>
+	</target>				
+	
+				
+	<!-- **************************************************************** -->
+	<!-- PACK -->
+	<!-- **************************************************************** -->				
+	<target name="pack">
+		<delete dir="${pack.real.path}" /> <!-- 2013-01-02 추가 -->
+		<mkdir dir="${pack.real.path}" />  <!-- 2013-01-02 추가 -->
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="pack"/>
+		</java>
+		
+		<!-- 2013-01-02 변경 -->
+		<antcall target="config.xml" /> 
+		<antcall target="jeus-web-dd.xml" />
+		<antcall target="x2config.xml" />
+		<antcall target="log4jconfig.xml" />
+		<antcall target="mall.conf" />
+		<antcall target="smpi.properties" />
+		<antcall target="pmpi.properties" />
+		
+		<!-- <antcall target="replace_domain" /> -->
+		
+		<antcall target="copy_lottesuper_commons" />
+	</target>
+	<!-- rename -->
+
+	<!-- -->
+	<target name="config.xml" depends="check_rename1" if="existFile1">
+		<move file="${pack.real.path}/WEB-INF/config-${deploy.phase}.xml" 
+			  tofile="${pack.real.path}/WEB-INF/config.xml" overwrite="true" verbose="true" />
+	</target>
+	<target name="jeus-web-dd.xml" depends="check_rename2" if="existFile2">
+		<move file="${pack.real.path}/WEB-INF/jeus-web-dd-${deploy.phase}.xml" 
+			  tofile="${pack.real.path}/WEB-INF/jeus-web-dd.xml" overwrite="true" verbose="true" />
+	</target>
+	<target name="x2config.xml" depends="check_rename3" if="existFile3">
+		<move file="${pack.real.path}/WEB-INF/x2config/x2config-${deploy.phase}.xml" 
+			  tofile="${pack.real.path}/WEB-INF/x2config/x2config.xml" overwrite="true" verbose="true" />
+	</target>
+	<target name="log4jconfig.xml" depends="check_rename4" if="existFile4">
+		<move file="${pack.real.path}/WEB-INF/x2config/log4jconfig-${deploy.phase}.xml" 
+			  tofile="${pack.real.path}/WEB-INF/x2config/log4jconfig.xml" overwrite="true" verbose="true" />
+	</target>			  	
+	<target name="mall.conf" depends="check_rename7" if="existFile7">
+		<move file="${pack.real.path}/WEB-INF/x2config/lgdacom/conf/mall-${deploy.phase}.conf" 
+			tofile="${pack.real.path}/WEB-INF/x2config/lgdacom/conf/mall.conf" overwrite="true" verbose="true" />
+	</target>
+	<target name="smpi.properties" depends="check_rename8" if="existFile8">
+		<move file="${pack.real.path}/WEB-INF/x2config/smpi/smpi-${deploy.phase}.properties" 
+			tofile="${pack.real.path}/WEB-INF/x2config/smpi/smpi.properties" overwrite="true" verbose="true" />
+	</target>
+	<target name="pmpi.properties" depends="check_rename9" if="existFile9">
+		<move file="${pack.real.path}/WEB-INF/x2config/pmpi/pmpi-${deploy.phase}.properties" 
+			tofile="${pack.real.path}/WEB-INF/x2config/pmpi/pmpi.properties" overwrite="true" verbose="true" />
+	</target>
+	
+	<target name="replace_domain">
+		<replace dir="${pack.real.path}" value="www.lottesuper.co.kr">
+			<include name="static-root/js/**/*.js"/>
+			<replacetoken>local.lottesuper.co.kr</replacetoken>
+		</replace>
+	</target>
+			
+	
+	<!-- 배포관리시스템에서 공통파일 포함해서 돌릴때 해당됨 -->
+	<target name="copy_lottesuper_commons" depends="check_common" if="existCommon">
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/${svrLibPath}">
+			<fileset dir="${comm.wrksp.path}/${svnReposNm}/${hdsnPackPath}/${comm.deploy.id}/${comm.pack.lib.path}">
+				<include name="*.*"/>
+		    </fileset>
+		</copy>
+	</target>
+	
+	
+	<!-- **************************************************************** -->
+	<!-- BACKUP -->
+	<!-- **************************************************************** -->	
+	<target name="backup_was">
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="deploy"/>
+			<arg value="${was.ip}" />
+			<arg value="21" />
+			<arg value="${user.id}" />
+			<arg value="${user.pwd}" />
+		</java> 
+	</target>
+	<target name="backup_web">
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="deploy"/>
+			<arg value="${web.ip}" />
+			<arg value="21" />
+			<arg value="${user.id}" />
+			<arg value="${user.pwd}" />
+		</java> 
+	</target>
+
+
+	<!-- **************************************************************** -->
+	<!-- DEPLOY -->
+	<!-- **************************************************************** -->
+	<target name="deploy_was" depends="check_exist" if="isExist">
+		<antcall target="init_was" />
+		<antcall target="send_was" />
+	</target>
+
+	<!-- **************************************************************** -->
+	<!-- MOBILE SSH DEPLOY_WAS / 2016-12-05 -->
+	<!-- **************************************************************** -->
+
+	<target name="ssh_deploy_was" depends="check_exist" if="isExist">
+		<antcall target="ssh_init_was" />
+		<antcall target="ssh_send_was" />
+	</target>
+		
+			
+	<target name="init_was">
+		<tstamp>
+			<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>초기화 작업을 진행합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+		<echo>${was.ip} 접속을 시작합니다... [${conn_time}]</echo>
+		<record name="${init.was.log}" action="start"/>
+		<telnet server="${was.ip}" userid="${user.id}" password="${user.pwd}">
+			<read>/jeus]%</read>
+			<write>cd deploy</write>
+			<read>/jeus/deploy]%</read>
+			<write>./${init.cmd} ${deploy.id}</write>
+			<read>/jeus/deploy]%</read>
+			<write>exit</write>
+		</telnet>
+		<record name="${init.was.log}" action="stop"/>
+		<tstamp>
+			<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${was.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<resourcecontains resource="${init.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>초기화 작업이 완료되었습니다...</echo>
+	</target>
+		
+	<target name="send_was">
+		<ftp server="${was.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${nas.dir}/${deploy.id}"
+		     action="put"
+			 passive="yes">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}">
+				<include name="project/mobile/**/*"></include>
+				<exclude name="project/mobile/WEB-INF/config-*.xml"></exclude>
+				<exclude name="project/mobile/WEB-INF/jeus-web-dd-*.xml"></exclude>
+				<exclude name="project/mobile/WEB-INF/x2config/x2config-*.xml"></exclude>
+				<exclude name="project/mobile/WEB-INF/x2config/log4jconfig-*.xml"></exclude>
+				<exclude name="project/mobile/WEB-INF/x2config/lgdacom/conf/mall-*.conf"></exclude>
+				<exclude name="project/mobile/WEB-INF/x2config/smpi/smpi-*.properties"></exclude>
+				<exclude name="project/mobile/WEB-INF/x2config/pmpi/pmpi-*.properties"></exclude>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</ftp>
+	</target>
+	
+	
+	<!-- **************************************************************** -->
+	<!-- SSH INIT_DEPLOY -->
+	<!-- **************************************************************** -->
+	
+	<!-- ##### SSH INIT ##### -->
+	<target name="ssh_init_was">
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${init.was.log}"
+			command="cd deploy;./${ssh.init.cmd} ${deploy.id}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${init.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />			
+	</target>
+
+	<!-- ssh_check_test -->
+		<target name="ssh_check_test_deploy_id_was">
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${ssh_check_test_deploy_id_was.log}"
+			command="cd deploy;./${ssh_check_test_deploy_id_was.cmd}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${ssh_check_test_deploy_id_was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />			
+	</target>
+
+	<!-- ##### SSH SEND ##### -->
+	<!-- 1. SCP (from local to nas) -->
+	<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_MOBILE_1_TEST_BUILD/workspace/lottesuper2011/pack/TEST/MO_20161205_1330 -->
+
+	<target name="ssh_send_was">
+		<scp todir="${user.id}:${user.pwd}@${was.ip}:${nas.dir}/${deploy.id}" trust="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}">
+				<include name="project/mobile/**/*"></include>
+				<exclude name="project/mobile/WEB-INF/config-*.xml"></exclude>
+				<exclude name="project/mobile/WEB-INF/jeus-web-dd-*.xml"></exclude>
+				<exclude name="project/mobile/WEB-INF/x2config/x2config-*.xml"></exclude>
+				<exclude name="project/mobile/WEB-INF/x2config/log4jconfig-*.xml"></exclude>
+				<exclude name="project/mobile/WEB-INF/x2config/lgdacom/conf/mall-*.conf"></exclude>
+				<exclude name="project/mobile/WEB-INF/x2config/smpi/smpi-*.properties"></exclude>
+				<exclude name="project/mobile/WEB-INF/x2config/pmpi/pmpi-*.properties"></exclude>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</scp>
+	</target>	
+		
+	
+	<!-- ##### SSH COPY ##### -->
+	<target name="ssh_copy_was">
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" output="${dep.was.log}"
+			command="cd deploy;./${ssh.dep.cmd} ${deploy.id}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${dep.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />		
+	</target>
+
+	<!-- ##### SSH TEST COPY ##### -->
+	<target name="ssh_test_copy_was">
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" output="${dep.was.log}"
+			command="cd deploy;./${ssh.dep.cmd} ${deploy.id}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${dep.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />		
+	</target>
+
+
+	<!-- #### SSH JESU RESTART ####-->
+	<!-- #### SSH tomcat RESTART ####-->
+	<target name="ssh_restart_tomcat" depends="check_exist,ip_check" if="isRestart">	 <!-- only test - restart_jeus -->
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${tomcat.restart.log}"
+			command="cd /usr2/apache-tomcat/instance/${mobile_tom}/bin;./shutdown.sh;sleep 10;./start.sh" />
+	</target>
+	
+	<target name="ssh_restart_tomcat2" depends="check_exist,ip_check" if="isRestart">	 <!-- only test - restart_jeus -->
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${tomcat.restart.log}"
+			command="cd /usr2/apache-tomcat/instance/mobile21/bin;./shutdown.sh;sleep 5;./start.sh" />
+			
+	</target>
+	
+	<!-- command="ja downcon ${mobile_tom};ja startcon ${mobile_tom}" />  -->
+		<!-- <condition property="isSuccess">
+			<resourcecontains resource="${tomcat.restart.log}" substring="Succeeded to start ${mobile_tom}" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>jeus restart 작업이 완료되었습니다...</echo> -->
+	
+				
+		
+	<target name="copy_was"> <!-- for 운영 server -->
+		<tstamp>
+			<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>deploy 작업을 진행합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+		<echo>${was.ip} 접속을 시작합니다... [${conn_time}]</echo>
+		<record name="${dep.was.log}" action="start"/>
+		<telnet server="${was.ip}" userid="${user.id}" password="${user.pwd}">
+			<read>/jeus]%</read>
+			<write>cd deploy</write>
+			<read>/deploy]%</read>
+			<write>find ${deploy.id} -type f</write>
+			<read>/deploy]%</read>
+			<write>./${dep.cmd} ${deploy.id}</write>
+			<read>/deploy]%</read>
+			<write>exit</write>
+		</telnet>
+		<record name="${dep.was.log}" action="stop"/>
+		<tstamp>
+			<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${was.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<resourcecontains resource="${dep.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>deploy 작업이 완료되었습니다...</echo>
+	</target>
+	
+	<target name="test_copy_was"> <!-- for test server -->
+		<tstamp>
+			<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>deploy 작업을 진행합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+		<echo>${was.ip} 접속을 시작합니다... [${conn_time}]</echo>
+		<record name="${dep.was.log}" action="start"/>
+		<telnet server="${was.ip}" userid="${user.id}" password="${user.pwd}">
+			<read>/jeus]%</read>
+			<write>cd deploy</write>
+			<read>/deploy]%</read>
+			<write>find ${deploy.id} -type f</write>
+			<read>/deploy]%</read>
+			<write>./${dep.cmd} ${deploy.id}</write>
+			<read>/deploy]%</read>
+			<write>exit</write>
+		</telnet>
+		<record name="${dep.was.log}" action="stop"/>
+		<tstamp>
+			<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${was.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<resourcecontains resource="${dep.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>deploy 작업이 완료되었습니다...</echo>
+	</target>
+	
+	<target name="restart_jeus" depends="check_exist" if="isRestart">	 <!-- only test - restart_jeus -->
+		<tstamp>
+			<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>jeus restart 작업을 진행합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+		<echo>${was.ip} 접속을 시작합니다... [${conn_time}]</echo>
+		<record name="${tomcat.restart.log}" action="start"/>
+		<telnet server="${was.ip}" userid="${user.id}" password="${user.pwd}">
+			<read>/jeus]%</read>
+			<write>ja downcon ${mobile_tom}</write>
+			<read>/jeus]%</read>
+			<write>ja startcon ${mobile_tom}</write>
+			<read>/jeus]%</read>
+			<write>exit</write>
+		</telnet>
+		<record name="${tomcat.restart.log}" action="stop"/>
+		<tstamp>
+			<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${was.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<resourcecontains resource="${tomcat.restart.log}" substring="Succeeded to start ${mobile_tom}" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>jeus restart 작업이 완료되었습니다...</echo>
+	</target>
+	<!-- **************************************************************** -->
+	<!-- RECORD -->
+	<!-- **************************************************************** -->	
+	<target name="record">
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="record"/>
+		</java> 
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- NOTICE -->
+	<!-- **************************************************************** -->	
+	<target name="notice_fail">
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="notice"/>
+			<arg value="FAIL"/>
+		</java> 
+	</target>
+	
+	<target name="notice_success">
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="notice"/>
+			<arg value="SUCCESS"/>
+		</java> 
+	</target>	
+	
+	<!-- **************************************************************** -->
+	<!-- ROLLBACK FOR TEST SERVER -->
+	<!-- **************************************************************** -->	
+	<target name="rollback_was">
+		<antcall target="rollback_start_time" />
+		<antcall target="rollback" />
+		<antcall target="rollback_end_time" />
+	</target>
+	
+	<target name="rollback_start_time">
+		<tstamp>
+			<format property="DSTAMP" pattern="yyyy.MM.dd"/>
+			<format property="TSTAMP" pattern="HH:mm"/>
+		</tstamp>
+		<echo message="Rollback Start ==> ${DSTAMP}-${TSTAMP}"/>
+	</target>
+	
+	<target name="rollback_end_time">
+		<tstamp>
+			<format property="DSTAMP" pattern="yyyy.MM.dd"/>
+			<format property="TSTAMP" pattern="HH:mm"/>
+		</tstamp>
+		<echo message="Rollback End ==> ${DSTAMP}-${TSTAMP}"/>
+	</target>
+	
+	<!-- 2. FTP (from local to nas) -->
+	<target name="rollback">
+		<ftp server="${was.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${svrDocRoot}"
+		     action="put"
+			 verbose="yes"
+			 passive="yes">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}_backup">
+				<include name="project/mobile/**/*"></include>
+			</fileset>
+		</ftp>
+	</target>
+	
+	
+	<!-- **************************************************************** -->
+	<!-- ROLLBACK FOR SSH TEST SERVER -->
+	<!-- 2. SSH (from Nas to DocRoot) -->
+	<!-- **************************************************************** -->
+	<!-- ssh.rollback.cmd = ssh_morollback -->
+		
+    <target name="ssh_rollback_was">
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" output="${rollback.was.log}"
+			command="cd deploy;./${ssh.rollback.cmd} ${deploy.id}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${rollback.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />		
+	</target>
+
+	
+	<!-- target for pre open begin -->
+	<target name="check_test">
+		<condition property="isTest">
+			<equals arg1="test" arg2="${deploy.phase}"/>
+		</condition>
+	</target>
+		
+	<target name="check_real">
+		<condition property="isReal">
+			<equals arg1="real" arg2="${deploy.phase}"/>
+		</condition>
+	</target>
+
+	<target name="clean">
+		<delete dir="${build.dir}" />
+		<delete dir="${dist.dir}" />
+	</target>
+			
+	<target name="commons-compile">
+		<mkdir dir="${commons.build.dir}" />
+
+		<javac source="1.7" 
+			target="1.7" 
+			srcdir="${commons.src.dir}" 
+			classpathref="app.classpath" 
+			destdir="${commons.build.dir}" 
+			failonerror="on" 
+			debug="on" 
+			verbose="on" 
+			encoding="utf-8" 
+			compiler="modern" 
+			fork="true" 
+			memoryMaximumSize="256m" />
+		
+		<copy todir="${commons.build.dir}">
+			<fileset dir="${commons.src.dir}">
+				<include name="**/**/*.xml"/>
+		    </fileset>
+		</copy>
+	</target>
+
+	<target name="commons-jar" depends="commons-compile">
+		<mkdir dir="${commons.pack.dir}" />
+		<jar encoding="UTF-8" destfile="${commons.pack.dir}/${commons.file.name}">
+			<fileset dir="${commons.build.dir}" />
+			<fileset dir="${commons.src.dir}">
+				<include name="**/**/*.java" />
+				<include name="**/**/*.xml" />
+			</fileset>
+		</jar>
+	</target>
+	
+	<target name="commons-deploy" depends="commons-jar">
+		<mkdir dir="${commons.lib.dir}"/>
+		<mkdir dir="${commons.pack.dir}"/>
+		
+		<copy todir="${commons.pack.dir}">
+			<fileset dir="${commons.lib.dir}">
+				<include name="**/*"/>
+			</fileset>
+			
+			<fileset dir="${commons.pack.dir}">
+				<include name="${commons.file.name}"/>
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="compile">
+		<antcall target="commons-deploy"/>
+		
+		<mkdir dir="${build.static.dir}" />
+		<mkdir dir="${build.dynamic.dir}" />
+
+		<javac source="1.7" 
+			target="1.7" 
+			srcdir="${src.static.dir}" 
+			classpathref="app.classpath"
+			destdir="${build.static.dir}" 
+			failonerror="on" 
+			debug="on"  
+			encoding="utf-8" 
+			compiler="modern" 
+			fork="true" 
+			memoryMaximumSize="256m" />
+		
+		<javac source="1.7" 
+			target="1.7" 
+			srcdir="${src.dynamic.dir}" 
+			classpathref="app.classpath" 
+			destdir="${build.dynamic.dir}" 
+			failonerror="on" 
+			debug="on"  
+			encoding="utf-8" 
+			compiler="modern" 
+			fork="true" 
+			memoryMaximumSize="256m" />
+		
+		<copy todir="${build.dynamic.dir}">
+			<fileset dir="${src.dynamic.dir}">
+				<include name="**/**/*.xml"/>
+		    </fileset>
+		</copy>
+	</target>
+
+	<target name="deploy" depends="compile">
+		<mkdir dir="${pack.dir}"/>
+		<mkdir dir="${pack.dir}/xansim"/>
+		<mkdir dir="${pack.dir}/Patrol"/>
+		<mkdir dir="${pack.dir}/static-root"/>
+		<mkdir dir="${pack.dir}/WEB-INF"/>
+		<mkdir dir="${pack.dir}/WEB-INF/jsp"/>
+		<mkdir dir="${pack.dir}/WEB-INF/lib"/>
+		<mkdir dir="${pack.dir}/WEB-INF/x2config"/>
+		<mkdir dir="${pack.dir}/WEB-INF/x2scenario"/>
+		
+		<copy todir="${pack.dir}">
+			<fileset dir="${context.root.dir}">
+				<include name="*"/>
+				<exclude name="META-INF"/>
+			</fileset>
+		</copy>
+		
+		<copy todir="${pack.dir}/xansim">
+			<fileset dir="${context.root.dir}/xansim">
+				<include name="**/*"/>
+			</fileset>
+		</copy>
+<!--
+		<copy todir="${pack.dir}/Patrol">
+			<fileset dir="${context.root.dir}/Patrol">
+				<include name="**/*"/>
+			</fileset>
+		</copy>
+-->				
+		<copy todir="${pack.dir}/static-root">
+			<fileset dir="${context.root.dir}/static-root">
+				<include name="**/*"/>
+			</fileset>
+		</copy>
+		
+		<copy todir="${pack.dir}/WEB-INF/jsp">
+			<fileset dir="${context.root.dir}/WEB-INF/jsp">
+				<include name="**/*"/>
+			</fileset>
+		</copy>
+		
+		<copy todir="${pack.dir}/WEB-INF/lib">
+			<fileset dir="${context.root.dir}/WEB-INF/lib">
+				<include name="**/*"/>
+			</fileset>
+			<fileset dir="${commons.pack.dir}">
+				<include name="**/*"/>
+			</fileset>
+			<fileset dir="${commons.lib.dir}">
+				<include name="**/*"/>
+			</fileset>
+		</copy>
+		
+		<copy todir="${pack.dir}/WEB-INF/x2config">
+			<fileset dir="${context.root.dir}/WEB-INF/x2config">
+				<include name="**/*"/>
+			</fileset>
+		</copy>
+		
+		<copy todir="${pack.dir}/WEB-INF/x2scenario">
+			<fileset dir="${context.root.dir}/WEB-INF/x2scenario">
+				<include name="**/*"/>
+			</fileset>
+		</copy>
+		<!--
+		<copy todir="${pack.dir}/WEB-INF/classes">
+			<fileset dir="${build.static.dir}">
+				<include name="**/**/*"/>
+			</fileset>
+		</copy>
+					
+		<copy todir="${pack.dir}/WEB-INF/dynamic_classes">
+			<fileset dir="${build.dynamic.dir}">
+				<include name="**/**/*"/>
+			</fileset>
+		</copy>
+		-->
+		<!--
+		<copy todir="${pack.dir}/ksnet">
+			<fileset dir="${context.root.dir}/ksnet">
+				<include name="**/*"/>
+			</fileset>
+		</copy>
+					
+		<copy todir="${pack.dir}/lgdacom">
+			<fileset dir="${context.root.dir}/lgdacom">
+				<include name="**/*"/>
+			</fileset>
+		</copy>
+		-->
+		<copy todir="${pack.dir}/">
+			<fileset dir="${context.root.dir}">
+				<include name="index.*"/>
+			</fileset>
+		</copy>		
+		
+		<antcall target="update-test-conf-files"/>
+		<antcall target="update-real-conf-files"/>
+		
+		<antcall target="replace-domain-name-in-javascript"/>
+		
+		<antcall target="tar-all"/>
+	</target>
+	
+	<target name="update-test-conf-files" depends="check_test" if="isTest">
+		<copy overwrite="true" file="${context.root.dir}/WEB-INF/web.xml" tofile="${pack.dir}/WEB-INF/web.xml" />
+		<copy overwrite="true" file="${context.root.dir}/WEB-INF/config-test.xml" tofile="${pack.dir}/WEB-INF/config.xml" />
+		<copy overwrite="true" file="${context.root.dir}/WEB-INF/jeus-web-dd-test.xml" tofile="${pack.dir}/WEB-INF/jeus-web-dd.xml" />
+		<copy overwrite="true" file="${context.root.dir}/WEB-INF/x2config/x2config-test.xml" tofile="${pack.dir}/WEB-INF/x2config/x2config.xml" />
+		<copy overwrite="true" file="${context.root.dir}/WEB-INF/x2config/log4jconfig-test.xml" tofile="${pack.dir}/WEB-INF/x2config/log4jconfig.xml" />
+		<copy overwrite="true" file="${context.root.dir}/WEB-INF/x2config/lgdacom/conf/mall-test.conf" tofile="${pack.dir}/WEB-INF/x2config/lgdacom/conf/mall.conf" />
+		<copy overwrite="true" file="${context.root.dir}/WEB-INF/x2config/pmpi/pmpi-test.properties" tofile="${pack.dir}/WEB-INF/x2config/pmpi/pmpi.properties" />
+		<copy overwrite="true" file="${context.root.dir}/WEB-INF/x2config/smpi/smpi-test.properties" tofile="${pack.dir}/WEB-INF/x2config/smpi/smpi.properties" />
+	</target>
+
+	<target name="update-real-conf-files" depends="check_real" if="isReal">
+		<copy overwrite="true" file="${context.root.dir}/WEB-INF/web.xml" tofile="${pack.dir}/WEB-INF/web.xml" />
+		<copy overwrite="true" file="${context.root.dir}/WEB-INF/config-real.xml" tofile="${pack.dir}/WEB-INF/config.xml" />
+		<copy overwrite="true" file="${context.root.dir}/WEB-INF/jeus-web-dd-real.xml" tofile="${pack.dir}/WEB-INF/jeus-web-dd.xml" />
+		<copy overwrite="true" file="${context.root.dir}/WEB-INF/x2config/x2config-real.xml" tofile="${pack.dir}/WEB-INF/x2config/x2config.xml" />
+		<copy overwrite="true" file="${context.root.dir}/WEB-INF/x2config/log4jconfig-real.xml" tofile="${pack.dir}/WEB-INF/x2config/log4jconfig.xml" />
+		<copy overwrite="true" file="${context.root.dir}/WEB-INF/x2config/lgdacom/conf/mall-real.conf" tofile="${pack.dir}/WEB-INF/x2config/lgdacom/conf/mall.conf" />
+		<copy overwrite="true" file="${context.root.dir}/WEB-INF/x2config/pmpi/pmpi-real.properties" tofile="${pack.dir}/WEB-INF/x2config/pmpi/pmpi.properties" />
+		<copy overwrite="true" file="${context.root.dir}/WEB-INF/x2config/smpi/smpi-real.properties" tofile="${pack.dir}/WEB-INF/x2config/smpi/smpi.properties" />
+	</target>
+			
+	<target name="svn-update-all-sources">
+		<exec executable="svn">
+			<arg value="update"/>
+			<arg value="."/>
+		</exec>
+	</target>
+	
+	<target name="replace-domain-name-in-javascript">
+		<replace dir="${pack.dir}/static-root/js" value="m.lottesuper.co.kr">
+			<include name="**/*.js"/>
+			<replacetoken>local.lottesuper.co.kr</replacetoken>
+		</replace>
+	</target>
+	
+	<target name="tar-all">
+		<tar longfile="gnu"
+			 destfile="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/mobile.tar" 
+			 basedir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/project"
+		     excludes="${pack.dir}/WEB-INF/config-*.xml,
+			           ${pack.dir}/WEB-INF/jeus-web-dd-*.xml,
+		               ${pack.dir}/WEB-INF/x2config/x2config-*.xml,
+			           ${pack.dir}/WEB-INF/x2config/log4jconfig-*.xml,
+			           ${pack.dir}/WEB-INF/x2config/lgdacom/conf/mall-*.conf,
+			           ${pack.dir}/WEB-INF/x2config/pmpi/pmpi-*.properties,
+			           ${pack.dir}/WEB-INF/x2config/smpi/smpi-*.properties, **/.svn/*"/>
+	</target>
+	
+	<target name="send-tst-server">
+		<ftp server="${tst.server.ip}" userid="${tst.server.user.id}" password="${tst.server.user.pw}"
+		     remotedir="/esuper/project"
+		     action="put"
+			 passive="yes">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}">
+				<include name="mobile.tar"></include>
+			</fileset>
+		</ftp>
+	</target>
+	
+	<target name="deploy-tst-server">
+		<telnet server="${tst.server.ip}"
+			userid="${tst.server.user.id}" password="${tst.server.user.pw}">
+		    <read>esptstf [jeus:/usr1/home/jeus]%</read>
+		    <write>cd deploy</write>
+		    <read>esptstf [jeus:/usr1/home/jeus/deploy]%</read>
+		    <write>./modeploy</write>
+			<read>esptstf [jeus:/usr1/home/jeus/deploy]%</read>
+		    <write>exit</write>
+		</telnet>
+	</target>
+	
+	<target name="send-real-server">
+		<ftp server="${real.server.ip}" userid="${real.server.user.id}" password="${real.server.user.pw}"
+		     remotedir="/esuper/project"
+		     action="put"
+			 passive="yes">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}">
+				<include name="mobile.tar"></include>
+			</fileset>
+		</ftp>
+	</target>
+	
+	<target name="deploy-real-server">
+		<telnet server="${real.server.ip}"
+			userid="${real.server.user.id}" password="${real.server.user.pw}">
+		    <read>[jeus:/usr1/home/jeus]%</read>
+		    <write>cd deploy</write>
+		    <read>[jeus:/usr1/home/jeus/deploy]%</read>
+		    <write>./modeploy</write>
+		    <read>[jeus:/usr1/home/jeus/deploy]%</read>
+		    <write>exit</write>
+		</telnet>
+	</target>
+	<!-- target for pre open end -->
+</project>
+

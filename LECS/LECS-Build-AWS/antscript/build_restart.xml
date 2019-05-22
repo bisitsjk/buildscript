@@ -1,0 +1,91 @@
+<project name="LECS_Build_Restart">
+	<target name="restart-container">
+		<sshexec host="${remote.address}" username="${remote.id}"
+			password="${remote.password}" command="~/bin/restart.sh ${container}"
+			trust="true" failonerror="false">
+		</sshexec>
+	</target>
+
+	<target name="deploy-and-restart-tst-servers">
+		<antcall target="thread-work">
+			<param name="cmds">deploy-bo,restart-bo
+				deploy-lps,restart-lps
+				deploy-muji,restart-muji</param>
+		</antcall>
+	</target>
+	<target name="restart-tst-servers">
+		<antcall target="thread-work">
+			<param name="cmds">restart-bo
+				restart-lps
+				restart-muji</param>
+		</antcall>
+	</target>
+
+	<target name="deploy-and-restart-prd-servers">
+		<antcall target="thread-work">
+			<param name="cmds">deploy-bo-prd,restart-bo-prd
+				deploy-lps-prd,restart-lps-prd
+				deploy-muji-prd,restart-muji-prd
+				deploy-cc-prd,restart-cc-prd
+				deploy-po-prd,restart-po-prd
+				deploy-wms-prd,restart-wms-prd
+				deploy-batch-prd</param>
+		</antcall>
+	</target>
+	<target name="restart-prd-servers">
+		<antcall target="thread-work">
+			<param name="cmds">restart-bo-prd
+				restart-lps-prd
+				restart-muji-prd
+				restart-cc-prd
+				restart-po-prd
+				restart-wms-prd</param>
+		</antcall>
+	</target>
+
+	<!-- sckim 추가 start -->
+	<target name="restart-prd-set1">
+		<antcall target="thread-work">
+			<param name="cmds">restart-bo-prd-set1
+				restart-lps-prd-set1
+				restart-muji-prd-set1
+				restart-cc-prd-set1
+				restart-po-prd-set1
+						</param>
+		</antcall>
+	</target>
+
+	<target name="restart-prd-set2">
+		<antcall target="thread-work">
+			<param name="cmds">restart-bo-prd-set2
+				restart-lps-prd-set2
+				restart-muji-prd-set2
+				restart-cc-prd-set2
+				restart-po-prd-set2
+						</param>
+		</antcall>
+	</target>
+
+
+	<target name="deploy-and-restart-prd-set1">
+		<antcall target="thread-work">
+			<param name="cmds">deploy-bo-prd-set1,restart-bo-prd-set1
+				deploy-lps-prd-set1,restart-lps-prd-set1
+				deploy-muji-prd-set1,restart-muji-prd-set1
+				deploy-cc-prd-set1,restart-cc-prd-set1
+				deploy-po-prd-set1,restart-po-prd-set1
+					</param>
+		</antcall>
+	</target>
+
+	<target name="deploy-and-restart-prd-set2">
+		<antcall target="thread-work">
+			<param name="cmds">deploy-bo-prd-set2,restart-bo-prd-set2
+				deploy-lps-prd-set2,restart-lps-prd-set2
+				deploy-muji-prd-set2,restart-muji-prd-set2
+				deploy-cc-prd-set2,restart-cc-prd-set2
+				deploy-po-prd-set2,restart-po-prd-set2
+					</param>
+		</antcall>
+	</target>
+</project>

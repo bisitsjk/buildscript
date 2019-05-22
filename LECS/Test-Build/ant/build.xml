@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="EUC-KR"?>
+<project name="testscript" basedir=".">
+
+	<target name="exec.cmd">
+		<exec dir="C:/" executable="cmd.exe">
+			<arg line="/c saslpasswd2 -c -f d:\\repositorie\\sasldb -u LECSDOC kjjung"/>
+    	</exec>		
+    </target>
+
+	<target name="exec.cmd2">
+		<exec executable="cmd.exe">
+			<arg line="saslpasswd2 -c -f d:\\repositories\\sasldb -u LECSDOC kjjung"/>
+    	</exec>
+    	<exec executable="cmd.exe">
+			<arg line="1111"/>
+    	</exec>
+    </target>
+	
+	<target name="telnet.pwd.input">
+		<telnet server="127.0.0.1">
+			<write>saslpasswd2 -c -f d:\repositorie\sasldb -u LECSDOC kjjung</write>
+		</telnet>
+	</target>
+	
+	<target name="telnet.pwd.input.bk">
+		<telnet server="localhost" userid="kjjung" password="J4youdpsme" port="23">
+			<write>saslpasswd2 -c -f d:\repositorie\sasldb -u LECSDOC kjjung</write>
+		</telnet>
+	</target>
+    
+</project>

@@ -1,0 +1,260 @@
+class MultiWork { 
+	def threads = []
+	
+	void add(Thread t){
+		threads.add(t)
+	}
+	
+	void waitDone() {
+		threads.each{t->t.join()}
+	}
+}
+
+
+
+MultiWork multi = new MultiWork();
+
+sshExecViaCfg = {cfg ->
+	return sshExec( cfg.address, cfg.id, cfg.password)
+}
+
+JEUS_재시작 = { address, id, password, containerName ->
+	def downResult = sshexec (
+		address:address, 
+		user:id, 
+		password:password, 
+		command:"/usr2/jeus6/bin/jeusadmin localhost -Uadministrator -Pjeusadmin downcon ${containerName}"
+	)
+ 	println "$address:$containerName downResult: $downResult"
+
+	def upResult = sshexec (
+		address:address, 
+		user:id, 
+		password:password, 
+		command:"/usr2/jeus6/bin/jeusadmin localhost -Uadministrator -Pjeusadmin startcon ${containerName}"
+	)
+	println "$address:$containerName upResult: $upResult"
+	
+	/*if ( upResult.contains("Succeeded") == false) {
+			throw new IllegalStateException(upResult)
+		}*/
+}
+
+JEUS_재시작_Via_Cfg = {배포본_목록, deployTarget ->
+	배포본_목록.each { 배포본_이름, 배포본 ->
+		if (배포본['SERVER']==null){
+			return
+		}
+		배포_목적_정보 = 배포본['SERVER'][deployTarget][MACHINE]
+		if (배포_목적_정보.container==null){
+			return
+		}
+		def exec = sshExecViaCfg ( 배포_목적_정보 )
+		exec "/usr2/jeus6/bin/jeusadmin localhost -Uadministrator -Pjeusadmin downcon ${배포_목적_정보.container}"
+		exec "/usr2/jeus6/bin/jeusadmin localhost -Uadministrator -Pjeusadmin startcon ${배포_목적_정보.container}"
+	}	
+}
+
+tasks.addRule("Pattern:jeusRestart_<ID>") { String taskName ->
+	if (taskName.startsWith("jeusRestart")) {
+        task(taskName) << {
+			def hostName = (taskName - 'jeusRestart_').split('_')[0]
+			def containerName = (taskName - 'jeusRestart_').split('_')[1]
+			def exec = sshExec( ALL_SERVERS[hostName], SERVER_ADMIN_ID, SERVER_ADMIN_PASSWORD)
+
+			println "IP:"+ALL_SERVERS[hostName]
+			println "Re-Start JEUS $containerName"			
+			exec "/usr1/home/jeus/bin/restartJeus.sh $containerName"			
+        }
+    }
+}
+
+//  DEPLOY  변수를 사용하지 않고 직접 입력하는 이유는 혹시나 운영서버를 재시작하는 문제를 발생시키지 않기 위해서이다. 
+task restart_bo_tst << {
+	multi.add(Thread.start {
+		println "restart_bo_tst"
+		JEUS_재시작_Via_Cfg DeployConfig[Bo].배포본_목록, 'tst'		
+	})	
+}
+
+task restart_lps_tst << {
+		println "restart_lps_tst"
+		JEUS_재시작_Via_Cfg DeployConfig[Lps].배포본_목록, 'tst'
+}
+
+task restart_muji_tst << {
+		println "restart_muji_tst"
+		JEUS_재시작_Via_Cfg DeployConfig[Muji].배포본_목록, 'tst'
+}
+
+task restart_nike_tst << {
+		println "restart_nike_tst"
+		JEUS_재시작_Via_Cfg DeployConfig[Nike].배포본_목록, 'tst'
+}
+
+task restart_puma_tst << {
+		println "restart_puma_tst"
+		JEUS_재시작_Via_Cfg DeployConfig[Puma].배포본_목록, 'tst'
+}
+
+
+task restart_uniqlo_tst << {
+		println "restart_uniqlo_tst"
+		JEUS_재시작_Via_Cfg DeployConfig[Uniqlo].배포본_목록, 'tst'
+}
+
+
+task waitServers << {
+	multi.waitDone()
+}
+
+
+///////////// STAGE
+
+task restart_nike_stg << {
+	println "restart_nike_stg"
+	JEUS_재시작_Via_Cfg DeployConfig[Nike].배포본_목록, 'stg'
+}
+
+task restart_bo_stg << {
+	println "restart_bo_stg"
+	JEUS_재시작_Via_Cfg DeployConfig[Bo].배포본_목록, 'stg'
+}
+
+task restart_lps_stg << {
+	println "restart_lps_tst"
+	JEUS_재시작_Via_Cfg DeployConfig[Lps].배포본_목록, 'stg'
+}
+
+task restart_muji_stg << {
+	println "restart_muji_tst"
+	JEUS_재시작_Via_Cfg DeployConfig[Muji].배포본_목록, 'stg'
+}
+
+
+task restart_wms_stg << {
+	println "restart_wms_stg"
+	JEUS_재시작_Via_Cfg DeployConfig[Wms].배포본_목록, 'stg'
+}
+
+task restart_puma_stg << {
+	println "restart_puma_stg"
+	JEUS_재시작_Via_Cfg DeployConfig[Puma].배포본_목록, 'stg'
+}
+
+
+wasInstanceCount = { address , id, password ->
+	ppidcmd = "ps -ef | grep /bin/java | grep /usr2/jeus6 | grep -v grep"
+	def output = sshexec (
+		address:address,
+		id:id,
+		password:password,
+		command: ppidcmd
+	)
+	if (output == null || outout.trim() == ""){
+		return 0
+	}
+	/*sshExecOutNow (address, id, password, ppidcmd, "$address-$ppidcmd")
+		if (ant.properties["$address-$ppidcmd"].trim() == ""){
+			return 0
+		}
+			*/
+
+	def ppid = output.trim().split(/\s+/)[1]
+	pidcmd = "ps -ef | grep $ppid | grep -v grep"
+	
+	output = sshexec (
+		address:address,
+		id:id,
+		password:password,
+		command: pidcmd
+	)
+	return output.trim().split('\n').size()
+	
+/*	sshExecOutNow (address, id, password, pidcmd, "$address-$pidcmd")
+	return ant.properties["$address-$pidcmd"].trim().split('\n').size()*/
+}
+
+
+restartWAS = { WAS, failCollector ->
+	address = WAS.address
+	id = WAS.id
+	password = WAS.password
+	
+	println "Jeus Down $address"
+	sshExecNow (address, id, password, "/usr2/jeus6/bin/jdown")
+	
+	
+	for(i=0; i< 3; i++){
+		def instanceCount = wasInstanceCount ( address, id, password ) 
+		println "Current WAS($address) Instance Count: $instanceCount"
+		if (instanceCount == 0){
+			println "All WAS Instance was shutdowned"
+			break;
+		}
+		sleep(1000L*10)
+	}
+	
+	if (wasInstanceCount ( address, id, password )  > 0){
+		failCollector.add("WAS($address) did not shutdowned in time!!!!!")
+		throw new IllegalStateException("WAS($address) did not shutdowned in time!!!!!")
+	}
+	println "Delete Transaction log $address"
+	sshExecNow (address, id, password, "rm -fR /usr3/jeus-log/TM/*")
+	
+	println "Jeus Start $address"
+	sshExecNow (address, id, password, "/usr2/jeus6/bin/jboot")
+	
+	for(i=0; i< 6; i++){
+		def instanceCount = wasInstanceCount ( address, id, password ) 
+		println "Current WAS($address) Instance Count: $instanceCount"
+		if (instanceCount == WAS.instanceCount){
+			println "All WAS Instance was started"
+			return
+		}
+		sleep(1000L*10)
+	}
+		
+		
+	if (wasInstanceCount ( address, id, password )  < WAS.instanceCount){
+		failCollector.add("WAS($address) did not started in time!!!!!")
+		throw new IllegalStateException("WAS($address) did not started in time!!!!!")
+	}	
+}
+
+///////////// PRD 
+
+restart_prd_set = { set ->
+	SET = [Muji, Nike, Lps, Bo, Cc, Po].collect { DeployConfig[it].배포본_목록['WEBAPP']['SERVER']['prd'][set]}
+	def fails = []
+	def threads = []
+	SET.each { WAS ->
+		threads.add(Thread.start ({ restartWAS (WAS, fails) }))
+	}
+	
+	threads.each { thread -> thread.join() }	
+	if (fails.size() >0){
+		println ""
+		println "!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!"
+		println "${fails.size()}개의 WAS 재기동에 실패했습니다"
+		fails.each { println it}
+		throw new IllegalStateException("${fails.size()}개의 WAS 재기동에 실패했습니다 (${fails}))")
+	}	
+}
+
+task restart_prd_set_1 << {
+	println "restart_muji_prd_set_1"
+	restart_prd_set('set1')	
+}
+
+task restart_prd_set_2 << {
+	println "restart_muji_prd_set_1"
+	restart_prd_set('set2')	
+}
+
+
+
+
+task restart_all_tst  <<{
+	groupRestart ( [ restart_bo_tst, restart_lps_tst, restart_muji_tst, restart_nike_tst ] )
+}

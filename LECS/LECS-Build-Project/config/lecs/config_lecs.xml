@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config-root>
+
+	<upload>
+		<dir>
+			<root>/lecs/upload/files</root>
+		</dir>
+	</upload>
+	
+	<url>
+		<bo>
+			<root>http://localhost:8081</root>
+		</bo>
+		<cc>
+			<root>http://localhost:8082</root>
+		</cc>
+		<image>
+			<root></root>
+			<upload>
+				<root>/files</root>
+				<isLocalTest>Y</isLocalTest>
+				<localTestFile>/files/test.gif</localTestFile>
+			</upload>
+		</image>
+	</url>
+
+</config-root>

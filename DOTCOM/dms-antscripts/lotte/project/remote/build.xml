@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lotte_remote">
+	<!-- macrodef -->
+	<macrodef name="targetproject">
+		<attribute name="property"/>
+		<attribute name="loglevel" default="3"/>
+		<sequential>
+			<script language="javascript">
+				self.getProject().setNewProperty("@{property}", self.getOwningTarget());
+			</script>
+		</sequential>
+	</macrodef>
+	
+	<macrodef name="propertyvalue">
+		<attribute name="property"/>
+		<attribute name="value"/>
+		<sequential>
+			<property name="@{property}" value="${@{value}}"/>
+		</sequential>
+	</macrodef>
+	
+	<!-- id, password -->
+	<property name="user.id"			value="jeus"/>
+	<property name="user.pwd"			value="w&uch6raDa*r"/>
+	
+	
+	
+	<!-- ============================================ -->
+	<!-- PROJECT -->
+	<!-- ============================================ -->	
+	<property name="lpay_20150623"			value="211.115.69.167"/>
+			
+	<property name="script.file.path"	value="/usr1/home/jeus/deploy/script"/>	
+	
+	<target name="remote_send">
+		<property name="host.name" value="${TARGET_PROJECT}"/>
+		<propertyvalue property="host.ip" value="${host.name}"/>
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${script.file.path}" trust="true">
+			<fileset dir="${wrkspc}/lotte/project/${TARGET_PROJECT}/remote">
+				<include name="*.xml"></include>
+			</fileset>
+		</scp>
+	</target>
+	
+	<target name="local_send">
+		<copy todir="d:/deployer/scripts/${TARGET_PROJECT}" verbose="true">
+			<fileset dir="${wrkspc}/lotte/project/${TARGET_PROJECT}/local">
+				<include name="*.xml"/>
+				<include name="*.properties"/>
+			</fileset>
+		</copy>
+	</target>
+</project>

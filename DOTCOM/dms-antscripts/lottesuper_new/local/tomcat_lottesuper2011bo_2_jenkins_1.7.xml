@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="tomcat_lottesuper2011bo_jenkins_1.7">
+    <!-- **************************************************************** -->
+	<!-- PROPERTY -->
+	<!-- **************************************************************** -->
+	 <taskdef resource="net/sf/antcontrib/antcontrib.properties" />
+	<property file="${deployer.home.dir}/scripts/${ant.project.name}.REAL.properties"/>
+	<echo>Properties : ${deployer.home.dir}/scripts/${ant.project.name}.REAL.properties</echo>
+	<property name="user.id" value="${svrUserId}" />
+	<property name="user.pwd" value="${svrUserPassword}" />
+
+		<!-- **************************************************************** -->
+	<!-- CHECK -->
+	<!-- **************************************************************** -->
+	
+	
+<!-- ###################### Tomcat Real Class Send Start ######################### -->
+
+<target name="move_real">
+		<echo>move_deploy : move_real</echo>
+		<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" command="cd /esuper/project/back/WEB-INF;find . -name classes_1.7.zip | xargs rm -f " />
+		<antcall target="move1_real" />
+  </target>
+	
+<target name="move1_real">
+		<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" command="cd /esuper/project/partner/WEB-INF;find . -name classes_1.7.zip | xargs rm -f " />
+			<antcall target="move2_real" />
+</target>
+
+<target name="move2_real">
+		<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" command="cd /esuper/project/mback/WEB-INF;find . -name classes_1.7.zip | xargs rm -f " />
+		<antcall target="send_real" />
+</target>
+
+
+<target name="send_real">
+		<scp todir="${user.id}:${user.pwd}@${host}:/esuper/project/back/WEB-INF" trust="true">
+			<fileset dir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_BACKOFFICE_1_REAL_BUILD_${target}_1_1.7/workspace/lottesuper2011/pack/PROJECT">
+				<include name="classes_1.7.zip"></include>
+			</fileset>
+		</scp>
+		<antcall target="send1_real" />
+</target>	
+
+<target name="send1_real">
+		<scp todir="${user.id}:${user.pwd}@${host}:/esuper/project/partner/WEB-INF" trust="true">
+			<fileset dir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_BACKOFFICE_1_REAL_BUILD_${target}_1_1.7/workspace/lottesuper2011/pack/PROJECT">
+				<include name="classes_1.7.zip"></include>
+			</fileset>
+		</scp>
+		<antcall target="send2_real" />
+</target>	
+
+<target name="send2_real">
+		<scp todir="${user.id}:${user.pwd}@${host}:/esuper/project/mback/WEB-INF" trust="true">
+			<fileset dir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_BACKOFFICE_1_REAL_BUILD_${target}_1_1.7/workspace/lottesuper2011/pack/PROJECT">
+			<include name="classes_1.7.zip"></include>
+			</fileset>
+		</scp>
+	<antcall target="unzip_real" />
+</target>
+						
+						
+<target name="unzip_real">
+		<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" command="cd /esuper/project/back/WEB-INF;unzip -o -q  ./classes_1.7.zip" />
+		<antcall target="unzip1_real" />
+</target>
+
+<target name="unzip1_real">
+		<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+				trust="true" verbose="false" command="cd /esuper/project/partner/WEB-INF;unzip -o -q  ./classes_1.7.zip" />
+		<antcall target="unzip2_real" />
+</target>
+
+<target name="unzip2_real">
+		<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+				trust="true" verbose="false" command="cd /esuper/project/mback/WEB-INF;unzip -o -q  ./classes_1.7.zip" />
+</target>
+
+	
+<!-- ###################### Tomcat Real Class Send End ######################### -->
+	
+	
+<target name="ssh_back_precompile">
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" command="cd deploy;./ssh_backjspcompile" />
+</target>
+
+<target name="ssh_mback_precompile">
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" command="cd deploy;./ssh_mbackjspcompile" />
+</target>
+				
+<target name="ssh_partner_precompile">
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" command="cd deploy;./ssh_partnerjspcompile" />
+</target>
+	
+</project>

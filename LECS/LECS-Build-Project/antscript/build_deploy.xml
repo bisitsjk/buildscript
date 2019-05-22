@@ -1,0 +1,203 @@
+<project name="LECS_Build_Deploy">
+	<target name="deploy">
+		<!--
+			<scp todir="${deploy.id}@${deploy.server}:${deploy.path}"
+			password="${deploy.password}"> <fileset dir="build/"
+			includes="*${target}.war" /> </scp>
+		-->
+		<ftp password="${ftp.password}" server="${ftp.server}" userid="${ftp.id}"
+			remotedir="${ftp.path}" binary="true" passive="true">
+			<fileset dir="build/" includes="*${target}.war" />
+		</ftp>
+	</target>
+
+	<target name="deploy-target">
+		<echo message="Deploy ${deploy.material} to ${deploy.path}" />
+		<ftp userid="${remote.id}" password="${remote.password}" server="${remote.address}"
+			remotedir="/lotte/lecsDocs/temp/" binary="true" passive="true">
+			<fileset dir="build/" includes="${deploy.material}" />
+		</ftp>
+
+		<sshexec host="${remote.address}" username="${remote.id}"
+			password="${remote.password}"
+			command="~/bin/deploy.sh ${deploy.material}  ${deploy.path} ${remove.old}"
+			trust="true" failonerror="false">
+		</sshexec>
+
+		<sshexec host="${remote.address}" username="${remote.id}"
+			password="${remote.password}" command="~/bin/extra.sh ${to.extra}"
+			trust="true" failonerror="false">
+		</sshexec>
+
+	</target>
+
+
+	<target name="deploy-cc-webapp">
+		<antcall target="deploy-target">
+			<param name="remote.address" value="${address}" />
+			<param name="deploy.material" value="LECS-Platform-BO_webapp.zip" />
+			<param name="deploy.path" value="/lotte/lecs/webapp/cc/" />
+			<param name="remove.old" value="yes" />
+			<param name="to.extra" value="yes" />
+		</antcall>
+	</target>
+
+	<target name="deploy-po-webapp">
+		<antcall target="deploy-target">
+			<param name="remote.address" value="${address}" />
+			<param name="deploy.material" value="LECS-Platform-BO_webapp.zip" />
+			<param name="deploy.path" value="/lotte/lecs/webapp/po/" />
+			<param name="remove.old" value="yes" />
+		</antcall>
+	</target>
+
+	<target name="deploy-bo-webapp">
+		<antcall target="deploy-target">
+			<param name="remote.address" value="${address}" />
+			<param name="deploy.material" value="LECS-Platform-BO_webapp.zip" />
+			<param name="deploy.path" value="/lotte/lecs/webapp/bo/" />
+			<param name="remove.old" value="yes" />
+		</antcall>
+	</target>
+	<target name="deploy-bonike-webapp">
+		<antcall target="deploy-target">
+			<param name="remote.address" value="${address}" />
+			<param name="deploy.material" value="LECS-Platform-BO_webapp.zip" />
+			<param name="deploy.path" value="/lotte/lecs/webapp/bonike/" />
+			<param name="remove.old" value="yes" />
+		</antcall>
+	</target>
+
+	<target name="deploy-bo-contents">
+		<antcall target="deploy-target">
+			<param name="remote.address" value="${address}" />
+			<param name="deploy.material" value="LECS-Platform-BO_contents.zip" />
+			<param name="deploy.path" value="/lotte/lecsDocs/contents/bo/" />
+			<param name="remove.old" value="no" />
+		</antcall>
+	</target>
+
+	<target name="deploy-bonike-contents">
+		<antcall target="deploy-target">
+			<param name="remote.address" value="${address}" />
+			<param name="deploy.material" value="LECS-Platform-BO_contents.zip" />
+			<param name="deploy.path" value="/lotte/lecsDocs/contents/bonike/" />
+			<param name="remove.old" value="yes" />
+		</antcall>
+	</target>
+
+	<target name="deploy-bo-images">
+		<antcall target="deploy-target">
+			<param name="remote.address" value="${address}" />
+			<param name="deploy.material" value="LECS-Platform-BO_images.zip" />
+			<param name="deploy.path" value="/lotte/lecsDocs/contents/bo/" />
+			<param name="remove.old" value="no" />
+		</antcall>
+	</target>
+
+	<target name="deploy-bonike-images">
+		<antcall target="deploy-target">
+			<param name="remote.address" value="${address}" />
+			<param name="deploy.material" value="LECS-Platform-BO_images.zip" />
+			<param name="deploy.path" value="/lotte/lecsDocs/contents/bonike/" />
+			<param name="remove.old" value="no" />
+		</antcall>
+	</target>
+
+
+	<target name="deploy-lps-webapp">
+		<antcall target="deploy-target">
+			<param name="remote.address" value="${address}" />
+			<param name="deploy.material" value="LECS-Platform-LPS_webapp.zip" />
+			<param name="deploy.path" value="${path}" />
+			<param name="remove.old" value="yes" />
+		</antcall>
+	</target>
+
+	<target name="deploy-lps-contents">
+		<antcall target="deploy-target">
+			<param name="remote.address" value="${address}" />
+			<param name="deploy.material" value="LECS-Platform-LPS_contents.zip" />
+			<param name="deploy.path" value="${path}" />
+			<param name="remove.old" value="no" />
+		</antcall>
+	</target>
+
+	<target name="deploy-lps-images">
+		<antcall target="deploy-target">
+			<param name="remote.address" value="${address}" />
+			<param name="deploy.material" value="LECS-Platform-LPS_images.zip" />
+			<param name="deploy.path" value="${path}" />
+			<param name="remove.old" value="no" />
+		</antcall>
+	</target>
+
+
+	<target name="deploy-muji-webapp">
+		<antcall target="deploy-target">
+			<param name="remote.address" value="${address}" />
+			<param name="deploy.material" value="LECS-Store-Muji_webapp.zip" />
+			<param name="deploy.path" value="/lotte/lecs/webapp/muji/" />
+			<param name="remove.old" value="yes" />
+		</antcall>
+
+	</target>
+	<target name="deploy-muji-contents">
+		<antcall target="deploy-target">
+			<param name="remote.address" value="${address}" />
+			<param name="deploy.material" value="LECS-Store-Muji_contents.zip" />
+			<param name="deploy.path" value="/lotte/lecsDocs/contents/MJS1/" />
+			<param name="remove.old" value="no" />
+		</antcall>
+
+
+	</target>
+	<target name="deploy-muji-images">
+		<antcall target="deploy-target">
+			<param name="remote.address" value="${address}" />
+			<param name="deploy.material" value="LECS-Store-Muji_images.zip" />
+			<param name="deploy.path" value="/lotte/lecsDocs/images/MJS1/" />
+			<param name="remove.old" value="no" />
+		</antcall>
+	</target>
+
+	<target name="deploy-nike-webapp">
+		<antcall target="deploy-target">
+			<param name="remote.address" value="${address}" />
+			<param name="deploy.material" value="LECS-Store-Nike_webapp.zip" />
+			<param name="deploy.path" value="/lotte/lecs/webapp/nike/" />
+			<param name="remove.old" value="yes" />
+		</antcall>
+
+	</target>
+	<target name="deploy-nike-contents">
+		<antcall target="deploy-target">
+			<param name="remote.address" value="${address}" />
+			<param name="deploy.material" value="LECS-Store-Nike_contents.zip" />
+			<param name="deploy.path" value="/lotte/lecsDocs/contents/NKS1/" />
+			<param name="remove.old" value="no" />
+		</antcall>
+
+
+	</target>
+	<target name="deploy-nike-images">
+		<antcall target="deploy-target">
+			<param name="remote.address" value="${address}" />
+			<param name="deploy.material" value="LECS-Store-Nike_images.zip" />
+			<param name="deploy.path" value="/lotte/lecsDocs/images/NKS1/" />
+			<param name="remove.old" value="no" />
+		</antcall>
+	</target>
+
+
+	<target name="deploy-wms-webapp">
+		<antcall target="deploy-target">
+			<param name="remote.address" value="${address}" />
+			<param name="deploy.material" value="LECS-Platform-LPS_webapp.zip" />
+			<param name="deploy.path" value="/lotte/lecs/webapp/wms/" />
+			<param name="remove.old" value="yes" />
+		</antcall>
+	</target>
+
+
+</project>

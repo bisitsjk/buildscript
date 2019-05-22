@@ -1,0 +1,435 @@
+<project name="LECS_Build_Build">
+
+	<target name="build-bo-project">
+		<antcall target="build-project">
+			<param name="target" value="LECS-Platform-BO" />
+			<param name="abbr" value="bo" />
+			<param name="flatImagePath" value="false" />
+			<param name="config_source" value="build/LECS-Platform-BO/WEB-INF/classes/config/system/bo/config_bo.xml.${DEPLOY_TARGET}" />
+			<param name="config_target" value="build/LECS-Platform-BO/WEB-INF/classes/config/system/bo/config_bo.xml" />
+		</antcall>
+	</target>
+
+	<target name="collect-project-bo">
+		<antcall target="collect-project">
+			<param name="target" value="LECS-Platform-BO" />
+		</antcall>
+	</target>
+
+
+	<target name="pack-project-bo">
+		<antcall target="pack-project">
+			<param name="target" value="LECS-Platform-BO" />
+		</antcall>
+	</target>
+
+
+	<target name="build-muji-project">
+		<antcall target="build-project">
+			<param name="target" value="LECS-Store-Muji" />
+			<param name="abbr" value="muji" />
+			<param name="flatImagePath" value="true" />
+			<param name="config_source" value="build/LECS-Store-Muji/WEB-INF/classes/config/system/muji/config_muji.xml.${DEPLOY_TARGET}" />
+			<param name="config_target" value="build/LECS-Store-Muji/WEB-INF/classes/config/system/muji/config_muji.xml" />
+		</antcall>
+	</target>
+
+	<target name="switch-css-muji">
+		<antcall target="switch-css">
+			<param name="dir" value="build/LECS-Store-Muji_contents/" />
+			<param name="targetDir" value="build/LECS-Store-Muji_contents/" />
+			<param name="prefix" value="${prefix}" />
+			<param name="scheme" value="" />
+		</antcall>
+	</target>
+
+	<target name="collect-project-muji">
+		<antcall target="collect-project">
+			<param name="target" value="LECS-Store-Muji" />
+			<param name="flatImagePath" value="true" />
+		</antcall>
+	</target>
+
+	<target name="pack-project-muji">
+		<antcall target="pack-project">
+			<param name="target" value="LECS-Store-Muji" />
+		</antcall>
+	</target>
+
+
+
+	<target name="build-nike-project">
+		<antcall target="build-project">
+			<param name="target" value="LECS-Store-Nike" />
+			<param name="abbr" value="nike" />
+			<param name="flatImagePath" value="true" />
+			<param name="config_source" value="build/LECS-Store-Nike/WEB-INF/classes/config/system/nike/config_nike.xml.${DEPLOY_TARGET}" />
+			<param name="config_target" value="build/LECS-Store-Nike/WEB-INF/classes/config/system/nike/config_nike.xml" />
+		</antcall>
+	</target>
+
+	<target name="switch-css-nike">
+		<antcall target="switch-css">
+			<param name="dir" value="build/LECS-Store-Nike_contents/" />
+			<param name="targetDir" value="build/LECS-Store-Nike_contents/" />
+			<param name="prefix" value="${prefix}" />
+			<param name="scheme" value="" />
+		</antcall>
+	</target>
+
+	<target name="collect-project-nike">
+		<antcall target="collect-project">
+			<param name="target" value="LECS-Store-Nike" />
+			<param name="flatImagePath" value="true" />
+		</antcall>
+	</target>
+
+	<target name="pack-project-nike">
+		<antcall target="pack-project">
+			<param name="target" value="LECS-Store-Nike" />
+		</antcall>
+	</target>
+
+
+	<target name="build-lps-project">
+		<antcall target="build-project">
+			<param name="target" value="LECS-Platform-LPS" />
+			<param name="abbr" value="lps" />
+			<param name="flatImagePath" value="false" />
+			<param name="config_source" value="build/LECS-Platform-LPS/WEB-INF/classes/config/system/lps/config_lps.xml.${DEPLOY_TARGET}" />
+			<param name="config_target" value="build/LECS-Platform-LPS/WEB-INF/classes/config/system/lps/config_lps.xml" />
+		</antcall>
+	</target>
+
+	<target name="switch-css-lps">
+		<antcall target="switch-css">
+			<param name="dir" value="build/LECS-Platform-LPS_contents/css" />
+			<param name="targetDir" value="build/LECS-Platform-LPS_contents/css" />
+			<param name="prefix" value="/image/" />
+			<param name="scheme" value="" />
+		</antcall>
+		<antcall target="switch-css">
+			<param name="dir" value="build/LECS-Platform-LPS_contents/css" />
+			<param name="targetDir" value="build/LECS-Platform-LPS_contents/css_ssl" />
+			<param name="prefix" value="/image/" />
+			<param name="scheme" value="https" />
+		</antcall>
+	</target>
+
+	<target name="collect-project-lps">
+		<antcall target="collect-project">
+			<param name="target" value="LECS-Platform-LPS" />
+		</antcall>
+	</target>
+
+	<target name="pack-project-lps">
+		<antcall target="pack-project">
+			<param name="target" value="LECS-Platform-LPS" />
+		</antcall>
+	</target>
+
+	<target name="build-wms">
+		<antcall target="build-lps-project" />
+		<antcall target="callback-wms" />
+		<antcall target="collect-webapp">
+			<param name="target" value="LECS-Platform-LPS" />
+		</antcall>
+		<antcall target="pack-webapp">
+			<param name="target" value="LECS-Platform-LPS" />
+		</antcall>
+	</target>
+	
+	
+	<target name="callback-wms">
+		<copy file="build/LECS-Platform-LPS/WEB-INF/web.xml.wms" tofile="build/LECS-Platform-LPS/WEB-INF/web.xml" verbose="true" overwrite="true" />
+	</target>
+
+
+	<target name="callback-wms-over-stg">
+		<copy file="build/LECS-Platform-LPS/WEB-INF/web.xml.wms" tofile="build/LECS-Platform-LPS/WEB-INF/web.xml" verbose="true" overwrite="true" />
+	</target>
+
+	<target name="build-library">
+		<ant antfile="${basedir}/build_build_library.xml" dir="${basedir}/build/src/LECS-Library" >
+			<property name="DEPLOY" value="${DEPLOY_TARGET}" />
+		</ant>
+	</target>
+	
+	<target name="api-javadoc">
+		<ant antfile="${basedir}/build_build_library.xml" dir="${basedir}/build/src/LECS-Library" target="doc">
+		</ant>
+	</target>
+
+	<!-- build batch project -->
+	<target name="build-batch">
+		<antcall target="build-project">
+			<param name="target" value="LECS-Batch" />
+		</antcall>
+	</target>
+
+	<target name="build-project">
+		<antcall target="build-project-build">
+			<param name="target" value="${target}" />
+			<param name="exclude" value="${exclude}" />
+			<param name="abbr" value="${abbr}" />
+			<param name="flatImagePath" value="${flatImagePath}" />
+			<param name="config_source" value="${config_source}" />
+			<param name="config_target" value="${config_target}" />
+			<param name="config_target" value="${config_target}" />
+			<param name="callback" value="${callback}" />
+		</antcall>
+
+		<!--
+			<copy todir="build/${target}_images/" overwrite="true"> <fileset
+			dir="build/${target}/"> <include name="**image/**" /> <include
+			name="**images/**" /> <exclude name="**.svn/*" /> <exclude
+			name="**/.DS_Store" /> </fileset> </copy>
+		-->
+	</target>
+
+	<target name="build-project-build">
+		<mkdir dir="build/${target}" />
+
+		<copy todir="build/${target}" failonerror="false" overwrite="true">
+			<fileset dir="build/src/${target}/WebContent">
+				<include name="**/*" />
+			</fileset>
+		</copy>
+
+
+
+		<copy todir="build/${target}/WEB-INF/lib" overwrite="true">
+			<fileset dir="build/src/LECS-Library/lib/">
+				<include name="*.jar" />
+			</fileset>
+		</copy>
+
+
+		<mkdir dir="build/${target}/WEB-INF/classes" />
+
+		<groovy>
+			<![CDATA[			
+			classpath = ant.path(id:"common.classpath") {
+				fileset(dir: "build/src/LECS-Library/build/dist/"){
+					include(name: "*.jar")
+				}
+				fileset(dir: "build/src/LECS-Library/lib/"){
+					include(name: "*.jar")
+				}
+				fileset(dir: "build/src/LECS-Library/lib_test/"){
+					include(name: "*.jar")
+				}
+			}
+			
+			if (properties["target"].equals("LECS-Platform-BO")) {
+				println "BO Build. ready to copy excel rule files.."
+				File path = new File("/lotte/lecsDocs/excel/rule");
+				if (!path.isDirectory()) {
+					path.mkdirs();
+				}
+				new File("build/src/LECS-Platform-BO/resources/excel/rule").eachFileRecurse { file -> 
+					if (file.isDirectory()) {
+						return
+					}
+					new File(path, file.getName()) << file.getBytes()
+				}
+			}
+			]]>
+		</groovy>
+		<echo message="EX: ${exclude}" />
+		<javac srcdir="build/src/${target}/src" destdir="build/${target}/WEB-INF/classes/" source="${src.version}" target="${target.version}" debug="true" encoding="UTF-8" excludes="${exclude}">
+			<classpath refid="project.classpath" />
+			<classpath refid="common.classpath" />
+			<compilerarg value="-Xlint:unchecked,deprecation" />
+		</javac>
+
+		<copy todir="build/${target}/WEB-INF/classes"  overwrite="true" >
+			<fileset dir="build/src/${target}/src">
+				<include name="**/*" />
+				<exclude name="**/java" />
+			</fileset>
+		</copy>
+		<echo message="Copy Library to ${target}" />
+		<copy todir="build/${target}/WEB-INF/classes/" overwrite="true" >
+			<fileset dir="build/src/LECS-Library/build/product/lecs/">
+				<include name="**/*" />
+			</fileset>
+		</copy>
+		<echo message="Wait to complete copying files"/>
+		<groovy>
+			<arg value="build/${target}/WEB-INF/classes/config/spring/common/spring_properties.properties.${DEPLOY_TARGET}" />
+			/**
+			def file = args[0]
+			println "Wait to complete copying files : $file"
+			while(true){
+				if (new File(file).exists()){
+					return
+				}
+				Thread.sleep(1000)
+				println "."
+			}
+			*/		
+		</groovy>
+		
+		<echo message="Change Config files build/${target}/WEB-INF/classes/config/spring/${abbr}/config_${abbr}.${DEPLOY_TARGET}" />
+
+		<!-- DB 설정파일 -->
+		<copy file="build/${target}/WEB-INF/classes/config/spring/common/spring_properties.properties.${DEPLOY_TARGET}" 
+			tofile="build/${target}/WEB-INF/classes/config/spring/common/spring_properties.properties" overwrite="true" verbose="true" failonerror="false" />
+
+		<!-- 전체 공통 설정 파일 -->
+		<copy file="build/${target}/WEB-INF/classes/config/system/lecs/config_lecs.xml.${DEPLOY_TARGET}" 
+			tofile="build/${target}/WEB-INF/classes/config/system/lecs/config_lecs.xml" overwrite="true" verbose="true" />
+
+		<!-- 각 프로젝트 설정 파일 -->
+		<copy file="build/${target}/WEB-INF/classes/config/system/${abbr}/config_${abbr}.xml.${DEPLOY_TARGET}" 
+			tofile="build/${target}/WEB-INF/classes/config/system/${abbr}/config_${abbr}.xml" failonerror="false" overwrite="true" verbose="true" />
+
+		<!-- LOG 설정  -->
+		<copy file="build/${target}/WEB-INF/classes/config/log4j/log4j.xml.${DEPLOY_TARGET}" 
+			tofile="build/${target}/WEB-INF/classes/config/log4j/log4j.xml" overwrite="true" verbose="true" />
+
+		<!-- Data Source 설정 -->
+		<copy file="build/${target}/WEB-INF/classes/config/spring/bean/common.xml.${DEPLOY_TARGET}" 
+			tofile="build/${target}/WEB-INF/classes/config/spring/bean/common.xml" overwrite="true"  verbose="true" />
+
+		<!-- 롯데포인트 설정파일 -->
+		<copy file="build/${target}/WEB-INF/classes/interfaces.properties.${DEPLOY_TARGET}" 
+			tofile="build/${target}/WEB-INF/classes/interfaces.properties" overwrite="true"  verbose="true" />
+
+		<!-- Xecure DB 설정파일 -->
+		<copy file="build/${target}/WEB-INF/classes/xdsp_pool.properties.${DEPLOY_TARGET}" 
+			tofile="build/${target}/WEB-INF/classes/xdsp_pool.properties" overwrite="true"   verbose="true" />
+
+		<groovy>
+			<arg value="${callback}" />
+			
+			if (args[0] != '${callback}') {
+				def callback = args[0]
+				println "Callback: $callback"
+				ant.antcall (target:callback)
+			}
+			
+		</groovy>
+
+		<copy file="${config_source}" tofile="${config_target}" overwrite="true" failonerror="false" />
+		<mkdir dir="build/doc/pmd/${target}/" />
+
+	</target>
+
+	<target name="collect-project">
+
+		<antcall target="collect-webapp">
+			<param name="target" value="${target}" />
+		</antcall>
+		<antcall target="collect-contents">
+			<param name="target" value="${target}" />
+		</antcall>
+
+		<antcall target="collect-images">
+			<param name="target" value="${target}" />
+			<param name="flatImagePath" value="${flatImagePath}" />
+		</antcall>
+
+	</target>
+
+
+	<target name="collect-webapp">
+		<delete dir="build/${target}_webapp" failonerror="false" />
+		<mkdir dir="build/${target}_webapp" />
+		<copy todir="build/${target}_webapp/" overwrite="true">
+			<fileset dir="build/${target}/">
+				<include name="**WEB-INF/**" />
+				<include name="*.jsp" />
+				<include name="*.html" />
+				<exclude name="**.svn/*" />
+				<exclude name="**/.DS_Store" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="collect-contents">
+		<delete dir="build/${target}_contents" failonerror="false" />
+		<mkdir dir="build/${target}_contents" />
+
+		<copy todir="build/${target}_contents/" overwrite="true">
+			<fileset dir="build/${target}/">
+				<include name="**/*" />
+				<exclude name="**WEB-INF/**" />
+				<exclude name="**image/**" />
+				<exclude name="**images/**" />
+				<exclude name="**.svn/*" />
+				<exclude name="**/.DS_Store" />
+			</fileset>
+		</copy>
+
+	</target>
+
+	<target name="collect-images">
+		<delete dir="build/${target}_images" failonerror="false" />
+		<mkdir dir="build/${target}_images" />
+		<groovy>
+			<arg line="${target} ${flatImagePath}" />
+			<![CDATA[
+					target = args[0]
+					flatImagePath = args[1]
+
+					if("true".equals(flatImagePath) == false) {
+						ant.copy(todir:"build/${target}_images/", overwrite:"true") {
+							fileset(dir: "build/${target}"){
+								include(name: "**image/**")
+								include(name: "**images/**")
+								exclude(name: "**.svn/*")
+								exclude(name: "**/.DS_Store")
+
+							}
+						}
+					}
+					else {
+						ant.copy(todir:"build/${target}_images/",	overwrite:"true") {
+							fileset(dir: "build/${target}/image/"){
+								include(name: "**/**")
+								exclude(name: "**.svn/*")
+								exclude(name: "**/.DS_Store")
+
+							}
+						}
+					}
+					]]>
+		</groovy>
+	</target>
+
+
+
+	<target name="pack-webapp">
+		<echo message="Make Web Application Archive" />
+
+		<zip basedir="build/${target}_webapp/" destfile="build/${target}_webapp.zip" whenempty="skip"/>
+	</target>
+
+	<target name="pack-contents">
+		<echo message="Make Web Contents Archive" />
+		<zip basedir="build/${target}_contents/" destfile="build/${target}_contents.zip" whenempty="skip"/>
+	</target>
+
+	<target name="pack-images">
+		<echo message="Make Web Images Archive" />
+		<zip basedir="build/${target}_images/" destfile="build/${target}_images.zip" whenempty="skip"/>
+	</target>
+
+	<target name="pack-project">
+
+		<antcall target="pack-webapp">
+			<param name="target" value="${target}" />
+		</antcall>
+		<antcall target="pack-contents">
+			<param name="target" value="${target}" />
+		</antcall>
+
+		<antcall target="pack-images">
+			<param name="target" value="${target}" />
+		</antcall>
+
+	</target>
+
+</project>

@@ -1,0 +1,181 @@
+import java.util.regex.*;
+
+configurations {
+    pmdConf
+	jdependConf
+}
+ 
+dependencies {
+    pmdConf 'pmd:pmd:4.2.5'
+	jdependConf 'jdepend:jdepend:2.9.1', 'org.apache.ant:ant-jdepend:1.7.1'
+}
+
+def PMD_문서위치='build/doc/pmd'
+
+task doPmd << {
+	ant {
+        taskdef(name:'pmd', classname:'net.sourceforge.pmd.ant.PMDTask', classpath: configurations.pmdConf.asPath)
+ 
+        pmd(shortFilenames:'true', failonruleviolation:'true', rulesetfiles:'rulesets/lecs_ruleset.xml', failOnRuleViolation:'false', encoding:"UTF-8") {
+            formatter(type:'xml', toFile:"$PMD_문서위치/pmd_report.xml")
+			formatter(type:'html', toFile:"$PMD_문서위치/pmd_report.html")
+			formatter(type:'text', toConsole:'true')
+			
+            fileset(dir: "$SOURCE_DIR") {
+                include(name: '**/*.java')
+				exclude(name: '**/*Test.java')
+				exclude(name: '**/Mobile*.java')
+				exclude(name: '**/src_interface/**')
+				exclude(name: '**/fit/**')
+				exclude(name: '**/LECS-Common/**')
+				exclude(name: '**/LECS-Build/**')
+				exclude(name: '**/LECS-DBObject/**')
+				exclude(name: '**/Mobile*')
+            }
+        }
+	}
+	
+	def xmlFile = file("$PMD_문서위치/pmd_report.xml")
+	def xml =  xmlFile.getText("UTF-8")
+	
+	def m =  xml =~ /\&u([^;]+);/
+	    while(m.find() ) {
+	        def code =    m.group(1);
+	        println code
+	        char ch =  Integer.parseInt(code, 16)
+	        xml= xml.replaceAll("\\&u"+ code+";", ""+ch)
+	  }
+	
+	  xmlFile.setText(xml, "UTF-8")
+	
+}
+
+
+task generateHTMLReport << {
+	ant {
+		xslt(in:"$PMD_문서위치/pmd_report.xml",  style:"pmd_xslt/only-prio1.xslt", out:"$PMD_문서위치/pmd_report_p1.html" )
+		xslt(in:"$PMD_문서위치/pmd_report.xml",  style:"pmd_xslt/only-prio2.xslt", out:"$PMD_문서위치/pmd_report_p2.html" )
+		xslt(in:"$PMD_문서위치/pmd_report.xml",  style:"pmd_xslt/only-prio3.xslt", out:"$PMD_문서위치/pmd_report_p3.html" )
+		xslt(in:"$PMD_문서위치/pmd_report.xml",  style:"pmd_xslt/only-prio4.xslt", out:"$PMD_문서위치/pmd_report_p4.html" )
+	}
+}
+
+task pmd << {
+
+    println 'Running PMD static code analysis'
+	if (file(PMD_문서위치).exists() == false) {
+		file(PMD_문서위치).mkdirs()
+	}
+
+	def f = file("$PMD_문서위치/pmd_report.xml")
+		
+		
+	ant {
+        taskdef(name:'pmd', classname:'net.sourceforge.pmd.ant.PMDTask', classpath: configurations.pmdConf.asPath)
+ 
+        pmd(shortFilenames:'true', failonruleviolation:'true', rulesetfiles:'rulesets/lecs_ruleset.xml', failOnRuleViolation:'false') {
+            formatter(type:'xml', toFile:"$PMD_문서위치/pmd_report.xml")
+			formatter(type:'html', toFile:"$PMD_문서위치/pmd_report.html")
+			formatter(type:'text', toConsole:'true')
+			
+            fileset(dir: "$SOURCE_DIR") {
+                include(name: '**/*.java')
+				exclude(name: '**/*Test.java')
+				exclude(name: '**/src_interface/**')
+				exclude(name: '**/fit/**')
+				exclude(name: '**/LECS-Common/**')
+				exclude(name: '**/LECS-Build/**')
+				exclude(name: '**/LECS-DBObject/**')
+				exclude(name: '**/Mobile**')
+            }
+        }
+
+        // Xml Formatter가 한글 문자열을 &uXXXX; 형식으로 출력하는데 이를 xslt가 처리하지 못하기 때문에 &uXXXX; 를 그냥 한글 출력으로 변경함
+        def src = f.text
+		Pattern p = Pattern.compile("(\\&u....;)");
+			Matcher m = p.matcher(src);
+			Pattern p2 = Pattern.compile("\\&u([^;]+)");
+			while(m.find()){
+				String ch = m.group(1);
+				Matcher m2 = p2.matcher(ch);
+				m2.find();
+				char c = (char) Integer.parseInt(m2.group(1), 16);
+				src = src.replace(ch, Character.toString(c));
+			}
+		f.text = src
+		
+		xslt(in:"$PMD_문서위치/pmd_report.xml",  style:"pmd_xslt/only-prio1.xslt", out:"$PMD_문서위치/pmd_report_p1.html" )
+		xslt(in:"$PMD_문서위치/pmd_report.xml",  style:"pmd_xslt/only-prio2.xslt", out:"$PMD_문서위치/pmd_report_p2.html" )
+		xslt(in:"$PMD_문서위치/pmd_report.xml",  style:"pmd_xslt/only-prio3.xslt", out:"$PMD_문서위치/pmd_report_p3.html" )
+		xslt(in:"$PMD_문서위치/pmd_report.xml",  style:"pmd_xslt/only-prio4.xslt", out:"$PMD_문서위치/pmd_report_p4.html" )
+
+    }
+}
+
+task jdepend << {
+    println 'Running jdepend quality metrics tool'
+    ant {
+      taskdef(name:'jdepend',
+         classname:'org.apache.tools.ant.taskdefs.optional.jdepend.JDependTask',
+         classpath: configurations.jdependConf.asPath)
+      jdepend (outputfile: 'build/doc/jdepend-report.txt') {
+        classespath {
+         pathelement(location: 'build')
+        }
+      }
+    }
+}
+
+task pmdMobile << {
+
+    println 'Running PMD static code analysis'
+	if (file(PMD_문서위치).exists() == false) {
+		file(PMD_문서위치).mkdirs()
+	}
+		
+	ant {
+        taskdef(name:'pmd', classname:'net.sourceforge.pmd.ant.PMDTask', classpath: configurations.pmdConf.asPath)
+ 
+        pmd(shortFilenames:'true', failonruleviolation:'true', rulesetfiles:'rulesets/lecs_ruleset.xml', failOnRuleViolation:'false') {
+            formatter(type:'xml', toFile:"$PMD_문서위치/pmd_report-mobile.xml")
+			formatter(type:'html', toFile:"$PMD_문서위치/pmd_report-mobile.html")
+			formatter(type:'text', toConsole:'true')
+			
+            fileset(dir: "$SOURCE_DIR") {
+                include(name: '**/mobile/*.java')
+				exclude(name: '**/*Test.java')
+				exclude(name: '**/src_interface/**')
+				exclude(name: '**/fit/**')
+				exclude(name: '**/LECS-Common/**')
+				exclude(name: '**/LECS-Build/**')
+				exclude(name: '**/LECS-DBObject/**')			
+            }
+        }
+		
+		xslt(in:"$PMD_문서위치/pmd_report-mobile.xml",  style:"pmd_xslt/only-prio1.xslt", out:"$PMD_문서위치/pmd_report_p1-mobile.html" )
+		xslt(in:"$PMD_문서위치/pmd_report-mobile.xml",  style:"pmd_xslt/only-prio2.xslt", out:"$PMD_문서위치/pmd_report_p2-mobile.html" )
+		xslt(in:"$PMD_문서위치/pmd_report-mobile.xml",  style:"pmd_xslt/only-prio3.xslt", out:"$PMD_문서위치/pmd_report_p3-mobile.html" )
+		xslt(in:"$PMD_문서위치/pmd_report-mobile.xml",  style:"pmd_xslt/only-prio4.xslt", out:"$PMD_문서위치/pmd_report_p4-mobile.html" )
+
+    }
+}
+
+
+task dddd << {
+	def f = file('pmd.xml')
+	def src = f.text
+	Pattern p = Pattern.compile("(\\&u....;)");
+		Matcher m = p.matcher(src);
+		Pattern p2 = Pattern.compile("\\&u([^;]+)");
+		while(m.find()){
+			String ch = m.group(1);
+			Matcher m2 = p2.matcher(ch);
+			m2.find();
+			char c = (char) Integer.parseInt(m2.group(1), 16);
+			src = src.replace(ch, Character.toString(c));
+		}
+	f.text = src
+	ant {
+		xslt(in:"pmd.xml",  style:"pmd_xslt/only-prio1.xslt", out:"pmd_report_p1.html" )
+	}
+}

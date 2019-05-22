@@ -1,0 +1,385 @@
+<project name="LECS_Build_Deploy_PRD">
+	<!-- 
+		BO
+	-->
+	<target name="deploy-bo-prd">
+		<antcall target="deploy-bo-webapp">
+			<param name="address" value="${bowas1}" />
+		</antcall>
+
+		<antcall target="deploy-bo-webapp">
+			<param name="address" value="${bowas2}" />
+		</antcall>
+
+		<antcall target="deploy-bo-contents">
+			<param name="address" value="${bowas1}" />
+		</antcall>
+		<antcall target="deploy-bo-images">
+			<param name="address" value="${bowas1}" />
+		</antcall>
+	</target>
+
+	<target name="deploy-bo-prd-set1">
+		<antcall target="deploy-bo-webapp">
+			<param name="address" value="${bowas1}" />
+		</antcall>
+
+		<antcall target="deploy-bo-contents">
+			<param name="address" value="${bowas1}" />
+		</antcall>
+		<antcall target="deploy-bo-images">
+			<param name="address" value="${bowas1}" />
+		</antcall>
+	</target>
+
+	<target name="deploy-bo-prd-set2">
+		<antcall target="deploy-bo-webapp">
+			<param name="address" value="${bowas2}" />
+		</antcall>
+
+		<antcall target="deploy-bo-contents">
+			<param name="address" value="${bowas2}" />
+		</antcall>
+		<antcall target="deploy-bo-images">
+			<param name="address" value="${bowas2}" />
+		</antcall>
+	</target>
+
+
+	<!-- 
+			CC
+	-->
+
+
+	<target name="deploy-cc-prd">
+		<antcall target="deploy-cc-webapp">
+			<param name="address" value="${ccwas1}" />
+		</antcall>
+		<antcall target="deploy-cc-webapp">
+			<param name="address" value="${ccwas2}" />
+		</antcall>
+		<!--
+			BO가 이미 배포되어 있을 것이며, 공유 폴더형식이기 때문에 contents, image는 이미 배포된 것으로 본다
+		-->
+	</target>
+
+	<target name="deploy-cc-prd-set1">
+		<antcall target="deploy-cc-webapp">
+			<param name="address" value="${ccwas1}" />
+		</antcall>
+		<!--
+			BO가 이미 배포되어 있을 것이며, 공유 폴더형식이기 때문에 contents, image는 이미 배포된 것으로 본다
+		-->
+	</target>
+
+	<target name="deploy-cc-prd-set2">
+		<antcall target="deploy-cc-webapp">
+			<param name="address" value="${ccwas2}" />
+		</antcall>
+		<!--
+			BO가 이미 배포되어 있을 것이며, 공유 폴더형식이기 때문에 contents, image는 이미 배포된 것으로 본다
+		-->
+	</target>
+
+
+
+	<!-- 
+			PO
+	-->
+
+	<target name="deploy-po-prd">
+		<antcall target="deploy-po-webapp">
+			<param name="address" value="${powas1}" />
+		</antcall>
+
+		<antcall target="deploy-po-webapp">
+			<param name="address" value="${powas2}" />
+		</antcall>
+	</target>
+
+	<target name="deploy-po-prd-set1">
+		<!-- was 1 은 스테이징용으로 사용 함 -->
+		<antcall target="deploy-po-webapp">
+			<param name="address" value="${powas1}" />
+		</antcall>
+	</target>
+
+	<target name="deploy-po-prd-set2">
+		<!-- was 1 은 스테이징용으로 사용 함 -->
+		<antcall target="deploy-po-webapp">
+			<param name="address" value="${powas2}" />
+		</antcall>
+	</target>
+
+
+	<!-- 
+			LPS
+	-->
+
+	<target name="deploy-lps-prd">
+		<antcall target="deploy-lps-webapp">
+			<param name="address" value="${lpswas1}" />
+			<param name="path" value="/lotte/lecs/webapp/lps/" />
+		</antcall>
+		<antcall target="deploy-lps-webapp">
+			<param name="address" value="${lpswas2}" />
+			<param name="path" value="/lotte/lecs/webapp/lps/" />
+		</antcall>
+		<antcall target="deploy-lps-contents">
+			<param name="address" value="${lpsweb1}" />
+			<param name="path" value="/lotte/lecs/lps/web/" />
+		</antcall>
+		<antcall target="deploy-lps-contents">
+			<param name="address" value="${lpsweb2}" />
+			<param name="path" value="/lotte/lecs/lps/web/" />
+		</antcall>
+		<!-- 이미지는 필요가 없는 작업.
+		<antcall target="deploy-lps-images">
+			<param name="address" value="${lpswas1}" />
+			<param name="path" value="/lotte/lecsDocs/contents/lps/" />
+		</antcall>
+		-->
+	</target>
+
+
+
+
+	<target name="deploy-lps-prd-set1">
+		<antcall target="deploy-lps-webapp">
+			<param name="address" value="${lpswas1}" />
+			<param name="path" value="/lotte/lecs/webapp/lps/" />
+		</antcall>
+		<antcall target="deploy-lps-contents">
+			<param name="address" value="${lpsweb1}" />
+			<param name="path" value="/lotte/lecs/lps/web/" />
+		</antcall>
+		<!-- 이미지내용은 contents 안에 포함됨.
+		<antcall target="deploy-lps-images">
+			<param name="address" value="${lpswas1}" />
+			<param name="path" value="/lotte/lecsDocs/contents/lps/" />
+		</antcall>
+		-->
+	</target>
+
+	<target name="deploy-lps-prd-set2">
+		<antcall target="deploy-lps-webapp">
+			<param name="address" value="${lpswas2}" />
+			<param name="path" value="/lotte/lecs/webapp/lps/" />
+		</antcall>
+		<antcall target="deploy-lps-contents">
+			<param name="address" value="${lpsweb2}" />
+			<param name="path" value="/lotte/lecs/lps/web/" />
+		</antcall>
+		<!-- 이미지 내용은 contents 안에 포함됨.
+		<antcall target="deploy-lps-images">
+			<param name="address" value="${lpswas2}" />
+			<param name="path" value="/lotte/lecsDocs/contents/lps/" />
+		</antcall>
+		-->
+	</target>
+	
+
+	<target name="deploy-lpsnike-prd-set1">
+		<antcall target="deploy-lps-webapp">
+			<param name="address" value="${lpswas1}" />
+			<param name="path" value="/lotte/lecs/webapp/lps/" />
+		</antcall>
+		<antcall target="deploy-lps-contents">
+			<param name="address" value="${lpswas1}" />
+			<param name="path" value="/lotte/lecsDocs/contents/lpsnike/" />
+		</antcall>
+		<antcall target="deploy-lps-images">
+			<param name="address" value="${lpswas1}" />
+			<param name="path" value="/lotte/lecsDocs/contents/lpsnike/" />
+		</antcall>
+	</target>
+
+	
+
+	<target name="deploy-lpsnike-prd-set2">
+		<antcall target="deploy-lps-webapp">
+			<param name="address" value="${lpswas2}" />
+			<param name="path" value="/lotte/lecs/webapp/lps/" />
+		</antcall>
+		<antcall target="deploy-lps-contents">
+			<param name="address" value="${lpswas2}" />
+			<param name="path" value="/lotte/lecsDocs/contents/lpsnike/" />
+		</antcall>
+		<antcall target="deploy-lps-images">
+			<param name="address" value="${lpswas2}" />
+			<param name="path" value="/lotte/lecsDocs/contents/lpsnike/" />
+		</antcall>
+	</target>
+	
+	<!-- 
+			MUJI
+	-->
+
+	<target name="deploy-muji-prd">
+		<antcall target="deploy-muji-webapp">
+			<param name="address" value="${mujiwas1}" />
+		</antcall>
+		<antcall target="deploy-muji-webapp">
+			<param name="address" value="${mujiwas2}" />
+		</antcall>
+		<antcall target="deploy-muji-contents">
+			<param name="address" value="${mujiwas1}" />
+		</antcall>
+		<antcall target="deploy-muji-images">
+			<param name="address" value="${mujiwas1}" />
+		</antcall>
+	</target>
+
+
+	<target name="deploy-muji-prd-set1">
+		<antcall target="deploy-muji-webapp">
+			<param name="address" value="${mujiwas1}" />
+		</antcall>
+		<antcall target="deploy-muji-contents">
+			<param name="address" value="${mujiwas1}" />
+		</antcall>
+		<antcall target="deploy-muji-images">
+			<param name="address" value="${mujiwas1}" />
+		</antcall>
+	</target>
+
+	<target name="deploy-muji-prd-set2">
+		<antcall target="deploy-muji-webapp">
+			<param name="address" value="${mujiwas2}" />
+		</antcall>
+		<antcall target="deploy-muji-contents">
+			<param name="address" value="${mujiwas2}" />
+		</antcall>
+		<antcall target="deploy-muji-images">
+			<param name="address" value="${mujiwas2}" />
+		</antcall>
+	</target>
+
+	<!-- 
+			NIKE
+	-->
+
+	<target name="deploy-nike-prd">
+		<antcall target="deploy-nike-webapp">
+			<param name="address" value="${nikewas1}" />
+		</antcall>
+		<antcall target="deploy-nike-webapp">
+			<param name="address" value="${nikewas2}" />
+		</antcall>
+		<antcall target="deploy-nike-contents">
+			<param name="address" value="${nikewas1}" />
+		</antcall>
+		<antcall target="deploy-nike-images">
+			<param name="address" value="${nikewas1}" />
+		</antcall>
+	</target>
+
+	<target name="deploy-nike-prd-set1">
+		<antcall target="deploy-nike-webapp">
+			<param name="address" value="${nikewas1}" />
+		</antcall>
+		<antcall target="deploy-nike-contents">
+			<param name="address" value="${nikewas1}" />
+		</antcall>
+		<antcall target="deploy-nike-images">
+			<param name="address" value="${nikewas1}" />
+		</antcall>
+	</target>
+	
+	<target name="deploy-nike-prd-set2">
+		<antcall target="deploy-nike-webapp">
+			<param name="address" value="${nikewas2}" />
+		</antcall>
+		<antcall target="deploy-nike-contents">
+			<param name="address" value="${nikewas2}" />
+		</antcall>
+		<antcall target="deploy-nike-images">
+			<param name="address" value="${nikewas2}" />
+		</antcall>
+	</target>
+
+	<!-- 
+			WMS
+	-->
+
+	<target name="deploy-wms-prd">
+		<antcall target="deploy-wms-webapp">
+			<param name="address" value="${batchapp}" />
+		</antcall>
+	</target>
+	
+	
+
+
+	<!-- 
+			Batch
+	-->
+
+	<target name="deploy-batch-prd">
+		<!-- classes -->
+		<mkdir dir="build/batch/inf/classes" />
+		<copy todir="build/batch/inf/classes">
+			<fileset dir="build/LECS-Batch/WEB-INF/classes" />
+		</copy>
+		<copy 
+		file="build/batch/inf/classes/config/spring/common/spring_properties.properties.prd.bo" 
+		tofile="build/batch/inf/classes/config/spring/common/spring_properties.properties" 
+		verbose="true" 
+		overwrite="true" />
+
+		<!-- dependency libraries -->
+		<mkdir dir="build/batch/inf/lib" />
+		<copy todir="build/batch/inf/lib">
+			<fileset dir="build/LECS-Batch/WEB-INF/lib" />
+			<fileset dir="build/src/LECS-Batch/inf/lib" />
+		</copy>
+
+		<!-- shell programs -->
+		<mkdir dir="build/batch/bin" />
+		<copy todir="build/batch/bin">
+			<fileset dir="build/src/LECS-Batch/bin" />
+		</copy>
+
+		<zip basedir="build/batch/" destfile="build/batch_app.zip" />
+		<antcall target="deploy-target">
+			<param name="remote.address" value="${batchapp}" />
+			<param name="deploy.material" value="batch_app.zip" />
+			<param name="deploy.path" value="/lotte/lecs/batch/" />
+			<param name="remove.old" value="yes" />
+		</antcall>
+		<sshexec host="${batchapp}" username="${remote.id}" password="${remote.password}" command="chmod +x /lotte/lecs/batch/bin/*" trust="true" failonerror="false">
+		</sshexec>		
+	</target>
+	
+	<target name="deploy-batchnike-prd">
+		<!-- classes -->
+		<mkdir dir="build/batch/inf/classes" />
+		<copy todir="build/batch/inf/classes">
+			<fileset dir="build/LECS-Batch/WEB-INF/classes" />
+		</copy>
+
+		<!-- dependency libraries -->
+		<mkdir dir="build/batch/inf/lib" />
+		<copy todir="build/batch/inf/lib">
+			<fileset dir="build/LECS-Batch/WEB-INF/lib" />
+			<fileset dir="build/src/LECS-Batch/inf/lib" />
+		</copy>
+
+		<!-- shell programs -->
+		<mkdir dir="build/batch/bin" />
+		<copy todir="build/batch/bin">
+			<fileset dir="build/src/LECS-Batch/bin" />
+		</copy>
+
+		<zip basedir="build/batch/" destfile="build/batch_app.zip" />
+		<antcall target="deploy-target">
+			<param name="remote.address" value="${batchapp}" />
+			<param name="deploy.material" value="batch_app.zip" />
+			<param name="deploy.path" value="/lotte/lecs/batch/nike/" />
+			<param name="remove.old" value="yes" />
+		</antcall>
+		<sshexec host="${batchapp}" username="${remote.id}" password="${remote.password}" command="chmod +x /lotte/lecs/batch/nike/bin/*" trust="true" failonerror="false">
+		</sshexec>
+	</target>
+
+</project>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lecs20.deploy" basedir="."><!-- Global Param: ${target} -->
+	
+	<property name="path" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/LOTTESSO" />
+	
+	<!-- FILECOPY -->
+		
+	<target name="copy.cd.src">
+		<copy todir="${path}">
+			<fileset dir="/Source/lecs2/jobs/${JOB_NAME}/workspace/build/pack"/>
+		</copy>
+		<copy tofile="${path}/lottesso.conf" 
+			    file="/Source/lecs2/jobs/SimplePayLogin.UPDATE.PRJ/workspace/src/LECS-Library/resources/lottesso.conf.tst" overwrite="true" verbose="true"/>
+	</target>
+	
+</project>

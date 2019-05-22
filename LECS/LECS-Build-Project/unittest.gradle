@@ -1,0 +1,28 @@
+task unittest << {
+	println 클래스패스수집()
+	file("build/LECS-Library/TEST/raw").mkdirs()
+	
+	def result = ant.junit(
+	) {
+		classpath(refid:"projectClasspath")
+		formatter(type:"xml")
+		batchtest(fork:"no", todir:"build/LECS-Library/TEST/raw") {
+			fileset(dir:'src/trunk/LECS-Library/src_common/test') {
+				include(name:"**/*Test*.java")
+			}
+		}
+	}
+	
+	println "Test Result:$result"
+}
+
+task unittest_report << {
+	file("build/LECS-Library/TEST/doc").mkdirs()
+	ant.junitreport(todir:"build/LECS-Library/TEST/doc") {
+		fileset(dir:"build/LECS-Library/TEST/doc"){
+			include(name:"**/TEST-*.xml")	
+		}
+		report(format:"frames", todir:"build/LECS-Library/TEST/doc")
+		
+	}
+}

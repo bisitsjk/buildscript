@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="tomcat_lottesuper2011ww_jenkins_1.7">
+    <!-- **************************************************************** -->
+	<!-- PROPERTY -->
+	<!-- **************************************************************** -->
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties" />
+	<property file="${deployer.home.dir}/scripts/${ant.project.name}.${deploy.phase}.properties"/>
+	<property name="user.id" value="${svrUserId}" />
+	<property name="user.pwd" value="${svrUserPassword}" />
+
+	<!-- **************************************************************** -->
+	<!-- CHECK -->
+	<!-- **************************************************************** -->
+	<target name="move_check">
+	<echo>echo move_check : ${deploy.phase}</echo>
+	  <condition property="move_deploy" value="move_test">
+	   		<equals arg1="${deploy.phase}" arg2="TEST" />
+	  </condition>
+	  <condition property="move_deploy" value="move_real">
+		   	<equals arg1="${deploy.phase}" arg2="REAL" />
+	  </condition>
+	</target>
+	
+	<target name="move_call" depends="move_check">
+		<antcall target="${move_deploy}"/>
+	</target>
+
+	<!-- **************************************************************** -->
+	<!-- BUILD -->
+	<!-- **************************************************************** -->
+	<target name="build">
+		<echo>공통소스 = E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${cmtarget}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-commons/lib</echo>
+		
+		<path id="classpath">
+			<fileset dir="${java.home.dir}/jre/lib">
+				<include name="rt.jar" />
+			</fileset>
+			
+			<!--
+			<fileset dir="${jeus.home.dir}/lib/datasource">
+				<include name="*.jar" />
+			</fileset>
+			
+			<fileset dir="${jeus.home.dir}/lib/system">
+				<include name="*.jar" />
+			</fileset>
+			-->
+			
+			
+			<fileset dir="${tomcat.home.dir}/lib">
+				<include name="*.jar" />
+			</fileset>
+			
+
+			<fileset dir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${cmtarget}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-commons/lib">
+				<include name="*.jar" />
+			</fileset>
+			<fileset dir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${cmtarget}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-commons/dist">
+				<include name="*.jar" />
+			</fileset>
+			<fileset dir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_WINWIN_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-winwin/WebContent/WEB-INF/lib">
+				<include name="*.jar" />
+			</fileset>
+			<dirset dir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_WINWIN_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-winwin/WebContent/WEB-INF/classes" />
+			<dirset dir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_WINWIN_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-winwin/WebContent/WEB-INF/dynamic_classes" />
+		</path>
+		
+		<!-- Static -->
+	    <mkdir dir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_WINWIN_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-winwin/WebContent/WEB-INF/classes" />
+		<javac source="1.7" 
+			target="1.7" 
+			srcdir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_WINWIN_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-winwin/src"
+			classpathref="classpath"
+			destdir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_WINWIN_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-winwin/WebContent/WEB-INF/classes"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			fork="true" 
+			memoryMaximumSize="256m"
+			includeantruntime="false"/>
+			
+		<!-- Dynamic -->
+		<mkdir dir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_WINWIN_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-winwin/WebContent/WEB-INF/dynamic_classes" />
+		<javac source="1.7"
+			target="1.7"
+			srcdir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_WINWIN_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-winwin/src_dynamic"
+			classpathref="classpath"
+			destdir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_WINWIN_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-winwin/WebContent/WEB-INF/dynamic_classes"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			fork="true"
+			memoryMaximumSize="256m"
+			includeantruntime="false"/> 
+			
+		<copy todir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_WINWIN_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-winwin/WebContent/WEB-INF/dynamic_classes">
+			<fileset dir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_WINWIN_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-winwin/src_dynamic">
+				<include name="**/**/*.xml"/>
+		    </fileset>
+		</copy>
+		
+		<antcall target="zip"/>
+
+	</target>
+	
+	<target name="zip">
+	<delete file="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_WINWIN_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/pack/PROJECT/classes_1.7.zip"/>		
+	<zip destfile="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_WINWIN_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/pack/PROJECT/classes_1.7.zip"
+	    basedir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_WINWIN_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-winwin/WebContent/WEB-INF"
+		includes="classes/** , dynamic_classes/**"
+		/>
+	
+		<antcall target="move_call" />
+		
+	</target>
+	
+	<!--
+	<target name="move_test">
+		<echo>move_test</echo>
+		<echo>host : ${host}</echo>
+	</target>
+	
+	<target name="move_real">
+		<echo>move_real</echo>
+		<echo>host : ${host}</echo>
+	</target>
+	-->
+	
+	
+	<!-- ###################### Tomcat Class Send Start ######################### -->
+	
+	<target name="move_test">
+		<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" command="cd /esuper/project/winwin/WEB-INF;\find . -name classes_1.7.zip | xargs rm -f " />
+
+		<antcall target="send_test" />
+	
+	</target>
+	
+	<target name="send_test">
+		<scp todir="${user.id}:${user.pwd}@${host}:/esuper/project/winwin/WEB-INF" trust="true">
+			<fileset dir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_WINWIN_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/pack/PROJECT">
+				<include name="classes_1.7.zip"></include>
+			</fileset>
+		</scp>
+	
+		<antcall target="unzip_test"/>
+	
+	</target>	
+	
+	<target name="unzip_test">
+		<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" command="cd /esuper/project/winwin/WEB-INF;unzip -o -q  ./classes_1.7.zip" />
+	</target>
+	
+
+	
+	<target name="move_real">
+		<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" command="cd /esuper/project/winwin/WEB-INF;\find . -name classes_1.7.zip | xargs rm -f " />
+
+		<antcall target="send_real" />
+	
+	</target>
+	
+	<target name="send_real">
+		<scp todir="${user.id}:${user.pwd}@${host}:/esuper/project/winwin/WEB-INF" trust="true">
+			<fileset dir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_WINWIN_1_${deploy.phase}_BUILD_${target}_${seq}_1.7/workspace/lottesuper2011/pack/PROJECT">
+				<include name="classes_1.7.zip"></include>
+			</fileset>
+		</scp>
+	
+		<antcall target="unzip_real"/>
+	
+	</target>	
+	
+	<target name="unzip_real">
+		<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" command="cd /esuper/project/winwin/WEB-INF;unzip -o -q  ./classes_1.7.zip" />
+	</target>
+
+
+	<target name="ssh_winwin_precompile">
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" command="cd deploy;./ssh_winwinjspcompile" />
+	</target>
+	
+	
+	<!-- ###################### Tomcat Class Send End ######################### -->
+
+</project>

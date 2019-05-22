@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lotte_remote">
+	<!-- macrodef -->
+	<macrodef name="targetname">
+		<attribute name="property"/>
+		<attribute name="loglevel" default="3"/>
+		<sequential>
+			<script language="javascript">
+				self.getProject().setNewProperty("@{property}", self.getOwningTarget());
+			</script>
+		</sequential>
+	</macrodef>
+	
+	<macrodef name="propertyvalue">
+		<attribute name="property"/>
+		<attribute name="value"/>
+		<sequential>
+			<property name="@{property}" value="${@{value}}"/>
+		</sequential>
+	</macrodef>
+	
+	<!-- id, password -->
+	<property name="user.id"			value="jeus"/>
+	<property file="user_pwd.properties" />
+
+	
+	
+	<!-- ============================================ -->
+	<!-- TEST -->
+	<!-- ============================================ -->	
+	<property name="ecfotst"			value="10.149.193.34"/>
+	<property name="ecfowstst"			value="10.149.193.44"/>
+	<property name="ecbotst"			value="10.149.193.49"/>
+	<property name="ecbowstst"			value="10.149.193.60"/>
+	<property name="fowebstg"			value="10.149.192.62"/>
+	<property name="fowasstg"			value="10.149.192.71"/>
+	<property name="fowebstg2"			value="10.149.192.86"/>
+	<property name="fowasstg2"			value="10.149.192.95"/>
+	<property name="ecfotst2"			value="10.149.193.39"/>
+	<property name="ecbotst2"			value="10.149.193.56"/>
+	<property name="ecstg3"			    value="10.149.201.33"/>
+	<property name="ecbotst3"			value="10.149.193.85"/>
+			
+	<property name="script.file.path"	value="/usr1/home/jeus/deploy/script"/>	
+	
+	<target name="build">
+		<property name="host.name" value="${TARGET_HOST_NAME}"/>
+		<propertyvalue property="host.ip" value="${host.name}"/>
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${script.file.path}" trust="true">
+			<fileset dir=".">
+				<include name="${host.name}.xml"></include>
+				<include name="*.properties"></include>
+			</fileset>
+		</scp>
+	</target>
+	
+	
+	
+	<!-- ============================================ -->
+	<!-- CM(fo,gl), FO, GL, MO, BO, MPO -->
+	<!-- ============================================ -->
+	<property name="hercules1"			value="10.149.144.65"/> <!-- cm, fo -->
+	<property name="ecws1"				value="10.149.144.75"/> <!-- gl -->
+	<property name="ecmows1"			value="10.149.144.38"/> <!-- mo -->
+	<property name="prows1"				value="10.149.144.47"/> <!-- cm, bo -->
+	<property name="partner3"			value="121.254.239.80"/> <!-- mpo -->
+	<property name="ecmows5"			value="10.149.144.42"/> <!-- mcgl -->
+	
+	<property name="script2.file.path"	value="/ncontents/src/deployer/scripts"/>
+	
+	<target name="build2">
+		<property name="host.name" value="${TARGET_HOST_NAME}"/>
+		<propertyvalue property="host.ip" value="${host.name}"/>
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${script2.file.path}" trust="true">
+			<fileset dir=".">
+				<include name="${host.name}.xml"></include>
+				<include name="*.properties"></include>
+			</fileset>
+		</scp>
+	</target>
+	
+	
+	
+	<!-- ============================================ -->
+	<!-- CM(bo, mpo), BO, MPO -->
+	<!-- ============================================ -->	
+	<property name="pro1"				value="121.254.239.93"/>
+	<property name="pro2"				value="121.254.239.94"/>
+	<property name="cc1"				value="121.254.239.91"/>
+	<property name="cc2"				value="121.254.239.92"/>
+	
+	<property name="script3.file.path"	value="/usr1/home/jeus/deploy/script"/>
+	
+	<target name="build3">
+		<property name="host.name" value="${TARGET_HOST_NAME}"/>
+		<propertyvalue property="host.ip" value="${host.name}"/>
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${script3.file.path}" trust="true">
+			<fileset dir=".">
+				<include name="pro1.xml"></include>
+				<include name="*.properties"></include>
+			</fileset>
+		</scp>
+	</target>
+	
+	
+	
+	<!-- ============================================ -->
+	<!-- CM(ba), BA -->
+	<!-- ============================================ -->
+	<property name="ocean1"				value=""/>
+	<property name="ocean2"				value=""/>
+	<property name="lottebatch1"		value=""/>
+	<property name="lottebatch2"		value=""/>
+	<property name="lottebatch3"		value=""/>
+	<property name="lottebatch4"		value=""/>
+	
+	<property name="script4.file.path"	value="/ncontents/src/deployer/scripts"/>
+	
+	<target name="build4">
+		<property name="host.name" value="${TARGET_HOST_NAME}"/>
+		<propertyvalue property="host.ip" value="${host.name}"/>
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${script4.file.path}" trust="true">
+			<fileset dir=".">
+				<include name="${host.name}.xml"></include>
+			</fileset>
+		</scp>
+	</target>
+	
+	
+</project>

@@ -1,0 +1,41 @@
+<project name="tomcat_lottesuper2011fo_jenkins_1.7">
+    <!-- **************************************************************** -->
+	<!-- PROPERTY -->
+	<!-- **************************************************************** -->
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties" />
+	<property file="${deployer.home.dir}/scripts/${ant.project.name}.REAL.properties" />
+	<property name="user.id" value="${svrUserId}" />
+	<property name="user.pwd" value="${svrUserPassword}" />
+
+	
+	<target name="move_real">
+			<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+				trust="true" verbose="false" command="cd /esuper/project/front/WEB-INF;find . -name classes_1.7.zip | xargs rm -f " />
+		
+		<antcall target="send_real"/>
+			
+		</target>
+	
+	<target name="send_real">
+		<scp todir="${user.id}:${user.pwd}@${host}:/esuper/project/front/WEB-INF" trust="true">
+			<fileset dir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_FRONT_1_REAL_BUILD_${target}_1_1.7/workspace/lottesuper2011/pack/PROJECT">
+				<include name="classes_1.7.zip"></include>
+			</fileset>
+		</scp>
+
+		<antcall target="unzip_real"/>
+	
+	</target>	
+
+	<target name="unzip_real">
+		<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" command="cd /esuper/project/front/WEB-INF;unzip -o -q  ./classes_1.7.zip" />
+	</target>
+
+	<target name="ssh_front_precompile">
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" command="cd deploy;./ssh_frontjspcompile" />
+	</target>
+	
+
+</project>

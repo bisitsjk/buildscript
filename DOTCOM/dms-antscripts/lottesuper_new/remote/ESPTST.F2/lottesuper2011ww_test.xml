@@ -1,0 +1,798 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottesuper2011ww_test">
+	<tstamp>
+		<!--<format property="back_time" pattern="yyyy-MM-dd_HH-mm-ss-SSS"/>-->
+		<format property="back_time" pattern="yyyyMMdd_HHmmss"/>
+		<!--<format property="back_time" pattern="yyyyMMdd"/>-->
+	</tstamp>
+	<property file="./lottesuper2011fo_test.properties"/>
+	<property name="deploy.id" value="${DEPLOY_ID}"/>
+	<property name="deploy.dir" value="/usr1/home/jeus/deploy"/>
+	<property name="real.web.ip" value="${REAL.WEB.IP}"/>
+	<property name="real.was.ip" value="${REAL.WAS.IP}"/>
+	<property name="app.dir" value="project/winwin"/>
+	<property name="base.dir" value="/esuper/project/winwin"/>
+	<!--<property name="base.dir" value="/esuper/project/deploytest/winwin"/>-->
+	<property name="ww.dir" value="/esuper/project/winwin"/>
+
+	<property name="source.dir" value="${deploy.dir}/${deploy.id}"/>
+
+	<property name="java.home" value="/usr/java1.5" />
+	<property name="ant.home" value="/usr1/home/xclass/downloads/apache-ant-1.8.2" />
+
+	<!--
+	<property name="user.id" value="jeus"/>
+	<property name="user.pwd" value="ALcHefghi|&amp;l"/>
+	-->
+	
+	<property name="user.id" value="${user.id}"/>
+	<property name="user.pwd" value="${user.pwd}"/>
+
+
+	<!-- deploy id ( for test only ) -->
+	<property name="prefix.dep.id" value="WW_" />
+	<property name="infix.dep.id" value="_TEST_" />
+	
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->		
+	<target name="check_test_deploy_id">
+		<condition property="isTestOnly">
+		  <and>
+			<length string="${deploy.id}" when="greater" length="10"/>
+			<contains string="${deploy.id}" substring="${prefix.dep.id}" casesensitive="true"/>
+			<contains string="${deploy.id}" substring="${infix.dep.id}" casesensitive="true"/>
+		  </and>
+		</condition>
+		<echo>DEPLOY ID ${deploy.id} / Valid ${isValid}</echo>
+	</target>
+
+	<target name="check_host">
+		<condition property="isHost">
+			<contains string="${hostname}" substring="esptstf"/>
+		</condition>
+		<echo>hostname is `${hostname}`</echo>
+	</target>
+			
+	<target name="check_valid" depends="check_host" unless="isHost">
+		<fail message="배포 대상 서버가 아닙니다."/>
+	</target>
+	
+	<target name="check_get_host">
+		  <condition property="isGetHost" value="espfweb1">
+		   		<equals arg1="${real.web.ip}" arg2="110.45.204.154" />
+		  </condition>
+		  <condition property="isGetHost" value="espfweb2">
+			   <equals arg1="${real.web.ip}" arg2="110.45.204.156" />
+		  </condition>
+		  <condition property="isGetHost" value="esptstf">
+		   		<equals arg1="${test.web.source.ip}" arg2="10.149.199.31" />
+		  </condition>
+		  <condition property="isGetHost" value="esptstf2">
+		   		<equals arg1="${test.web.source.ip}" arg2="10.149.199.46" />
+		  </condition>
+		  <condition property="isGetHost" value="esptstb">
+		   		<equals arg1="${test.web.source.ip}" arg2="10.149.199.32" />
+		  </condition>
+		  <condition property="isGetHost" value="esptstb2">
+		   		<equals arg1="${test.web.source.ip}" arg2="10.149.199.47" />
+		  </condition>
+			<condition property="isGetHost" value="espfwas1">
+			   <equals arg1="${real.was.ip}" arg2="10.149.150.31" />
+		  </condition>
+		  <condition property="isGetHost" value="espfwas2">
+				   <equals arg1="${real.was.ip}" arg2="10.149.150.32" />
+		  </condition>
+		<echo>get hostname is ${isGetHost}</echo>
+	</target>
+
+	
+	<!-- ############ Backup DocRoot Folder Check Start ########## -->
+		<target name="Check_Formula1_Web_Backday">
+			<condition property="isFormula1_Web_Backday">
+				<resourceexists>
+					<file file="/usr1/home/jeus/deploy/docroot_backup/formula1/winwin/${back_time}/static-root"/>
+				</resourceexists>
+			</condition>
+			<echo>Check_Formula1_Web_Backday : /usr1/home/jeus/deploy/docroot_backup/formula1/winwin/${back_time}/static-root 가 존재한다면 True / Valid ${isFormula1_Web_Backday}</echo>
+		</target>
+
+		<target name="Check_Formula2_Web_Backday">
+			<condition property="isFormula2_Web_Backday">
+				<resourceexists>
+					<file file="/usr1/home/jeus/deploy/docroot_backup/formula2/winwin/${back_time}/static-root"/>
+				</resourceexists>
+			</condition>
+			<echo>check_formula2_backday : /usr1/home/jeus/deploy/docroot_backup/formula2/winwin/${back_time}/static-root 가 존재한다면 True / Valid ${isformula2_backday}</echo>
+		</target>
+
+		<target name="Check_Regular_Web_Backday">
+			<condition property="isRegular_Web_Backday">
+				<resourceexists>
+					<file file="/usr1/home/jeus/deploy/docroot_backup/regular/winwin/${back_time}/static-root"/>
+				</resourceexists>
+			</condition>
+			<echo>Check_Regular_Web_Backday : /usr1/home/jeus/deploy/docroot_backup/regular/winwin/${back_time}/static-root 가 존재한다면 True / Valid ${isRegular_Web_Backday}</echo>
+		</target>
+
+		<target name="Check_Formula1_Was_Backday">
+			<condition property="isFormula1_Was_Backday">
+				<resourceexists>
+					<file file="/usr1/home/jeus/deploy/docroot_backup/formula1/winwin/${back_time}/WEB-INF"/>
+				</resourceexists>
+			</condition>
+			<echo>Check_Formula1_Was_Backday : /usr1/home/jeus/deploy/docroot_backup/formula1/winwin/${back_time}/WEB-INF 가 존재한다면 True / Valid ${isFormula1_Was_Backday}</echo>
+		</target>
+
+		<target name="Check_Formula2_Was_Backday">
+			<condition property="isFormula2_Was_Backday">
+				<resourceexists>
+					<file file="/usr1/home/jeus/deploy/docroot_backup/formula2/winwin/${back_time}/WEB-INF"/>
+				</resourceexists>
+			</condition>
+			<echo>Check_Formula2_Was_Backday : /usr1/home/jeus/deploy/docroot_backup/formula2/winwin/${back_time}/WEB-INF 가 존재한다면 True / Valid ${isFormula2_Was_Backday}</echo>
+		</target>
+
+		<target name="Check_Regular_Was_Backday">
+			<condition property="isRegular_Was_Backday">
+				<resourceexists>
+					<file file="/usr1/home/jeus/deploy/docroot_backup/regular/winwin/${back_time}/WEB-INF"/>
+				</resourceexists>
+			</condition>
+			<echo>Check_Regular_Was_Backday : /usr1/home/jeus/deploy/docroot_backup/regular/winwin/${back_time}/WEB-INF 가 존재한다면 True / Valid ${isRegular_Was_Backday}</echo>
+		</target>
+		<!-- ############ Backup DocRoot Folder Check End ########## -->
+
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->
+	<target name="check_exist">
+		<condition property="isExistWW">
+			<resourceexists>
+				<!-- /usr1/home/xclass/deploy/src/WW_20161215_1330 -->
+				<file file="${source.dir}"/>
+			</resourceexists>
+		   <!-- <echo message="체크함"/> -->
+		</condition>
+		<!--<echo message="체크함"/>-->
+		<echo>isExistWW / Valid ${isExistWW}</echo>
+	</target>
+
+			
+	<!-- ================================================== -->
+	<!-- only test deploy -->
+	<!-- ================================================== -->	
+	<target name="test_deploy_was" depends="check_test_deploy_id">
+		<antcall target="rename_was" />
+		<antcall target="copy_was" />
+	</target>
+		
+	<!-- ================================================== -->
+	<!-- init -->
+	<!-- ================================================== -->
+	<target name="init">
+		<antcall target="check_valid" />
+		<antcall target="delete_sources" />
+		<antcall target="make_directory" />
+	</target>
+	
+	<target name="delete_sources">
+		<echo>Target directory `${source.dir}/project`...</echo>
+		<delete dir="${source.dir}/project" />
+	</target>
+	
+	<target name="make_directory">
+		<echo>Target directory `${source.dir}`...</echo>
+		<mkdir dir="${source.dir}" />
+	</target>
+
+	<!-- ================================================== -->
+	<!-- ssh init -->
+	<!-- ================================================== -->
+	<target name="ssh_init">
+		<antcall target="check_valid" />
+		<antcall target="delete_sources" />
+		<antcall target="make_directory" />
+	</target>
+	
+	<!-- ================================================== -->
+		<!-- test deploy -->
+		<!-- ================================================== -->	
+		<target name="ssh_test_deploy_was" depends="check_test_deploy_id">
+			<antcall target="ssh_rename_was" />
+			<antcall target="ssh_backup_was" />
+			<antcall target="ssh_copy_was" />
+		</target>
+
+	<target name="ssh_rename_was" if="isTestOnly">
+		<echo>change WebContent</echo>
+		<exec executable="mv" dir="${source.dir}">
+			<arg value="lotte-super-winwin" />
+			<arg value="project" />
+		</exec>
+		<echo>change lotte-super-winwin</echo>
+		<exec executable="mv" dir="${source.dir}/project">
+			<arg line="WebContent winwin" />
+		</exec>
+	</target>
+
+	<!-- ================================================== -->
+	<!-- rename (for test only) -->
+	<!-- ================================================== -->	
+	<target name="rename_was" if="isTestOnly">
+		<echo>change WebContent</echo>
+		<exec executable="mv" dir="${source.dir}">
+			<arg value="lotte-super-winwin" />
+			<arg value="project" />
+		</exec>
+		<echo>change lotte-super-winwin</echo>
+		<exec executable="mv" dir="${source.dir}/project">
+			<arg line="WebContent winwin" />
+		</exec>
+	</target>
+
+	<!-- ================================================== -->
+	<!-- copy -->
+	<!-- ================================================== -->	
+	<target name="copy_was">
+		<copy todir="${base.dir}" overwrite="true" verbose="true">
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="static-root/**/*"/>
+                <include name="WEB-INF/**/*"/>
+                <include name="*.html"/>
+                <include name="*.jsp"/>
+		    </fileset>
+		</copy>
+	</target>	
+
+	
+	<!-- ================================================== -->
+	<!-- ssh backup -->
+	<!-- ================================================== -->	
+
+	<!-- Only TEST -->
+	<!-- source.dir/app.dir                                        =         /usr1/home/jeus/deploy/WW_20170117_TEST_HSLIM/project/winwin -->
+	<!-- ww.dir                                                                 =         /esuper/project/winwin -->
+	<!-- source.dir_backup/project/winwin      =         /usr1/home/jeus/deploy/WW_20170117_TEST_HSLIM_backup/project/winwin -->
+
+	<!-- Regular TEST -->
+	<!-- source.dir/app.dir                                        =         /usr1/home/jeus/deploy/WW_20161212_1330/project/winwin -->
+	<!-- ww.dir                                                                 =         /esuper/project/winwin -->
+	<!-- source.dir_backup/project/winwin      =         /usr1/home/jeus/deploy/WW_20161212_1330_backup/project/winwin -->
+
+	<target name="ssh_backup_was">
+		<echo>Backup ${source.dir}</echo>
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte.jar">
+			<arg value="${source.dir}/${app.dir}"/>
+			<arg value="${ww.dir}"/>
+			<arg value="${source.dir}_backup/project/winwin"/>
+		</java>
+	</target>
+
+	<!-- ================================================== -->
+	<!-- ssh copy -->
+	<!-- ================================================== -->
+	<!-- base.dir                             =   /esuper/project/winwin -->
+	<!-- source.dir/app.dir       =   /usr1/home/jeus/deploy/WW_20161212_1330/project/winwin -->
+	<target name="ssh_copy_was">
+		<copy todir="${base.dir}" overwrite="true" verbose="true">
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="**/*"/>
+		    </fileset>
+		</copy>
+	</target>	
+
+	<target name="ssh_copy_test_was">
+		<copy todir="/esuper/project/deploytest/winwin" overwrite="true" verbose="true">
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="**/*"/>
+		    </fileset>
+		</copy>
+	</target>	
+
+	
+	<target name="ssh_rollback" depends="check_exist">
+		<antcall target="check_valid"/>
+		<echo message="Rollback WW Java Applications"/>
+		<antcall target="rollbackww"/>
+	</target>	
+
+	<!-- Test Purpose -->
+	<target name="ssh_rollback_test" depends="check_exist">
+		<antcall target="check_valid"/>
+		<echo message="Rollback WW Java Applications"/>
+		<antcall target="rollbackwwtest"/>
+	</target>	
+
+
+	<!-- SSH Rollback -->
+	<!-- source.dir = /usr1/home/jeus/deploy/WW_20161215_1330 -->
+	<!-- source.dir = /usr1/home/jeus/deploy/WW_20161215_TEST_HSLIM -->
+	<!-- 경로가 winwin  밑에 있는 파일들 전체 롤백 -->
+	<target name="rollbackww" if="isExistWW">        
+        <copy todir="/esuper/project/winwin" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/project/winwin"
+                     includes="**/*"/>
+        </copy>
+    </target>		
+
+	<!-- Test Purpose -->
+	<target name="rollbackwwtest" if="isExistWW">        
+        <copy todir="/esuper/project/rollbacktest/winwin" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/project/winwin"
+                     includes="**/*"/>
+        </copy>
+    </target>		
+
+	
+	<!-- ########## Web Sync ########## -->
+	<!-- ★ 운영 기준 : 운영에 있는것이 테스트서버에 있는지 확인하고 운영폴더 숫자로 맞추기 바람 ★ -->
+	<target name="ssh_wwsync_web_test1">
+		<!-- #### js - Backup #### -->
+		<!-- 차후에 front js 항목 변동 발생시 사용 -->
+		<!--
+		<move todir="/usr1/home/jeus/deploy/docroot_backup/company/${back_time}/static-root/js">
+				    <fileset dir="/esuper/project/movetest/company/static-root/js">
+		    		 	  <exclude name="wisegrid/**" />
+					      <exclude name="ckeditor/**" />
+				          <exclude name="ckeditor_*/**" />
+				    </fileset>
+				 </move>
+		-->
+		<antcall target="DocRoot_Web_Formula1_Move" />
+		<!--<antcall target="zipdelete" />-->
+		<antcall target="ftp_get_web" />
+		<!--<antcall target="unzip_web_test1" />-->
+	</target>	
+	
+	
+	<target name="ssh_wwsync_web_test2">
+		<!-- #### js - Backup #### -->
+		<!-- 차후에 front js 항목 변동 발생시 사용 -->
+		<!--
+		<move todir="/usr1/home/jeus/deploy/docroot_backup/front/${back_time}/static-root/js">
+				    <fileset dir="/esuper/project/movetest/front/static-root/js">
+		    		 	  <exclude name="wisegrid/**" />
+					      <exclude name="ckeditor/**" />
+				          <exclude name="ckeditor_*/**" />
+				    </fileset>
+				 </move>
+	   -->
+		<antcall target="DocRoot_Web_Formula2_Move" />
+		<!--<antcall target="zipdelete" />-->
+		<antcall target="ftp_get_web" />
+		<!--<antcall target="unzip_web_test2" />-->
+	</target>	
+	
+	
+	<target name="ssh_wwsync_web">
+		<!-- #### js - Backup #### -->
+		<!-- 차후에 front js 항목 변동 발생시 사용 -->
+		<!--
+		<move todir="/usr1/home/jeus/deploy/docroot_backup/front/${back_time}/static-root/js">
+				    <fileset dir="/esuper/project/front/static-root/js">
+		    		 	  <exclude name="wisegrid/**" />
+					      <exclude name="ckeditor/**" />
+				          <exclude name="ckeditor_*/**" />
+				    </fileset>
+				 </move>
+		-->
+		<antcall target="DocRoot_Web_Regular_Move" />
+		<!--<antcall target="zipdelete" />-->
+		<antcall target="ftp_get_web" />
+		<!--<antcall target="unzip_web" />-->
+	</target>	
+
+	
+	<!-- ########## Was Sync ########## -->
+	<target name="ssh_wwsync_was" >
+		<!--<antcall target="zipdelete" />-->
+		<antcall target="DocRoot_Was_Regular_Move" />
+		<antcall target="ftp_get_was" />
+		<!--<antcall target="unzip_was" />-->
+	</target>	
+
+	
+	<target name="ssh_wwsync_was_test1">
+		<!--<antcall target="zipdelete" />-->
+		<antcall target="DocRoot_Was_Formula1_Move" />
+		<antcall target="ftp_get_was" />
+		<!--<antcall target="unzip_was_test1" />-->
+	</target>	
+
+	
+	<target name="ssh_wwsync_was_test2">
+		<!--<antcall target="zipdelete" />-->
+		<antcall target="DocRoot_Was_Formula2_Move" />
+		<antcall target="ftp_get_was" />
+		<!--<antcall target="unzip_was_test2" />-->
+	</target>	
+	
+	
+	<target name="ftp_get_web" depends="check_get_host">
+		<echo message="${isGetHost}번 서버에서 ${deploy.id}_winwin_web.zip 파일 Get"/>
+		<!-- <echo message="espfweb1번 서버에서 ${deploy.id}_winwin_web_js.zip 파일 Get"/> -->
+		<ftp server="${real.web.ip}" userid="${user.id}" password="${user.pwd}" 
+			port="21" remotedir="/usr1/home/jeus/deploy/fozipbackup" 
+			passive="no" 
+			action="get" 
+			verbose="true">
+			<fileset dir="real_zipreceive" >
+				<include name="${deploy.id}_winwin_web.zip" />
+		        <!--<include name="${deploy.id}_winwin_web_js.zip" />-->
+			</fileset>
+		</ftp>
+	</target>
+
+	
+	<target name="ftp_get_was" depends="check_get_host">
+		<echo message="${isGetHost}번 서버에서 ${deploy.id}_winwin_was.zip 파일 Get"/>
+		<ftp server="${real.was.ip}" userid="${user.id}" password="${user.pwd}" 
+			port="21" remotedir="/usr1/home/jeus/deploy/fozipbackup" 
+			passive="no" 
+			action="get" 
+			verbose="true">
+			<fileset dir="real_zipreceive" >
+				<include name="${deploy.id}_winwin_was.zip" />
+			</fileset>
+		</ftp>
+	</target>
+	
+<!--
+	<target name="copy_test">
+		<copy todir="/usr1/home/jeus/deploy/docroot_backup" includeemptydirs="false">
+		    <fileset dir="/esuper/project/back/WEB-INF">
+		      <exclude name="x2log/**/*"/>
+		      <exclude name="*.xml"/>
+		    </fileset>
+		</copy>
+	</target>
+-->
+	
+	
+	<!--
+	<target name="zipdelete">
+		<delete includeemptydirs="true">
+	    		<fileset dir="/usr1/home/jeus/deploy/real_zipreceive" includes="*.zip"/>
+	  </delete>
+	</target>
+	-->
+	
+	<!-- ##########  DocRoot Web 폴더를 /deploy/DocRoot 백업폴더로 이동 ##########  -->
+     <!--<target name="DocRoot_Web_Formula1_Move"  depends="Check_Formula1_Web_Backday" unless="isFormula1_Web_Backday">-->
+      <target name="DocRoot_Web_Formula1_Move">
+    	<echo># 폴더가 없다면 이동 #</echo>
+		<delete>
+			 <fileset dir="/usr1/home/jeus/deploy/real_zipreceive" includes="${deploy.id}_winwin_web.zip"/>
+	    </delete>
+		<move todir="/usr1/home/jeus/deploy/docroot_backup/formula1/winwin/${back_time}/static-root">
+		    <fileset dir="/esuper/project/movetest/winwin/static-root">
+				  <include name="css/**" />
+				  <include name="js/**" />
+				  <include name="v3/**" />
+				  <include name="img/**" />
+		    </fileset>
+		 </move>
+	</target>
+
+    <target name="DocRoot_Web_Formula2_Move"  depends="Check_Formula2_Web_Backday" unless="isFormula2_Web_Backday">
+    	<echo># 폴더가 없다면 이동 #</echo>
+		<delete>
+			 <fileset dir="/usr1/home/jeus/deploy/real_zipreceive" includes="${deploy.id}_winwin_web.zip"/>
+	    </delete>
+		<move todir="/usr1/home/jeus/deploy/docroot_backup/formula2/winwin/${back_time}/static-root">
+		    <fileset dir="/esuper/project/movetest/winwin/static-root">
+				  <include name="css/**" />
+				  <include name="js/**" />
+				  <include name="v3/**" />
+				  <include name="img/**" />
+		    </fileset>
+		 </move>
+	</target>
+	
+	<target name="DocRoot_Web_Regular_Move"  depends="Check_Regular_Web_Backday" unless="isRegular_Web_Backday">
+    	<echo># 폴더가 없다면 이동 #</echo>
+		<delete>
+			 <fileset dir="/usr1/home/jeus/deploy/real_zipreceive" includes="${deploy.id}_winwin_web.zip"/>
+	    </delete>
+		<move todir="/usr1/home/jeus/deploy/docroot_backup/regular/winwin/${back_time}/static-root">
+		    <fileset dir="/esuper/project/winwin/static-root">
+				  <include name="css/**" />
+				  <include name="js/**" />
+				  <include name="v3/**" />
+				  <include name="img/**" />
+		    </fileset>
+		 </move>
+	</target>
+
+	<!-- ##########  DocRoot Was 폴더를 /deploy/DocRoot 백업폴더로 이동 ##########  -->	
+    <target name="DocRoot_Was_Formula1_Move"  depends="Check_Formula1_Was_Backday" unless="isFormula1_Was_Backday">
+    	<echo># 폴더가 없다면 이동 #</echo>
+		<delete>
+			 <fileset dir="/usr1/home/jeus/deploy/real_zipreceive" includes="${deploy.id}_winwin_was.zip"/>
+	    </delete>
+		<move todir="/usr1/home/jeus/deploy/docroot_backup/formula1/winwin/${back_time}/WEB-INF">
+		    <fileset dir="/esuper/project/movetest/winwin/WEB-INF">
+				<include name="classes/**"/>
+				<include name="dynamic_classes/**"/>
+				<include name="x2scenario/**"/>
+				<include name="jsp/**"/>
+				<include name="lib/lottesuper-commons.jar"/>
+		    </fileset>
+		 </move>
+	</target>
+
+   <target name="DocRoot_Was_Formula2_Move"  depends="Check_Formula2_Was_Backday" unless="isFormula2_Was_Backday">
+	<echo># 폴더가 없다면 이동 #</echo>
+		<delete>
+			 <fileset dir="/usr1/home/jeus/deploy/real_zipreceive" includes="${deploy.id}_winwin_was.zip"/>
+	    </delete>
+		<move todir="/usr1/home/jeus/deploy/docroot_backup/formula2/winwin/${back_time}/WEB-INF">
+		    <fileset dir="/esuper/project/movetest/winwin/WEB-INF">
+				<include name="classes/**"/>
+				<include name="dynamic_classes/**"/>
+				<include name="x2scenario/**"/>
+				<include name="jsp/**"/>
+				<include name="lib/lottesuper-commons.jar"/>
+		    </fileset>
+		 </move>
+	</target>
+	
+	<target name="DocRoot_Was_Regular_Move">
+    	<echo># 폴더가 없다면 이동 #</echo>
+		<!--<target name="DocRoot_Was_Regular_Move"  depends="Check_Regular_Was_Backday" unless="isRegular_Was_Backday">-->
+		<delete>
+			 <fileset dir="/usr1/home/jeus/deploy/real_zipreceive" includes="${deploy.id}_winwin_was.zip"/>
+	    </delete>
+		<move todir="/usr1/home/jeus/deploy/docroot_backup/regular/winwin/${back_time}/WEB-INF">
+		    <fileset dir="/esuper/project/winwin/WEB-INF">
+				<include name="classes/**"/>
+				<include name="dynamic_classes/**"/>
+				<include name="x2scenario/**"/>
+				<include name="jsp/**"/>
+				<include name="lib/lottesuper-commons.jar"/>
+		    </fileset>
+		 </move>
+	</target>
+	
+	<!--
+	<target name="zipdelete">
+		<delete>
+	    	<fileset dir="/usr1/home/jeus/deploy/real_zipreceive" includes="*"/>
+	  </delete>
+	</target>
+	-->
+	
+	<target name="zipdelete">
+		<!--
+		<delete>
+	    		<fileset dir="/usr1/home/jeus/deploy/real_zipreceive" includes="*"/>
+	  </delete>
+	  -->
+		<delete dir="/usr1/home/jeus/deploy/real_zipreceive" />
+		<mkdir dir="/usr1/home/jeus/deploy/real_zipreceive" />
+	</target>
+
+
+	
+	<!--
+	<target name="copy_test">
+		<copy todir="/usr1/home/jeus/deploy/docroot_backup">
+		    <fileset dir="/esuper/project/back/WEB-INF">
+		      <exclude name="x2log/**/*"/>
+		      <exclude name="*.xml"/>
+		    </fileset>
+		</copy>
+	</target>
+	-->
+
+	<!--
+	<target name="move_test">
+			<move todir="/usr1/home/jeus/deploy/move">
+			    <fileset dir="/usr1/home/jeus/deploy/docroot_backup">
+			      <exclude name="x2log/**/*"/>
+			      <include name="**/**/*"/>
+			    </fileset>
+			 </move>
+   </target>
+-->
+
+	<!-- 특정폴더만 옮길경우 이방법 됨 -->
+	<!--
+	<target name="move_test">
+			<move todir="/usr1/home/jeus/deploy/docroot_backup">
+			    <fileset dir="/esuper/project/back/movetest">
+			      <include name="jsp/**/"/>
+			      <include name="dynamic_classes/**"/>
+			      <include name="classes/**"/>
+			    </fileset>
+			 </move>
+   </target>
+   -->
+
+	<!-- 특정폴더만 옮길경우 이방법 됨 -->
+	<!--
+	<target name="move_test">
+			<move todir="/usr1/home/jeus/deploy/docroot_backup">
+			    <fileset dir="/esuper/project/back/movetest">
+			      <include name="jsp/**/**"/>
+			      <include name="dynamic_classes/**/**"/>
+			      <include name="classes/**/**"/>
+			    </fileset>
+			 </move>
+   </target>
+   -->
+
+	
+	<!-- 이상함 x2config가 왜 복사가 되지?? -->
+	<!--
+	<target name="move_test">
+			<move todir="/usr1/home/jeus/deploy/docroot_backup">
+			    <fileset dir="/esuper/project/back/movetest">
+			      <exclude name="x2log/**/*"/>
+			      <exclude name="tempdir/**"/>
+			      <exclude name="*.xml"/>
+			      <exclude name="x2config/**/*"/>
+			      <include name="**/**/*"/>
+			    </fileset>
+			 </move>
+   </target>
+   -->
+
+	<!-- move에 폴더가 만들어지고 파일들은 가는데 docroot_backup 폴더에는 폴더들은 그대로 있고 파일들만 없다 -->
+	<!-- move 는 파일들 먼저 옮겨지면 빈 폴더들이 생기기때문에 includeemptydirs="false" 옵션을 쓰면 안되는것 같음,  파일들은 옮겨지나, 폴더들은 그대로 남아있는것으로 보임  -->
+	<!--
+	<target name="move_test">
+		<move todir="/usr1/home/jeus/deploy/move" includeemptydirs="false">
+		    <fileset dir="/usr1/home/jeus/deploy/docroot_backup">
+		      <exclude name="x2log/**/*"/>
+		      <include name="**/**/*"/>
+		    </fileset>
+		 </move>
+  </target>
+	-->
+	
+	<!-- 아래 방식은 폴더명만 바꾼다 docroot_backup 에서 move로 교체 -->
+	<!--
+	<target name="move_test">
+		<move todir="/usr1/home/jeus/deploy/move">
+		    <fileset dir="/usr1/home/jeus/deploy/docroot_backup">
+		      <exclude name="x2log/**/*"/>
+		    </fileset>
+		 </move>
+  </target>
+  
+  	<target name="move_test">
+		<move todir="/usr1/home/jeus/deploy/move">
+		    <fileset dir="/usr1/home/jeus/deploy/docroot_backup">
+		    </fileset>
+		 </move>
+  </target>
+  
+    -->
+
+	
+<!-- move하면서 이름을 바꿈 -->
+	<!--
+	<target name="move_test1">
+	<move file="/usr1/home/jeus/deploy/docroot_backup"  tofile="./move"/>
+	</target>
+-->
+
+	<!--
+	<move todir="some/new/dir">
+	    <fileset dir="my/src/dir">
+	      <include name="**/*.jar"/>
+	      <exclude name="**/ant.jar"/>
+	    </fileset>
+	  </move>
+	-->
+	
+<!--	
+   <target name="copy_test1">
+		<copy todir="./move" includeemptydirs="false">
+		    <fileset dir="/usr1/home/jeus/deploy/docroot_backup">
+			      <exclude name="x2log/**/*"/>
+		    </fileset>
+		 </copy>
+   </target>
+-->
+
+
+<!--	
+	<target name="ftp_test">
+		<echo message="espbwas1번 서버에서 Put"/>
+		<ftp server="10.149.150.33" userid="${user.id}" password="${user.pwd}" remotedir="/usr1/home/jeus/deploy/backup" passive="no"  action="put" verbose="true">
+			<fileset dir="real_zipreceive">
+				<include name="*.zip"></include>
+			</fileset>
+		</ftp>
+	</target>
+-->
+
+<!--	
+	<target name="ftp_test">
+		<echo message="espbwas1번 서버에서 Get"/>
+		<ftp server="10.149.150.31" userid="${user.id}" password="${user.pwd}" 
+			port="21" remotedir="/usr1/home/jeus/deploy/bozipbackup" 
+			passive="no" 
+			action="get" 
+			verbose="true">
+			<fileset dir="real_zipreceive" >
+				<include name="*.zip" />
+			</fileset>
+		</ftp>
+	</target>
+-->
+	
+	<target name="ftp_get">
+		<echo message="espfwas1번 서버에서 ${deploy.id}_winwin_was.zip 파일 Get"/>
+		<ftp server="10.149.150.31" userid="${user.id}" password="${user.pwd}" 
+			port="21" remotedir="/usr1/home/jeus/deploy/fozipbackup" 
+			passive="no" 
+			action="get" 
+			verbose="true">
+			<fileset dir="real_zipreceive" >
+				<include name="${deploy.id}_winwin_was.zip" />
+			</fileset>
+		</ftp>
+	</target>
+
+<!--
+	<target name="ftp_test-">
+		<echo message="espbwas1번 서버에서 Listing"/>
+	<ftp action="list"
+	       server="10.149.150.33"
+	       userid="${user.id}"
+	       password="${user.pwd}"
+	       listing="/usr1/home/jeus/deploy/*.zip">
+	    <fileset>
+	      <include name="*.zip"/>
+	    </fileset>
+	  </ftp>
+	</target>
+-->
+
+	
+	<!-- #### Unzip TEST 1 -  movetest Folder uncompress#### -->
+	<!--
+	<target name="unzip_web_test1">
+			<unzip src="/usr1/home/jeus/deploy/real_zipreceive/${deploy.id}_winwin_web.zip" dest="/esuper/project/movetest/winwin/static-root"/>
+			//<unzip src="/usr1/home/jeus/deploy/real_zipreceive/${deploy.id}_winwin_web_js.zip" dest="/esuper/project/movetest/winwin/static-root/js"/>
+	</target>
+
+	<target name="unzip_was_test1">
+			<unzip src="/usr1/home/jeus/deploy/real_zipreceive/${deploy.id}_winwin_was.zip" dest="/esuper/project/movetest/winwin/WEB-INF"/>
+	</target>
+	-->
+	
+	
+	<!-- #### Unzip TEST 2 - Unzipfolder Folder uncompress #### -->
+	<!--
+	<target name="unzip_web_test2">
+		    <unzip src="/usr1/home/jeus/deploy/real_zipreceive/${deploy.id}_winwin_web.zip" dest="/usr1/home/jeus/deploy/unzipfolder/winwin/static-root"/>
+			//<unzip src="/usr1/home/jeus/deploy/real_zipreceive/${deploy.id}_winwin_web_js.zip" dest="/usr1/home/jeus/deploy/unzipfolder/winwin/static-root/js"/>
+	</target>
+
+	<target name="unzip_was_test2">
+			<unzip src="/usr1/home/jeus/deploy/real_zipreceive/${deploy.id}_winwin_was.zip" dest="/usr1/home/jeus/deploy/unzipfolder/winwin/WEB-INF"/>
+	</target>
+	-->
+	
+		
+
+	<!-- #### Unzip From Real Source to Test DocRoot #### -->
+	<!--
+	<target name="unzip_web">
+	<unzip src="/usr1/home/jeus/deploy/real_zipreceive/${deploy.id}_winwin_web.zip" dest="/esuper/project/winwin/static-root"/>
+	<unzip src="/usr1/home/jeus/deploy/real_zipreceive/${deploy.id}_winwin_web_js.zip" dest="/esuper/project/winwin/static-root/js"/>
+	</target>
+
+	<target name="unzip_was">
+	<unzip src="/usr1/home/jeus/deploy/real_zipreceive/${deploy.id}_winwin_was.zip" dest="/esuper/project/winwin/WEB-INF"/>
+	</target>
+	-->
+
+</project>

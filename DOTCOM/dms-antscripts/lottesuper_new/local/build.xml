@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottesuper_local">
+	<target name="build">
+		<copy todir="d:/deployer/scripts" verbose="true">
+			<fileset dir="E:/jenkins-lottesuper/jobs/script_svn_deploy/workspace/lottesuper_new/local"/>
+		</copy>
+	</target>
+</project>

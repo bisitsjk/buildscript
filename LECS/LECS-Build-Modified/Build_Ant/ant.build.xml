@@ -1,0 +1,545 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lecs20.deploy" basedir="."><!-- Global Param: ${target} -->
+	<property name="source.dir" value="/lotte/hudson-home/lecs2/jobs/2.UPDATE_DEV/workspace/src" />
+	<property name="compile.dir" value="/lotte/lecs/jenkinsBuild/compile" />
+	<property name="merge.dir" value="/lotte/lecs/jenkinsBuild/merge" />
+
+	<!-- Ant Contrib -->
+	<taskdef resource="net/sf/antcontrib/antlib.xml">
+	  <classpath>
+	    <pathelement location="${path-to-ant-contrib}/ant-contrib-1.0b3.jar"/>
+	  </classpath>
+	</taskdef>
+
+	<patternset id="pattern.compile.copy.resource">
+		<exclude name="**/*.java"/>
+	</patternset>
+	
+	<patternset id="pattern.unnecessary.resource">
+		<include name="**\*.java"/>
+		<include name="**\*.tst"/>
+		<include name="**\*.stg"/>
+		<include name="**\*.prd"/>
+	</patternset>
+	
+	<path id="classpath.all.libs">
+		<fileset dir="/lotte/hudson-home/lecs2/jobs/2.UPDATE_DEV/workspace/src/LECS-Library/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="/lotte/hudson-home/lecs2/jobs/2.UPDATE_DEV/workspace/src/LECS-Library/lib_test">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="/usr2/tomcat/lib">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+
+	<!-- ############### Compile ############### -->
+	
+	<target name="COMPILE.LECS-Library">
+		<echo>+=======================================================+</echo>
+		<echo>         COMPILE.LIBRARY                                    </echo>
+		<echo>+=======================================================+</echo>
+		
+		<delete dir="${compile.dir}/LECS-Library"/>
+		<mkdir dir="${compile.dir}/LECS-Library"/>
+
+		<javac debug="true" debuglevel="source,lines,vars" destdir="${compile.dir}/LECS-Library" source="1.6" target="1.6" encoding="UTF-8" includeantruntime="false">
+			<src path="${source.dir}/LECS-Library/src_common"/>
+			<src path="${source.dir}/LECS-Library/src_interface/java"/>
+			<src path="${source.dir}/LECS-Library/src_platform_api"/>
+			<src path="${source.dir}/LECS-Library/src_platform_component"/>
+			<classpath refid="classpath.all.libs"/>
+		</javac>
+		
+		<copy todir="${compile.dir}/LECS-Library">
+				<fileset dir="${source.dir}/LECS-Library/src_common">
+					<patternset refid="pattern.compile.copy.resource"/>
+				</fileset>
+				<fileset dir="${source.dir}/LECS-Library/src_interface/java">
+					<patternset refid="pattern.compile.copy.resource"/>
+				</fileset>
+				<fileset dir="${source.dir}/LECS-Library/src_platform_api">
+					<patternset refid="pattern.compile.copy.resource"/>
+				</fileset>
+				<fileset dir="${source.dir}/LECS-Library/src_platform_component">
+					<patternset refid="pattern.compile.copy.resource"/>
+				</fileset>
+		</copy>
+	
+	</target>
+
+	<target name="_COMPILE.PLATFORM">
+		<!-- ${param.project.name} -->
+		<echo>+=======================================================+</echo>
+		<echo>         _COMPILE.PLATFORM (${param.project.name})                                    </echo>
+		<echo>+=======================================================+</echo>
+
+		<delete dir="${compile.dir}/${param.project.name}"/>
+		<mkdir dir="${compile.dir}/${param.project.name}"/>
+		
+		<javac debug="true" debuglevel="source,lines,vars" destdir="${compile.dir}/${param.project.name}" source="1.6" target="1.6" encoding="UTF-8" includeantruntime="false">
+			<src path="${source.dir}/${param.project.name}/src"/>
+
+			<classpath path="${compile.dir}/LECS-Library"/>
+			<classpath refid="classpath.all.libs"/>
+		</javac>
+		
+		<copy todir="${compile.dir}/${param.project.name}">
+			<fileset dir="${compile.dir}/LECS-Library"/>
+			<fileset dir="${source.dir}/${param.project.name}/src">
+				<patternset refid="pattern.compile.copy.resource"/>
+			</fileset>
+		</copy>
+		
+	</target>
+	
+	<target name="COMPILE.BO">
+		<echo>+=======================================================+</echo>
+		<echo>         COMPILE.BO                                    </echo>
+		<echo>+=======================================================+</echo>
+		
+		<antcall target="_COMPILE.PLATFORM">
+			<param name="param.project.name" value="LECS-Platform-BO"/>
+		</antcall>
+	</target>
+	
+	<target name="COMPILE.LPS">
+		<echo>+=======================================================+</echo>
+		<echo>         COMPILE.LPS                                    </echo>
+		<echo>+=======================================================+</echo>
+		<antcall target="_COMPILE.PLATFORM">
+			<param name="param.project.name" value="LECS-Platform-LPS"/>
+		</antcall>
+	</target>
+	
+	<target name="COMPILE.BATCH">
+		<echo>+=======================================================+</echo>
+		<echo>         COMPILE.BATCH                                    </echo>
+		<echo>+=======================================================+</echo>
+
+		<delete dir="${compile.dir}/LECS-Batch"/>
+		<mkdir dir="${compile.dir}/LECS-Batch"/>
+		
+		<javac debug="true" debuglevel="source,lines,vars" destdir="${compile.dir}/LECS-Batch" source="1.6" target="1.6" encoding="UTF-8" includeantruntime="false">
+			<src path="${source.dir}/LECS-Batch/src"/>
+			<classpath path="${compile.dir}/LECS-Library"/>
+			<classpath refid="classpath.all.libs"/>
+		</javac>
+		
+		<copy todir="${compile.dir}/LECS-Library-Platform">
+				<fileset dir="${source.dir}/LECS-Batch/src">
+					<patternset refid="pattern.compile.copy.resource"/>
+				</fileset>
+		</copy>
+
+	</target>
+	
+	
+	<!-- ############### MERGE ############### -->
+
+	<target name="MERGE.BO.APP">
+		<!-- Clean -->
+		<delete dir="${merge.dir}/LECS-Platform-BO/App" />
+		<!-- 무조건 지우고 다시 추가 -->
+		<mkdir dir="${merge.dir}/LECS-Platform-BO/App" />
+
+		<!-- JSP -->
+		<copy todir="${merge.dir}/LECS-Platform-BO/App">
+			<fileset dir="${source.dir}/LECS-Platform-BO/WebContent">
+				<include name="WEB-INF/**/**" />
+				<include name="index.jsp" />
+				<include name="lems.jsp" />
+				<include name="ispCertSuccess.jsp" />
+				<include name="helpdesk*" />
+			</fileset>
+		</copy>
+		<!-- error page -->
+		<copy todir="${merge.dir}/LECS-Platform-BO/App">
+			<fileset dir="${source.dir}/LECS-Platform-BO/WebContent">
+				<include name="helpdesk_page_error.html" />
+			</fileset>
+		</copy>
+		<!-- Lib -->
+		<copy todir="${merge.dir}/LECS-Platform-BO/App/WEB-INF/lib">
+			<fileset dir="${source.dir}/LECS-Library/lib">
+				<include name="**/*.jar" />
+			</fileset>
+		</copy>
+		<!-- Classes -->
+		<mkdir dir="${merge.dir}/LECS-Platform-BO/App/WEB-INF/classes" />
+		<copy todir="${merge.dir}/LECS-Platform-BO/App/WEB-INF/classes">
+			<fileset dir="${compile.dir}/LECS-Platform-BO"/>
+		</copy>
+		<!-- 서버별 파일 교체 -->
+		<move todir="${merge.dir}/LECS-Platform-BO/App" includeemptydirs="false" verbose="true">
+			<fileset dir="${merge.dir}/LECS-Platform-BO/App">
+			</fileset>
+			<mapper type="glob" from="*.${PHASE}" to="*"/>
+		</move>
+		<!-- 불필요한 파일 정리 -->
+		<delete>
+			<fileset dir="${merge.dir}/LECS-Platform-BO/App">
+				<patternset refid="pattern.unnecessary.resource"/>
+			</fileset>
+		</delete>
+	</target>
+
+	<target name="MERGE.BO.CONTENTS">
+		<delete dir="${merge.dir}/LECS-Platform-BO/Contents" />
+		<mkdir dir="${merge.dir}/LECS-Platform-BO/Contents" />
+		<copy todir="${merge.dir}/LECS-Platform-BO/Contents">
+			<fileset dir="${source.dir}/LECS-Platform-BO/WebContent">
+				<patternset>
+					<include name="**/**" />
+
+					<exclude name="WEB-INF/**/**" />
+					<exclude name="*.jsp" />
+				</patternset>
+			</fileset>
+		</copy>
+	</target>
+
+
+	<target name="MERGE.BO">
+		<antcall target="MERGE.BO.APP"/>
+		<antcall target="MERGE.BO.CONTENTS"/>
+	</target>
+
+	<target name="MERGE.LPS.APP">
+		<echo>+=======================================================+</echo>
+		<echo>                  MERGE.LPS.APP                                     </echo>
+		<echo>+=======================================================+</echo>
+
+		<!-- Clean -->
+		<delete dir="${merge.dir}/LECS-Platform-LPS/App" />
+		<mkdir dir="${merge.dir}/LECS-Platform-LPS/App" />
+		<!-- JSP -->
+		<copy todir="${merge.dir}/LECS-Platform-LPS/App">
+			<fileset dir="${source.dir}/LECS-Platform-LPS/WebContent">
+				<include name="WEB-INF/**/**" />
+				<include name="index.jsp" />
+				<include name="lems.jsp" />
+				<include name="ispCertSuccess.jsp" />
+				<include name="helpdesk*" />
+				<!-- wms 배포 파일 제외 설정 -->
+				<exclude name="**/common.xml.wms"/>
+			</fileset>
+		</copy>
+		<!-- Lib -->
+		<copy todir="${merge.dir}/LECS-Platform-LPS/App/WEB-INF/lib">
+			<fileset dir="${source.dir}/LECS-Library/lib">
+				<include name="**/*.jar" />
+			</fileset>
+		</copy>
+		<!-- Classes -->
+		<mkdir dir="${merge.dir}/LECS-Platform-LPS/App/WEB-INF/classes" />
+		<copy todir="${merge.dir}/LECS-Platform-LPS/App/WEB-INF/classes">
+			<fileset dir="${compile.dir}/LECS-Platform-LPS"/>
+		</copy>
+		<!-- 서버별 파일 교체 -->
+		<move todir="${merge.dir}/LECS-Platform-LPS/App" includeemptydirs="false" verbose="true">
+			<fileset dir="${merge.dir}/LECS-Platform-LPS/App">
+			</fileset>
+			<mapper type="glob" from="*.${PHASE}" to="*"/>
+		</move>
+		<!-- 불필요한 파일 정리 -->
+		<delete>
+			<fileset dir="${merge.dir}/LECS-Platform-LPS/App">
+				<patternset refid="pattern.unnecessary.resource"/>
+			</fileset>
+		</delete>
+	</target>
+
+	<target name="MERGE.LPS.CONTENTS">
+		<echo>+=======================================================+</echo>
+		<echo>                  MERGE.LPS.CONTENTS                                     </echo>
+		<echo>+=======================================================+</echo>
+
+		<!-- Contents -->
+		<delete dir="${merge.dir}/LECS-Platform-LPS/Contents" />
+		<mkdir dir="${merge.dir}/LECS-Platform-LPS/Contents" />
+		<copy todir="${merge.dir}/LECS-Platform-LPS/Contents">
+			<fileset dir="${source.dir}/LECS-Platform-LPS/WebContent">
+				<patternset>
+					<include name="**/**" />
+
+					<exclude name="WEB-INF/**/**" />
+					<exclude name="*.jsp" />
+				</patternset>
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="MERGE.LPS">
+		<antcall target="MERGE.LPS.APP"/>
+		<antcall target="MERGE.LPS.CONTENTS"/>
+	</target>
+
+	<target name="MERGE.WMS.APP">
+		<echo>+=======================================================+</echo>
+		<echo>                  MERGE.WMS.APP                                     </echo>
+		<echo>+=======================================================+</echo>
+
+		<!-- ## LPS 부분 그대로 복사후 다른 부분 2가지 있음 -->
+		<!-- Clean -->
+		<delete dir="${merge.dir}/LECS-Platform-WMS/App" />
+		<mkdir dir="${merge.dir}/LECS-Platform-WMS/App" />
+		<!-- JSP -->
+		<copy todir="${merge.dir}/LECS-Platform-WMS/App">
+			<fileset dir="${source.dir}/LECS-Platform-LPS/WebContent">
+				<!-- Contents까지 모두 포함: LPS랑 다른 부분 1 -->
+				<!-- wms 배포 파일 제외 설정 -->
+				<exclude name="**/common.xml"/>
+			</fileset>
+		</copy>
+		<!-- Lib -->
+		<copy todir="${merge.dir}/LECS-Platform-WMS/App/WEB-INF/lib">
+			<fileset dir="${source.dir}/LECS-Library/lib">
+				<include name="**/*.jar" />
+			</fileset>
+		</copy>
+		<!-- Classes -->
+		<mkdir dir="${merge.dir}/LECS-Platform-WMS/App/WEB-INF/classes" />
+		<copy todir="${merge.dir}/LECS-Platform-WMS/App/WEB-INF/classes">
+			<fileset dir="${compile.dir}/LECS-Platform-LPS"/>
+		</copy>
+		<!-- 서버별 파일 교체 -->
+		<move todir="${merge.dir}/LECS-Platform-WMS/App" includeemptydirs="false" verbose="true">
+			<fileset dir="${merge.dir}/LECS-Platform-WMS/App">
+			</fileset>
+			<!-- only wms change config insert 2015.01.20 -->
+<!--			<mapper type="glob" from="*.${PHASE}" to="*"/> -->
+			<mapper>
+				<globmapper from="*.${PHASE}" to="*"/>
+				<globmapper from="*.wms" to="*"/>
+			</mapper>
+		</move>
+		<!-- 불필요한 파일 정리 -->
+		<delete>
+			<fileset dir="${merge.dir}/LECS-Platform-WMS/App">
+				<patternset refid="pattern.unnecessary.resource"/>
+			</fileset>
+		</delete>
+
+		<!-- ## web.xml 교체: LPS랑 다른 부분 2 -->
+<!--		<copy tofile="${merge.dir}/LECS-Platform-WMS/App/WEB-INF/web.xml"
+		file="${merge.dir}/LECS-Platform-WMS/App/WEB-INF/web.xml.wms" overwrite="true" verbose="true"/> -->
+	</target>
+
+	<target name="MERGE.WMS">
+		<antcall target="MERGE.WMS.APP"/>
+	</target>
+
+	<target name="MERGE.BATCH">
+		<echo>+=======================================================+</echo>
+		<echo>                        MERGE.BATCH                                      </echo>
+		<echo>+=======================================================+</echo>
+
+		<!-- Clean -->
+		<delete dir="${merge.dir}/LECS-Batch/inf/classes" />
+		<mkdir dir="${merge.dir}/LECS-Batch/inf/classes" />
+		<!-- All Except Source -->
+		<copy todir="${merge.dir}/LECS-Batch">
+			<fileset dir="${source.dir}/LECS-Batch">
+				<exclude name="src" />
+			</fileset>
+		</copy>
+		<!-- Lib -->
+		<copy todir="${merge.dir}/LECS-Batch/inf/lib">
+			<fileset dir="${source.dir}/LECS-Library/lib">
+				<include name="**/*.jar" />
+			</fileset>
+		</copy>
+		<!-- Classes -->
+		<copy todir="${merge.dir}/LECS-Batch/inf/classes">
+			<fileset dir="${compile.dir}/LECS-Batch"/>
+		</copy>
+		<!-- 서버별 파일 교체 -->
+		<move todir="${merge.dir}/LECS-Batch" includeemptydirs="false" verbose="true">
+			<fileset dir="${merge.dir}/LECS-Batch">
+			</fileset>
+			<mapper type="glob" from="*.${PHASE}" to="*"/>
+		</move>
+		<!-- 불필요한 파일 정리 -->
+		<delete>
+			<fileset dir="${merge.dir}/LECS-Batch">
+				<patternset refid="pattern.unnecessary.resource"/>
+			</fileset>
+		</delete>
+	</target>
+
+
+
+	<target name="_MERGE.STORE.APP">
+		<!-- ${param.project.name}, ${param.store.config.file.name} -->
+		<echo>+=======================================================+</echo>
+		<echo>                   _MERGE.STORE.APP                                      </echo>
+		<echo>+=======================================================+</echo>
+
+		<!-- Clean -->
+		<delete dir="${merge.dir}/${param.project.name}/App" />
+		<mkdir dir="${merge.dir}/${param.project.name}/App" />
+		<!-- JSP -->
+		<copy todir="${merge.dir}/${param.project.name}/App">
+			<fileset dir="${source.dir}/${param.project.name}/WebContent">
+				<include name="WEB-INF/**/**" />
+				<include name="index.jsp" />
+				<include name="lems.jsp" />
+				<include name="ispCertSuccess.jsp" />
+				<include name="helpdesk*" />
+<!--				<exclude name="image/**/**" /> -->
+			</fileset>
+		</copy>
+		<!-- Lib -->
+		<copy todir="${merge.dir}/${param.project.name}/App/WEB-INF/lib">
+			<fileset dir="${source.dir}/LECS-Library/lib">
+				<include name="**/*.jar" />
+			</fileset>
+		</copy>
+		<!-- Classes -->
+		<mkdir dir="${merge.dir}/${param.project.name}/App/WEB-INF/classes" />
+		<copy todir="${merge.dir}/${param.project.name}/App/WEB-INF/classes">
+			<fileset dir="${compile.dir}/${param.project.name}"/>
+		</copy>
+
+		<!-- 서버별 파일 교체 -->
+		<move todir="${merge.dir}/${param.project.name}/App" includeemptydirs="false" verbose="true">
+			<fileset dir="${merge.dir}/${param.project.name}/App">
+			</fileset>
+			<mapper type="glob" from="*.${PHASE}" to="*"/>
+		</move>
+		<!-- 불필요한 파일 정리 -->
+		<delete>
+			<fileset dir="${merge.dir}/${param.project.name}/App">
+				<patternset refid="pattern.unnecessary.resource"/>
+			</fileset>
+		</delete>
+	</target>
+
+	<target name="_MERGE.STORE.CONTENTS">
+		<!-- ${param.project.name} -->
+		<echo>+=======================================================+</echo>
+		<echo>                   _MERGE.STORE.CONTENTS                                      </echo>
+		<echo>+=======================================================+</echo>
+
+		<!-- Contents -->
+		<mkdir dir="${merge.dir}/${param.project.name}/Contents" />
+		<copy todir="${merge.dir}/${param.project.name}/Contents">
+			<fileset dir="${source.dir}/${param.project.name}/WebContent">
+				<include name="**/**" />
+
+				<exclude name="WEB-INF/**/**" />
+				<exclude name="*.jsp" />
+
+				<exclude name="image/**/**" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="_MERGE.STORE.IMAGE">
+		<!-- ${param.project.name} -->
+		<echo>+=======================================================+</echo>
+		<echo>                   _MERGE.STORE.IMAGE                                      </echo>
+		<echo>+=======================================================+</echo>
+
+		<!-- Image -->
+		<delete dir="${merge.dir}/${param.project.name}/Image" />
+		<mkdir dir="${merge.dir}/${param.project.name}/Image" />
+		<copy todir="${merge.dir}/${param.project.name}/Image">
+			<fileset dir="${source.dir}/${param.project.name}/WebContent/image">
+				<include name="**/**"/>
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="_MERGE.STORE">
+		<!-- ${param.project.name}, ${param.store.config.file.name} -->
+		<antcall target="_MERGE.STORE.APP">
+			<param name="param.project.name" value="${param.project.name}"/>
+<!--			<param name="param.store.config.file.name" value="${param.store.config.file.name}"/> -->
+		</antcall>
+		<antcall target="_MERGE.STORE.CONTENTS">
+			<param name="param.project.name" value="${param.project.name}"/>
+		</antcall>
+		<antcall target="_MERGE.STORE.IMAGE">
+			<param name="param.project.name" value="${param.project.name}"/>
+		</antcall>
+	</target>
+
+
+	<target name="COMPILE.MERGE.PLATFORM">
+		<antcall target="COMPILE.LECS-Library" />
+
+		<antcall target="COMPILE.BO"/>
+		<antcall target="COMPILE.LPS"/>
+		<antcall target="COMPILE.BATCH"/>
+
+		<antcall target="MERGE.BO"/>
+		<antcall target="MERGE.LPS"/>
+		<antcall target="MERGE.WMS"/>
+		<antcall target="MERGE.BATCH"/>
+	</target>
+	
+	<!-- WMS 머지 분리-->
+	<target name="COMPILE.MERGE.WMS">
+		<antcall target="MERGE.WMS"/>
+	</target>
+	
+	<!-- 매장 샘플 코드 -->
+
+	<target name="_COMPILE.MERGE.STORE"><!-- 반드시 COMPILE.STORE.LIBRARY를 하고 수행해야 함 -->
+		<antcall target="_COMPILE.PLATFORM">
+			<param name="param.project.name" value="${param.project.name}"/>
+		</antcall>
+		<antcall target="_MERGE.STORE.APP">
+			<param name="param.project.name" value="${param.project.name}"/>
+<!--			<param name="param.store.config.file.name" value="${param.store.config.file.name}"/> -->
+		</antcall>
+		<antcall target="_MERGE.STORE.CONTENTS">
+			<param name="param.project.name" value="${param.project.name}"/>
+		</antcall>
+		<antcall target="_MERGE.STORE.IMAGE">
+			<param name="param.project.name" value="${param.project.name}"/>
+		</antcall>
+	</target>
+	
+	<target name="_COMPILE.MERGE.NK"><!-- 반드시 COMPILE.STORE.LIBRARY를 하고 수행해야 함 -->
+		<antcall target="_COMPILE.PLATFORM">
+			<param name="param.project.name" value="LECS-Store-Nike"/>
+		</antcall>
+		<antcall target="_MERGE.STORE.APP">
+			<param name="param.project.name" value="LECS-Store-Nike"/>
+		</antcall>
+		<antcall target="_MERGE.STORE.CONTENTS">
+			<param name="param.project.name" value="LECS-Store-Nike"/>
+		</antcall>
+		<antcall target="_MERGE.STORE.IMAGE">
+			<param name="param.project.name" value="LECS-Store-Nike"/>
+		</antcall>
+	</target>
+	
+	<!-- 운영 -->
+	<target name="COMPILE.MERGE.STORE.OPR">
+		<antcall target="_COMPILE.MERGE.NK" />
+	
+	</target>
+
+	<!-- 운영 -->
+	<target name="COMPILE.MERGE.OPR">
+		<antcall target="COMPILE.MERGE.PLATFORM" />
+		<antcall target="COMPILE.MERGE.STORE.OPR" />
+	</target>
+	
+	<target name="CONVERT.CSS.URL.NK">
+		<replaceregexp match="\s+" replace=" " flags="g" byline="true">
+		    <fileset dir="${merge.dir}/LECS-Store-Nike/Contents/css" includes="**/*.css"/>
+		</replaceregexp>
+	</target>
+	
+	<target name="CONVERT.CSS.URL">
+		<antcall target="CONVERT.CSS.URL.NK" />
+	</target>
+	
+	
+</project>

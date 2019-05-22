@@ -1,0 +1,156 @@
+
+
+클래스패스수집 = {  프로젝트 ->
+	// 라이브러리 파일들에 대한 클래스 패스를 생성한다. 
+	classpath = ant.path(id:"projectClasspath") {		
+		[
+			컴파일_목적_위치(Library),
+			테스트_목적_위치(Library),
+			소스위치(Library)+"/lib",
+			소스위치(Library)+"/lib_test",
+			컴파일_목적_위치(프로젝트),
+			테스트_목적_위치(프로젝트),
+		].each { path ->
+			if (file(path).exists()) {
+				pathelement(path: path)
+				fileset(dir: path){
+					include(name: "*.jar")
+				}
+			}			
+		}
+	}
+	return classpath
+}
+
+
+컴파일_자바소스 = { srcDirs, dest ->
+	file(dest).mkdirs()
+	ant.javac ( 
+		destdir: dest,
+		debug: "true",
+		source: SOURCE_VERSION, 
+		target:TARGET_VERSION,		
+		encoding:SOURCE_ENCODING,
+		includeAntRuntime: false
+	) {
+		srcDirs.each { srcDir ->
+			src path:srcDir			
+		}
+		classpath( refid:"projectClasspath" )
+		compilerarg( value:"-Xlint:unchecked,deprecation" )
+	}
+}
+
+프로젝트_설정파일복사 = { 프로젝트, 소스종류,destClosure ->
+	tree = SourceDirs["$프로젝트"]["$소스종류"].collect { srcDir ->
+		return fileTree(소스위치 (프로젝트)+"/$srcDir").include("**/*").exclude('**/.svn/**')
+	}
+	
+	copy {
+		from tree
+		into destClosure(프로젝트)
+	}
+}
+
+컴파일_프로젝트_코드 = { 프로젝트, 소스종류, destClosure ->
+	def sourceProject = 소스위치 (프로젝트)
+	클래스패스수집(프로젝트)
+	컴파일_자바소스(
+		SourceDirs["$프로젝트"]["$소스종류"].collect { srcDir -> 
+			return 소스위치 (프로젝트)+"/$srcDir"
+		}, destClosure(프로젝트))
+		
+	프로젝트_설정파일복사 프로젝트,소스종류, destClosure
+}
+
+컴파일_프로젝트_소스 = { 프로젝트,  destClosure ->
+	컴파일_프로젝트_코드 프로젝트, 'src', destClosure
+}
+
+컴파일_프로젝트_테스트 = { 프로젝트,  destClosure ->
+	컴파일_프로젝트_코드 프로젝트, 'test', destClosure
+}
+
+
+컴파일_프로젝트_소스_Simple = { 프로젝트 ->
+	컴파일_프로젝트_소스 프로젝트,  컴파일_목적_위치	
+}
+
+컴파일_프로젝트_테스트_Simple = { 프로젝트 ->
+	컴파일_프로젝트_테스트 프로젝트,  테스트_목적_위치	
+}
+
+
+task compile_library << {
+	println "Library를 빌드합니다."
+	컴파일_프로젝트_소스_Simple Library
+}
+
+task compile_batch(dependsOn:compile_library) << {
+	println "Batch를 빌드합니다."
+	컴파일_프로젝트_소스_Simple Batch
+}
+
+task compile_bo(dependsOn:compile_library) << {
+	println "BO를 빌드합니다."
+	컴파일_프로젝트_소스_Simple Bo
+}
+
+task compile_lps(dependsOn:compile_library) << {
+	println "LPS를 빌드합니다."
+	컴파일_프로젝트_소스_Simple Lps
+}
+
+task compile_muji(dependsOn:compile_library) << {
+	println "Muji를 빌드합니다."
+	컴파일_프로젝트_소스_Simple Muji
+}
+
+task compile_nike(dependsOn:compile_library) << {
+	println "Nike를 빌드합니다."
+	컴파일_프로젝트_소스_Simple Nike
+}
+
+task compile_puma(dependsOn:compile_library) << {
+	println "Puma를 빌드합니다."
+	컴파일_프로젝트_소스_Simple Puma
+}
+
+task compile_uniqlo(dependsOn:compile_library) << {
+	println "Uniqlo를 빌드합니다."
+	컴파일_프로젝트_소스_Simple Uniqlo
+}
+
+task compile_kiehls(dependsOn:compile_library) << {
+	println "Kiehls를 빌드합니다."
+	컴파일_프로젝트_소스_Simple Kiehls
+}
+
+task compile_northface(dependsOn:compile_library) << {
+	println "Northface를 빌드합니다."
+	컴파일_프로젝트_소스_Simple Northface
+}
+
+task compile_youngone(dependsOn:compile_library) << {
+	println "Youngone를 빌드합니다."
+	컴파일_프로젝트_소스_Simple Youngone
+}
+
+
+task compile_library_test(dependsOn:compile_library) << {
+	println "Library Test를 빌드합니다."
+	컴파일_프로젝트_테스트_Simple Library
+}
+
+
+
+task copy_cfgs_library << {
+	프로젝트_설정파일복사 Library, ["src_common", "src_platform_api","src_platform_component", 	"src_interface/java"], 컴파일_목적_위치
+}
+
+task compile_all(dependsOn: [ compile_library, compile_batch, compile_bo, compile_lps, compile_muji, compile_nike ]) << {
+	println "전체 프로젝트를 컴파일하였습니다."	
+}
+
+
+

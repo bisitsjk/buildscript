@@ -1,0 +1,124 @@
+<project name="LECS_Build_Build_PRD">
+	 
+	<target name="build-bo-prd">
+		<antcall target="build-bo-project" />
+		<antcall target="collect-project-bo" />
+		<antcall target="callback-bo" />
+		<antcall target="pack-project-bo" />
+	</target>
+
+
+	<target name="build-cc-prd">
+		<antcall target="build-bo-project" />
+		<antcall target="collect-project-bo" />
+		<antcall target="callback-cc" />
+		<antcall target="pack-project-bo" />
+	</target>
+
+	<target name="build-po-prd">
+		<antcall target="build-bo-project" />
+		<antcall target="collect-project-bo" />
+		<antcall target="callback-po" />
+		<antcall target="pack-project-bo" />
+	</target>
+
+	<target name="build-muji-prd">
+		<antcall target="build-muji-project" />
+		<antcall target="callback-muji" />
+		<antcall target="collect-project-muji" />
+		<antcall target="switch-css-muji">
+			<param name="prefix" value="http://image.mujikorea.net/" />
+		</antcall>
+		<antcall target="pack-project-muji" />
+	</target>
+
+
+	<target name="build-nike-prd">
+		<antcall target="build-nike-project" />
+		<antcall target="callback-nike" />
+		<antcall target="collect-project-nike" />
+		<antcall target="switch-css-nike">
+			<param name="prefix" value="http://image.nikestore.co.kr/" />
+		</antcall>
+		
+		<antcall target="pack-project-nike" />
+	</target>
+
+	<target name="build-lps-prd">
+		<antcall target="build-lps-project" />
+		<antcall target="collect-project-lps" />
+		<antcall target="switch-css-lps" />
+		<antcall target="callback-lps" />
+		<antcall target="pack-project-lps" />
+	</target>
+
+	<target name="build-wms-prd">
+			<antcall target="build-lps-project" />
+			<antcall target="collect-project-lps" />
+			<antcall target="callback-wms-over-stg" />
+			<antcall target="pack-project-lps" />
+		</target>
+	
+	<target name="callback-muji">
+		<copy 
+			file="build/LECS-Store-Muji/WEB-INF/classes/config/spring/common/spring_properties.properties.prd.fo" 
+			tofile="build/LECS-Store-Muji/WEB-INF/classes/config/spring/common/spring_properties.properties" 
+			verbose="true" 
+			overwrite="true" />
+	</target>
+	
+	<target name="callback-nike">
+		<copy 
+			file="build/LECS-Store-Nike/WEB-INF/classes/config/spring/common/spring_properties.properties.prd.fo" 
+			tofile="build/LECS-Store-Nike/WEB-INF/classes/config/spring/common/spring_properties.properties" 
+			verbose="true" 
+			overwrite="true" />
+		
+	</target>
+
+	<target name="callback-lps">
+		<copy 
+			file="build/LECS-Platform-BO/WEB-INF/classes/config/spring/common/spring_properties.properties.prd.bo" 
+			tofile="build/LECS-Platform-BO/WEB-INF/classes/config/spring/common/spring_properties.properties" 
+			verbose="true" 
+			overwrite="true" />
+	</target>
+	
+	<target name="callback-bo">
+		<copy 
+			file="build/LECS-Platform-BO/WEB-INF/classes/config/spring/common/spring_properties.properties.prd.bo" 
+			tofile="build/LECS-Platform-BO/WEB-INF/classes/config/spring/common/spring_properties.properties" 
+			verbose="true" 
+			overwrite="true" />
+	</target>
+
+	<target name="callback-cc">
+		<copy 
+			file="build/LECS-Platform-BO/WEB-INF/classes/config/system/bo/config_cc.prd"
+			tofile="build/LECS-Platform-BO/WEB-INF/classes/config/system/bo/config_bo.xml" 
+			verbose="true" 
+			overwrite="true" />
+		<copy 
+			file="build/LECS-Platform-BO/WEB-INF/classes/config/spring/common/spring_properties.properties.prd.bo" 
+			tofile="build/LECS-Platform-BO/WEB-INF/classes/config/spring/common/spring_properties.properties" 
+			verbose="true" 
+			overwrite="true" />
+	</target>
+
+
+	<target name="callback-po">
+		<copy 
+			file="build/LECS-Platform-BO/WEB-INF/classes/config/system/bo/config_po.xml.prd"
+			tofile="build/LECS-Platform-BO/WEB-INF/classes/config/system/bo/config_bo.xml" 
+			verbose="true" 
+			overwrite="true" />
+		<copy 
+			file="build/LECS-Platform-BO/WEB-INF/classes/config/spring/common/spring_properties.properties.prd.bo" 
+			tofile="build/LECS-Platform-BO/WEB-INF/classes/config/spring/common/spring_properties.properties" 
+			verbose="true" 
+			overwrite="true" />
+	</target>
+		
+	
+
+</project>

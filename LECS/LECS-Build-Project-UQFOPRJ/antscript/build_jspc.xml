@@ -1,0 +1,69 @@
+<project name="LECS_Build_JSP_Compiler" default="build">
+	<!-- JSP 사전 컴파일 -->
+	<target name="jspcompile">
+		<sshexec host="${remote.address}" username="${remote.id}"
+			password="${remote.password}" command="/usr2/jeus6/bin/appcompiler /lotte/lecs/webapp/${webapp} "
+			trust="true" failonerror="false">
+		</sshexec>
+	</target>
+
+	<target name="jspcompile-muji">
+		<antcall target="jspcompile">
+			<param name="remote.address" value="${dev2}" />
+			<param name="webapp" value="muji" />
+		</antcall>
+	</target>
+	<target name="jspcompile-nike">
+		<antcall target="jspcompile">
+			<param name="remote.address" value="${dev2}" />
+			<param name="webapp" value="nike" />
+		</antcall>
+	</target>
+
+	<target name="jspcompile-lps">
+		<antcall target="jspcompile">
+			<param name="remote.address" value="${dev1}" />
+			<param name="webapp" value="lps" />
+		</antcall>
+	</target>
+
+	<target name="jspcompile-bo">
+		<antcall target="jspcompile">
+			<param name="remote.address" value="${dev1}" />
+			<param name="webapp" value="bo" />
+		</antcall>
+	</target>
+
+	<target name="jspcompile-bo-prd">
+		<antcall target="jspcompile">
+			<param name="remote.address" value="${bowas1}" />
+			<param name="webapp" value="bo" />
+		</antcall>
+		<antcall target="jspcompile">
+			<param name="remote.address" value="${bowas2}" />
+			<param name="webapp" value="bo" />
+		</antcall>
+	</target>
+
+	<target name="jspcompile-muji-prd">
+		<antcall target="jspcompile">
+			<param name="remote.address" value="${mujiwas1}" />
+			<param name="webapp" value="muji" />
+		</antcall>
+		<antcall target="jspcompile">
+			<param name="remote.address" value="${mujiwas2}" />
+			<param name="webapp" value="muji" />
+		</antcall>
+	</target>
+
+	<target name="jspcompile-lps-prd">
+		<antcall target="jspcompile">
+			<param name="remote.address" value="${lpswas1}" />
+			<param name="webapp" value="lps" />
+		</antcall>
+		<antcall target="jspcompile">
+			<param name="remote.address" value="${lpswas2}" />
+			<param name="webapp" value="lps" />
+		</antcall>
+	</target>
+</project>

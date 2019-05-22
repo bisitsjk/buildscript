@@ -1,0 +1,237 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottefoundation" xmlns:artifact="antlib:org.apache.maven.artifact.ant">
+	<path id="maven-ant-tasks.classpath" path="${ant.home}/lib/maven-ant-tasks-2.1.3.jar"/>
+	<typedef resource="org/apache/maven/artifact/ant/antlib.xml"
+	         uri="antlib:org.apache.maven.artifact.ant" classpathref="maven-ant-tasks.classpath"/>
+	<!-- param -->
+	<property name="deploy.id" value="${DEPLOY_ID}"/>
+	<!-- properties -->
+	<property name="java16.home"     value="C:/Program Files (x86)/Java/jdk1.6.0_25"/>
+	<property name="java15.home"     value="C:/Program Files (x86)/Java/jdk1.5.0_12"/>
+	<property name="deployer.home"   value="D:/deployer"/>
+	
+	<property file="${deployer.home}/scripts/${ant.project.name}.properties"/>	
+	
+	<property name="user.id"   value="xclass"/>
+	<property name="user.pwd"  value="aLPd%BgT1)Pl"/>
+	
+	<property name="req.dir"         value="${workspace}${requestPath}/${deploy.id}"/>
+	
+	<property name="src.home"        value="${workspace}${releasePath}"/>
+	<property name="java.src.dir"    value="${src.home}${srcPath}"/>
+	<property name="java.lib.dir"    value="${src.home}${libPath}"/>
+	<property name="pack.dir"        value="${workspace}${packPath}/${deploy.id}"/>
+	
+	<property name="dst.class.dir"   value="${src.home}/${ant.project.name}${svrClassPath}"/>
+	<property name="dst.lib.dir"     value="${src.home}/${ant.project.name}${svrLibPath}"/>
+	
+	<property name="java.dyna.src.dir"    value="${src.home}${srcDynaPath}"/>
+	<property name="dst.dyna.class.dir"   value="${src.home}/${ant.project.name}${svrDynaClassPath}"/>	
+	
+	<property name="remote.home.dir" value="${docRoot}"/>
+	<property name="org.springframework-version" value="3.1.1.RELEASE" />
+	<property name="org.aspectj-version" value="1.6.10" />
+	<property name="org.slf4j-version" value="1.6.6" />
+	
+	<!-- validation -->
+	<target name="param_check">
+		<condition property="isValid">
+			<and>
+			    <contains string="${deploy.id}" substring="FD_" casesensitive="true" />
+				<length string="${deploy.id}" when="greater" length="12"/>
+				<resourceexists>
+					<file file="${req.dir}"/>
+				</resourceexists>
+			</and>
+		</condition>
+	</target>
+	<target name="param_check_fail" unless="isValid">
+		<echo>${req.dir}</echo>
+		<fail message="DEPLOY_ID가 유효하지 않습니다."/>
+	</target>
+	
+	<!-- merge -->
+	<path id="deployerclasspath">
+		<fileset dir="${deployer.home}/lib">
+			<include name="*.jar" />
+		</fileset>
+	</path>	
+	
+	<target name="merge" depends="param_check">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="param_check_fail"/>
+		<antcall target="exec_merge"/>
+	</target>
+	<target name="exec_merge" if="isValid">
+		<java jar="${deployer.home}/bin/deployer1.1.3.jar"
+		      fork="true" failonerror="true" >
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="merge"/>			
+		</java> 
+	</target>
+	
+	<!-- build -->	
+	<artifact:dependencies pathId="dependency.classpath">
+		<dependency groupId="org.springframework" artifactId="spring-context" version="${org.springframework-version}"/>
+		<dependency groupId="org.springframework" artifactId="spring-webmvc" version="${org.springframework-version}"/>
+		<dependency groupId="org.aspectj" artifactId="aspectjrt" version="${org.aspectj-version}"/>
+		<dependency groupId="servlets.com" artifactId="cos" version="05Nov2002"/>
+		<dependency groupId="org.slf4j" artifactId="slf4j-api" version="${org.slf4j-version}"/>
+		<dependency groupId="org.slf4j" artifactId="jcl-over-slf4j" version="${org.slf4j-version}"/>
+		<dependency groupId="org.slf4j" artifactId="slf4j-log4j12" version="${org.slf4j-version}"/>
+		<dependency groupId="log4j" artifactId="log4j" version="1.2.15" >
+			<exclusion groupId="javax.mail" artifactId="mail" />
+			<exclusion groupId="javax.jms" artifactId="jms" />
+			<exclusion groupId="com.sun.jdmk" artifactId="jmxtools" />
+			<exclusion groupId="com.sun.jmx" artifactId="jmxri" />
+		</dependency>
+		<dependency groupId="javax.inject" artifactId="javax.inject" version="1"/>
+		<dependency groupId="javax.servlet" artifactId="servlet-api" version="2.5"/>
+		<dependency groupId="javax.servlet.jsp" artifactId="jsp-api" version="2.1"/>
+		<dependency groupId="javax.servlet" artifactId="jstl" version="1.2"/>
+		<dependency groupId="junit" artifactId="junit" version="4.7"/>
+		<dependency groupId="com.oracle" artifactId="ojdbc14" version="10.2.0.4.0"/>
+		<dependency groupId="org.apache.maven.plugins" artifactId="maven-compiler-plugin" version="2.5.1"/>
+		<dependency groupId="org.codehaus.mojo" artifactId="exec-maven-plugin" version="1.2.1"/>
+		
+		
+		<remoteRepository id="remote.repos" url="http://mesir.googlecode.com/svn/trunk/mavenrepo" />
+	</artifact:dependencies>
+	
+	<path id="classpath.ref">
+		<path refid="dependency.classpath"/>
+		
+		<fileset dir="${java.lib.dir}">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="${java15.home}/jre/lib">
+			<include name="rt.jar" />
+		</fileset>
+		<fileset dir="C:/TmaxSoft/JEUS5.0/lib">
+			<include name="**/*.jar" />
+		</fileset>		
+		<fileset dir="${dst.lib.dir}">
+			<include name="*.jar"/>
+		</fileset>
+		
+		<dirset dir="${dst.class.dir}" />
+		<dirset dir="${dst.dyna.class.dir}" />
+	</path>
+	
+	<target name="build">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="compile"/>
+	</target>
+
+	<target name="compile">
+		<javac srcdir="${java.src.dir}"
+		       destdir="${dst.class.dir}"
+		       fork="no"
+		       classpathref="classpath.ref"
+		       nowarn="yes"
+		       source="1.5"
+		       target="1.5"
+		       compiler="javac1.5"
+			   encoding="utf-8" />
+		<copy todir="${dst.class.dir}">
+			<fileset dir="${java.src.dir}">
+				<include name="**/*"/>
+				<exclude name="**/*.java"/>
+			</fileset>
+		</copy>
+		<copy todir="${dst.dyna.class.dir}">
+			<fileset dir="${java.dyna.src.dir}">
+				<include name="**/*"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<!-- pack -->
+	<target name="pack" depends="param_check">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="param_check_fail"/>
+		<antcall target="exec_pack"/>
+	</target>
+	<target name="exec_pack" if="isValid">
+		<delete dir="${pack.dir}" />
+		<java jar="${deployer.home}/bin/deployer1.1.3.jar"
+		      fork="true" failonerror="true" >
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="pack"/>
+		</java>
+		<move todir="${pack.dir}/${ant.project.name}">
+			<fileset dir="${pack.dir}/${ant.project.name}/src/main">
+				<include name="webapp/**/*"/>
+			</fileset>
+		</move>
+		<rename dest="${pack.dir}/${ant.project.name}/doc" src="${pack.dir}/${ant.project.name}/webapp"/>
+		<delete dir="${pack.dir}/${ant.project.name}/src" >
+		</delete>
+	</target>
+	
+	<!-- backup -->
+	<target name="backup" depends="param_check">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="param_check_fail"/>
+		<antcall target="exec_backup"/>
+	</target>
+	<target name="exec_backup" if="isValid">
+		<java jar="${deployer.home}/bin/deployer1.1.3.jar"
+		      fork="true" failonerror="true" >
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="backup"/>
+			<arg value="${host.ip}"/>
+			<arg value="${user.id}"/>
+			<arg value="${user.pwd}"/>
+		</java>
+	</target>
+
+	<!-- deploy -->
+	<target name="deploy" depends="param_check">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="param_check_fail"/>
+		<antcall target="exec_scp"/>
+	</target>
+	
+	<target name="exec_scp" if="isValid">
+		<!--<ftp server="${host.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${remote.home.dir}/doc" passive="yes"
+		     action="put">
+			<fileset dir="${pack.dir}/${ant.project.name}/doc" 
+			         includes="**/*"/>
+		</ftp>-->
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${remote.home.dir}/doc" trust="true">
+			<fileset dir="${pack.dir}/${ant.project.name}/doc" 
+       	  	  includes="**/*"/>
+		</scp>
+	</target>
+	
+	<!-- rollback -->
+	<target name="rollback" depends="param_check">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="param_check_fail"/>
+		<antcall target="exec_rollback"/>
+	</target>
+	
+	<target name="exec_rollback" if="isValid">
+		<!--<ftp server="${host.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${remote.home.dir}/doc" passive="yes"
+		     action="put">
+			<fileset dir="${pack.dir}_backup/${ant.project.name}/doc" 
+			         includes="**/*"/>
+		</ftp>-->
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${remote.home.dir}/doc" trust="true">
+			<fileset dir="${pack.dir}_backup/${ant.project.name}/doc" 
+	      	   includes="**/*"/>
+		</scp>
+	</target>
+</project>

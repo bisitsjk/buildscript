@@ -1,0 +1,25 @@
+version: 0.0
+os: linux
+files:
+- source: /ROOT.war
+  destination: /lotte/lecs/webapp/bo
+- source: /RULE.zip
+  destination: /usr1/home/jeus/deploy
+
+permissions:
+- object: /lotte/lecs/webapp/bo
+  pattern: "**"
+  owner: jeus
+  group: www
+  mode: 644
+- object: /usr1/home/jeus/deploy
+  pattern: "**"
+  owner: jeus
+  group: www
+  mode: 644
+
+hooks:
+  ApplicationStart:
+   - location: scripts/Start.sh
+     timeout: 900
+     

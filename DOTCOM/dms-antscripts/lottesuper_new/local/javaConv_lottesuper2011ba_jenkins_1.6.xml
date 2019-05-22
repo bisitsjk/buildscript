@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="javaConv_lottesuper2011ba_jenkins_1.6">
+    <!-- **************************************************************** -->
+	<!-- PROPERTY -->
+	<!-- **************************************************************** -->
+	<!-- parameters -->
+	<tstamp>
+		<!--<format property="back_time" pattern="yyyy-MM-dd_HH-mm-ss-SSS"/>-->
+		<format property="current_time" pattern="yyyyMMdd_HHmmss"/>
+		<!--<format property="back_time" pattern="yyyyMMdd"/>-->
+	</tstamp>
+	 <taskdef resource="net/sf/antcontrib/antcontrib.properties" />
+	<property file="${deployer.home.dir}/scripts/${ant.project.name}.${deploy.phase}.properties"/>
+	<property name="user.id" value="${svrUserId}"/>
+	<property name="user.pwd" value="${svrUserPassword}"/>
+	<!-- **************************************************************** -->
+	<!-- BUILD -->
+	<!-- **************************************************************** -->
+	<target name="build">
+		<echo>공통소스 = E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${cmtarget}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/lib</echo>
+		<echo>빌드경로 = E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-batch/build</echo>
+		
+		<path id="classpath">
+			<fileset dir="${java.home.dir}/jre/lib">
+				<include name="rt.jar" />
+			</fileset>
+			
+			
+			<fileset dir="${jeus.home.dir}/lib/datasource">
+				<include name="*.jar" />
+			</fileset>
+			<fileset dir="${jeus.home.dir}/lib/system">
+				<include name="*.jar" />
+			</fileset>
+
+			
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${cmtarget}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/lib">
+				<include name="*.jar" />
+			</fileset>
+
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMMONS_1_${deploy.phase}_BUILD_${cmtarget}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-commons/dist">
+				<include name="*.jar" />
+			</fileset>
+
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-batch/lib">
+				<include name="*.jar" />
+			</fileset>
+		</path>
+		
+		
+		<delete dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-batch/build" />
+	    <mkdir dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-batch/build" />
+
+		<javac source="1.6"
+			target="1.6"
+			srcdir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-batch/src"
+			classpathref="classpath"
+			destdir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-batch/build"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			fork="true" 
+			memoryMaximumSize="256m"
+			includeantruntime="false"/>
+
+		<copy todir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-batch/build">
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-batch/src">
+				<include name="**/**/*.xml"/>
+		    </fileset>
+		</copy>
+		
+		<antcall target="jar" />
+	</target>
+	
+	<target name="jar">
+		<delete includeemptydirs="true">
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-batch/dist" includes="**/*"/>
+    	</delete>
+		
+		<jar encoding="UTF-8" destfile="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-batch/dist/lotte-super-batch.jar">
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-batch/build" />
+		</jar>
+		
+		<antcall target="pack"/>
+	</target>
+	
+	<target name="pack">
+		<copy todir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/pack/PROJECT">
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/JavaConvProject/lotte-super-batch/dist">
+				<include name="*.jar"/>
+		    </fileset>
+		</copy>
+		
+		<!--<antcall target="move">-->
+		
+	</target>
+
+	<target name="move">
+		<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" command="cd /esuper/project/batch/lib;mv lotte-super-batch.jar lotte-super-batch.jar.${current_time} " />
+		
+		<antcall target="send"/>
+		
+   </target>
+
+	<target name="send">
+		<scp todir="${user.id}:${user.pwd}@${host}:/esuper/project/batch/lib" trust="true">
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/pack/PROJECT">
+				<include name="lotte-super-batch.jar"></include>
+			</fileset>
+		</scp>
+	</target>	
+
+
+</project>

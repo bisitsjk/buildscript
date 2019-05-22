@@ -1,0 +1,733 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottesuper2011bo_real">
+	<property name="deploy.id" value="${DEPLOY_ID}"/>	
+	<property name="deploy.dir" value="/usr1/home/jeus/deploy"/>		
+	<property name="app.dir" value="project/back"/>
+	
+	<property name="base.dir" value="/esuper/project"/>	
+	
+	<!-- /esuper/project/back -->
+	<property name="back.dir" value="${base.dir}/back"/>	
+
+	<!-- /esuper/project/mback -->
+	<property name="mback.dir" value="${base.dir}/mback"/>	
+
+	<!-- /esuper/project/partner -->
+	<property name="partner.dir" value="${base.dir}/partner"/>
+	
+	<!-- source.dir = /usr1/home/jeus/deploy/BO_20160207_1330 -->
+	<property name="source.dir" value="${deploy.dir}/${deploy.id}"/>
+
+	<!--bozipbackup.dir = /usr1/home/jeus/deploy/bozipbackup -->
+	<property name="bozipbackup.dir" value="${deploy.dir}/bozipbackup"/>
+
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->		
+	<target name="check_host">
+		<condition property="isHost">
+			<contains string="${hostname}" substring="espbwas"/>
+		</condition>
+		<echo>hostname is `${hostname}`</echo>
+	</target>
+
+	
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->
+	<target name="check_exist">
+		<condition property="isExistBO">
+			<resourceexists>
+				<!-- /usr1/home/xclass/deploy/src/BO_20161108_1330 -->
+				<file file="${source.dir}"/>
+			</resourceexists>
+		   <!-- <echo message="체크함"/> -->
+		</condition>
+		<!--<echo message="체크함"/>-->
+	</target>
+
+	<target name="check_valid" depends="check_host" unless="isHost">
+		<fail message="배포 대상 서버가 아닙니다."/>
+	</target>
+	
+	<target name="check_x2config">
+		<echo>x2config.xml 파일이 있는지 확인합니다.</echo>
+		<condition property="existX2config">
+		    <!-- /usr1/home/jeus/deploy/BO_20160207_1330/project/back/WEB-INF/x2config/x2config.xml --> <!-- src 폴더에 x2config.xml 파일이 있다는것은 배포요청을 하였다는 뜻임 -->
+			<resourceexists><file file="${source.dir}/${app.dir}/WEB-INF/x2config/x2config.xml" /></resourceexists>
+		</condition>
+		<echo>x2config.xml : ${existX2config}</echo>
+	</target>
+	
+    <target name="check_x2config_mpick">
+        <echo> checking  x2config_mpicking.xml file ......</echo>
+        <condition property="existX2config_mpick">
+			<!-- /usr1/home/jeus/deploy/BO_20160207_1330/project/back/WEB-INF/x2config/x2configMpicking.xml -->
+            <resourceexists><file file="${source.dir}/${app.dir}/WEB-INF/x2config/x2configMpicking.xml" /></resourceexists>
+        </condition> 
+        <echo> x2config-mpicking.xml : ${existX2config_mpick} ></echo>
+    </target>
+    
+    <target name="check_log4jconfig_mpick">
+        <echo> checking log4jconfig_mpicking.xml file.....</echo>
+        <condition property="existLog4jconfig_mpick">  
+			<!-- /usr1/home/jeus/deploy/BO_20160207_1330/project/back/WEB-INF/x2config/log4jconfigMpicking.xml -->
+            <resourceexists><file file="${source.dir}/${app.dir}/WEB-INF/x2config/log4jconfigMpicking.xml"/></resourceexists> 
+        </condition>
+        <echo> log4jconfig-mpicking.xml : ${existLog4jconfig_mpick} ></echo>
+    </target>
+
+	
+    <target name="check_x2config_partner">
+        <echo> checking x2config_partner.xml .....</echo> 
+        <condition property="existX2config_partner">
+			<!-- /usr1/home/jeus/deploy/BO_20160207_1330/project/back/WEB-INF/x2config/x2configPartner.xml -->
+            <resourceexists><file file="${source.dir}/${app.dir}/WEB-INF/x2config/x2configPartner.xml" /></resourceexists>
+        </condition>
+        <echo> x2config-partner.xml : ${existX2config_partner} ></echo>
+    </target>
+
+    <target name="check_log4jconfig_partner">
+        <echo> checking log4jconfig_partner.xml file.....</echo>
+        <condition property="existLog4jconfig_partner">
+			<!-- /usr1/home/jeus/deploy/BO_20160207_1330/project/back/WEB-INF/x2config/log4jconfigPartner.xml -->
+            <resourceexists><file file="${source.dir}/${app.dir}/WEB-INF/x2config/log4jconfigPartner.xml"/></resourceexists> 
+        </condition>
+        <echo> log4jconfig-partner.xml : ${existLog4jconfig_partner} ></echo>
+    </target>
+
+	<!-- back.dir        =  /esuper/project/back -->
+	<!-- mback.dir    =  /esuper/project/mback -->
+	<!-- partner.dir  =  /esuper/project/partner -->
+	<target name="check_removeConfig">
+        <echo> Searching remove config file........</echo>
+        <condition property="isRemove_config">
+            <or>
+            <resourceexists><file file="${back.dir}/WEB-INF/x2config/x2configMpicking.xml"/></resourceexists>
+            <resourceexists><file file="${back.dir}/WEB-INF/x2config/x2configPartner.xml"/></resourceexists>
+            <resourceexists><file file="${back.dir}/WEB-INF/x2config/log4jconfigMpicking.xml"/></resourceexists>
+            <resourceexists><file file="${back.dir}/WEB-INF/x2config/log4jconfigPartner.xml"/></resourceexists>
+            <resourceexists><file file="${mback.dir}/WEB-INF/x2config/x2configMpicking.xml"/></resourceexists>
+            <resourceexists><file file="${mback.dir}/WEB-INF/x2config/x2configPartner.xml"/></resourceexists>  
+            <resourceexists><file file="${mback.dir}/WEB-INF/x2config/log4jconfigMpicking.xml"/></resourceexists>
+            <resourceexists><file file="${mback.dir}/WEB-INF/x2config/log4jconfigPartner.xml"/></resourceexists>
+            <resourceexists><file file="${partner.dir}/WEB-INF/x2config/x2configMpicking.xml"/></resourceexists>
+            <resourceexists><file file="${partner.dir}/WEB-INF/x2config/x2configPartner.xml"/></resourceexists>
+            <resourceexists><file file="${partner.dir}/WEB-INF/x2config/log4jconfigMpicking.xml"/></resourceexists>
+            <resourceexists><file file="${partner.dir}/WEB-INF/x2config/log4jconfigPartner.xml"/></resourceexists>
+            </or>
+        </condition>
+        <echo> find out junk File : ${isRemove_config} </echo> 
+    </target>
+
+	<!-- ================================================== -->
+	<!-- init -->
+	<!-- ================================================== -->
+	<target name="init">
+		<antcall target="check_valid" />
+		<antcall target="delete_sources" />
+		<antcall target="make_directory" />
+	</target>
+
+	
+	<target name="ssh_init">
+		<antcall target="check_valid" />
+		<antcall target="delete_sources" />
+		<antcall target="make_directory" />
+	</target>
+
+	<target name="delete_sources">
+		<echo>Target directory `${source.dir}/project`...</echo>
+		<delete dir="${source.dir}/project" />
+	</target>
+	
+	<target name="make_directory">
+		<echo>Target directory `${source.dir}`...</echo>
+		<mkdir dir="${source.dir}" />
+	</target>	
+	
+	
+	<!-- ================================================== -->
+	<!-- ssh deploy -->
+	<!-- ================================================== -->	
+	<target name="ssh_deploy_was">
+		<antcall target="ssh_backup_was" />
+		<antcall target="ssh_copy_was" />
+	</target>
+	
+	<target name="ssh_deploy_test_was">
+		<antcall target="ssh_backup_was" />
+	</target>
+
+	<!-- ================================================== -->
+	<!-- ssh backup -->
+	<!-- ================================================== -->	
+
+	<!-- source.dir/app.dir                                       =         /usr1/home/jeus/deploy/BO_20161212_1330/project/back -->
+	<!-- back.dir                                                                  =         /esuper/project/back -->
+	<!-- source.dir_backup/project/back         =         /usr1/home/jeus/deploy/BO_20161212_1330_backup/project/back -->
+
+
+	<!-- Pro Backup-->
+	<target name="ssh_backup_was">
+		<echo>Backup ${source.dir}</echo>
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte.jar">
+			<arg value="${source.dir}/${app.dir}"/>
+			<arg value="${back.dir}"/>
+			<arg value="${source.dir}_backup/project/back"/>
+		</java>
+		<antcall target="ssh_backup_mback_was" />
+	</target>
+	
+	<!-- Mback Backup -->
+	<target name="ssh_backup_mback_was">
+		<echo>Backup ${source.dir}</echo>
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte.jar">
+			<arg value="${source.dir}/${app.dir}"/>
+			<arg value="${mback.dir}"/>
+			<arg value="${source.dir}_backup/project/mback"/>
+		</java>
+		<antcall target="ssh_backup_partner_was" />
+	</target>
+	
+	<!-- Partner Backup-->
+	<target name="ssh_backup_partner_was">
+		<echo>Backup ${source.dir}</echo>
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte.jar">
+			<arg value="${source.dir}/${app.dir}"/>
+			<arg value="${partner.dir}"/>
+			<arg value="${source.dir}_backup/project/partner"/>
+		</java>
+	</target>
+
+	<!-- ================================================== -->
+	<!-- copy -->
+	<!-- ================================================== -->				
+	<target name="copy_was" depends="check_x2config">
+		<echo>url replace and file copy to docroot</echo>
+
+
+		<!-- /esuper/project/back -->
+		<copy todir="${back.dir}" failonerror="false" overwrite="true">
+			<!-- /usr1/home/jeus/deploy/BO_20160207_1330/project/back -->
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="static-root/**/*"/>
+				<include name="ubireport/**/*"/>
+				<include name="WEB-INF/**/*"/>
+				<include name="WiseGrid/**/*"/>
+				<include name="index.html"/>
+			</fileset>
+		</copy>
+
+
+		<!-- x2config.xml 도메인 pro.lottesuper.co.kr 를 mpicking.lottesuper.co.kr:2443 으로 변경하고 배포 -->
+		<antcall target="replace_pro2mpick" />
+		<!-- /esuper/project/mback-->
+		<copy todir="${mback.dir}" failonerror="false" overwrite="true">
+
+			<!-- /usr1/home/jeus/deploy/BO_20160207_1330/project/back -->
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="static-root/**/*"/>
+				<include name="ubireport/**/*"/>
+				<include name="WEB-INF/**/*"/>
+				<include name="WiseGrid/**/*"/>
+				<include name="index.html"/>
+			</fileset>
+		</copy>
+
+		<!-- 도메인 mpicking.lottesuper.co.kr:2443 을 partner.lottesuper.co.kr 로 변환 -->
+		<antcall target="replace_mpick2partner" />
+		<!-- /esuper/project/partner -->
+		<copy todir="${partner.dir}" failonerror="false" overwrite="true">
+			<!-- /usr1/home/jeus/deploy/BO_20160207_1330/project/back -->
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="static-root/**/*"/>
+				<include name="ubireport/**/*"/>
+				<include name="WEB-INF/**/*"/>
+				<include name="WiseGrid/**/*"/>
+				<include name="index.html"/>
+			</fileset>
+		</copy>
+
+		<!-- x2config.xml 을 계속 Replace 하면서 partner 까지 다 배포를 하고 난 다음에 아래부분에서 다시 pro 로 전환한다. -->
+		<antcall target="replace_partner2pro" />
+
+    <!-- ########################### 왜 아래부분에서 partner.lottesuper.co.kr 는 pro.lottesuper.co.kr 로 바뀌지 않았는가? -->
+		<!-- 변환순서 : mback, partner, pro -->
+		<!--
+		SYSTEM DOMAIN
+        <entry name="system.server.name.bo" value="pro.lottesuper.co.kr"/>
+        <entry name="system.server.name.po" value="partner.lottesuper.co.kr"/> ===> 왜 pro.lottesuper.co.kr 로 바뀌지 않았는가?
+	   -->
+
+
+        <antcall target="x2configMpicking.xml" />  
+        <antcall target="log4jconfigMpicking.xml" /> 
+        <antcall target="x2configPartner.xml" />
+        <antcall target="log4jconfigPartner.xml" />
+        <antcall target="remove_junkFile"/>
+
+	</target>
+	
+	
+	<!-- x2config.xml 을 계속 Replace 하면서 partner 까지 다 배포를 하고 난 다음에 아래부분에서 다시 pro 로 전환한다. -->
+	<!-- ########################### 왜 아래부분에서 partner.lottesuper.co.kr 는 pro.lottesuper.co.kr 로 바뀌지 않았는가? -->
+	<!-- 변환순서 : mback, partner, pro -->
+	<!--
+	SYSTEM DOMAIN
+    <entry name="system.server.name.bo" value="pro.lottesuper.co.kr"/>
+    <entry name="system.server.name.po" value="partner.lottesuper.co.kr"/> ===> 왜 pro.lottesuper.co.kr 로 바뀌지 않았는가?
+     -->
+
+	<target name="ssh_copy_was" depends="check_x2config">
+		<echo>url replace and file copy to docroot</echo>
+		<!-- /esuper/project/back -->
+		<copy todir="${back.dir}" failonerror="false" overwrite="true">
+			<!-- /usr1/home/jeus/deploy/BO_20160207_1330/project/back -->
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="static-root/**/*"/>
+				<include name="ubireport/**/*"/>
+				<include name="WEB-INF/**/*"/>
+				<include name="WiseGrid/**/*"/>
+				<include name="index.html"/>
+			</fileset>
+		</copy>
+
+
+		<!-- x2config.xml 도메인 pro.lottesuper.co.kr 를 mpicking.lottesuper.co.kr:2443 으로 변경하고 배포 -->
+		<antcall target="replace_pro2mpick" />
+		<!-- /esuper/project/mback-->
+		<copy todir="${mback.dir}" failonerror="false" overwrite="true">
+
+			<!-- /usr1/home/jeus/deploy/BO_20160207_1330/project/back -->
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="static-root/**/*"/>
+				<include name="ubireport/**/*"/>
+				<include name="WEB-INF/**/*"/>
+				<include name="WiseGrid/**/*"/>
+				<include name="index.html"/>
+			</fileset>
+		</copy>
+
+		<!-- 도메인 mpicking.lottesuper.co.kr:2443 을 partner.lottesuper.co.kr 로 변환 -->
+		<antcall target="replace_mpick2partner" />
+		<!-- /esuper/project/partner -->
+		<copy todir="${partner.dir}" failonerror="false" overwrite="true">
+			<!-- /usr1/home/jeus/deploy/BO_20160207_1330/project/back -->
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="static-root/**/*"/>
+				<include name="ubireport/**/*"/>
+				<include name="WEB-INF/**/*"/>
+				<include name="WiseGrid/**/*"/>
+				<include name="index.html"/>
+			</fileset>
+		</copy>
+		<antcall target="replace_partner2pro" />
+        <antcall target="x2configMpicking.xml" />  
+        <antcall target="log4jconfigMpicking.xml" /> 
+        <antcall target="x2configPartner.xml" />
+        <antcall target="log4jconfigPartner.xml" />
+        <antcall target="remove_junkFile"/>
+	</target>
+        	
+    <target name="x2configMpicking.xml" depends="check_x2config_mpick" if="existX2config_mpick">
+		<!-- move file = /usr1/home/jeus/deploy/BO_20160207_1330/project/back/WEB-INF/x2config/x2configMpicking.xml , /esuper/project/mback/WEB-INF/x2config/x2config.xml  -->
+        <move file="${source.dir}/${app.dir}/WEB-INF/x2config/x2configMpicking.xml" tofile="${mback.dir}/WEB-INF/x2config/x2config.xml" overwrite="true" />
+    </target>
+		
+    <target name="log4jconfigMpicking.xml" depends="check_log4jconfig_mpick" if="existLog4jconfig_mpick">
+		<!-- move file = /usr1/home/jeus/deploy/BO_20160207_1330/project/back/WEB-INF/x2config/log4jconfigMpicking.xml , /esuper/project/mback/WEB-INF/x2config/log4jconfig.xml  -->
+        <move file="${source.dir}/${app.dir}/WEB-INF/x2config/log4jconfigMpicking.xml" tofile="${mback.dir}/WEB-INF/x2config/log4jconfig.xml" overwrite="true" /> 
+    </target>
+  
+    <target name="x2configPartner.xml" depends="check_x2config_partner" if="existX2config_partner">
+         <move file="${source.dir}/${app.dir}/WEB-INF/x2config/x2configPartner.xml" tofile="${partner.dir}/WEB-INF/x2config/x2config.xml" overwrite="true" />
+    </target>
+  
+    <target name="log4jconfigPartner.xml" depends="check_log4jconfig_partner" if="existLog4jconfig_partner">
+        <move file="${source.dir}/${app.dir}/WEB-INF/x2config/log4jconfigPartner.xml" tofile="${partner.dir}/WEB-INF/x2config/log4jconfig.xml" overwrite="true" />
+    </target>
+
+    <target name="remove_junkFile" depends="check_removeConfig" if="isRemove_config">
+        <delete file="${back.dir}/WEB-INF/x2config/x2configMpicking.xml"/>
+        <delete file="${back.dir}/WEB-INF/x2config/x2configPartner.xml"/>
+        <delete file="${back.dir}/WEB-INF/x2config/log4jconfigMpicking.xml"/>
+        <delete file="${back.dir}/WEB-INF/x2config/log4jconfigPartner.xml"/>
+        <delete file="${mback.dir}/WEB-INF/x2config/x2configMpicking.xml"/> 
+        <delete file="${mback.dir}/WEB-INF/x2config/x2configPartner.xml"/>
+        <delete file="${mback.dir}/WEB-INF/x2config/log4jconfigMpicking.xml"/>
+        <delete file="${mback.dir}/WEB-INF/x2config/log4jconfigPartner.xml"/>
+        <delete file="${partner.dir}/WEB-INF/x2config/x2configMpicking.xml"/>
+        <delete file="${partner.dir}/WEB-INF/x2config/x2configPartner.xml"/>
+        <delete file="${partner.dir}/WEB-INF/x2config/log4jconfigMpicking.xml"/>
+        <delete file="${partner.dir}/WEB-INF/x2config/log4jconfigPartner.xml"/>
+    </target>
+
+
+	<!-- ################# replace 를 시키면서 차례로 복사를 한다. #################-->
+
+	<target name="replace_pro2mpick" if="existX2config">
+		<!-- 도메인 pro.lottesuper.co.kr 를 mpicking:2443으로 변경하고 배포 -->
+		<!-- dir = /usr1/home/jeus/deploy/BO_20160207_1330/project/back -->
+		<replace dir="${source.dir}/${app.dir}" value="mpicking.lottesuper.co.kr:2443">
+			<include name="WEB-INF/x2config/x2config.xml"/>
+			<replacetoken>pro.lottesuper.co.kr</replacetoken>
+		</replace>
+
+		<!-- 폴더경로 /esuper/project/back 을 /esuper/project/mback 로 변경 -->
+		<!-- dir = /usr1/home/jeus/deploy/BO_20160207_1330/project/back -->
+		<replace dir="${source.dir}/${app.dir}" value="/esuper/project/mback">
+			<include name="WEB-INF/x2config/x2config.xml"/>
+			<replacetoken>/esuper/project/back</replacetoken>
+		</replace>
+	</target>
+	
+
+	<target name="replace_mpick2partner" if="existX2config">
+		<!-- 도메인 mpicking.lottesuper.co.kr:2443 을 partner.lottesuper.co.kr 로 변환 -->
+		<!-- dir = /usr1/home/jeus/deploy/BO_20160207_1330/project/back -->
+		<replace dir="${source.dir}/${app.dir}" value="partner.lottesuper.co.kr">
+			<include name="WEB-INF/x2config/x2config.xml"/>
+			<replacetoken>mpicking.lottesuper.co.kr:2443</replacetoken>
+		</replace>
+
+
+		<!-- 폴더경로 /esuper/project/mback 을 /esuper/project/partner 로 치환 -->
+		<!-- dir = /usr1/home/jeus/deploy/BO_20160207_1330/project/back -->
+		<replace dir="${source.dir}/${app.dir}" value="/esuper/project/partner">
+			<include name="WEB-INF/x2config/x2config.xml"/>
+			<replacetoken>/esuper/project/mback</replacetoken>
+		</replace>
+	</target>
+
+
+
+	<target name="replace_partner2pro" if="existX2config">
+		<!-- 도메인 partner.lottesuper.co.kr 를 pro.lottesuper.co.kr 로 Replace -->
+		<!-- dir = /usr1/home/jeus/deploy/BO_20160207_1330/project/back -->
+		<replace dir="${source.dir}/${app.dir}" value="pro.lottesuper.co.kr">
+			<include name="WEB-INF/x2config/x2config.xml"/>
+			<replacetoken>partner.lottesuper.co.kr</replacetoken>
+		</replace>
+
+
+		<!-- 폴더경로 /esuper/project/partner 를 /esuper/project/back 로 교체 -->
+		<!-- dir = /usr1/home/jeus/deploy/BO_20160207_1330/project/back -->
+		<replace dir="${source.dir}/${app.dir}" value="/esuper/project/back">
+			<include name="WEB-INF/x2config/x2config.xml"/>
+			<replacetoken>/esuper/project/partner</replacetoken>
+		</replace>	
+	</target>
+
+	
+	<!-- ================================================== -->
+	<!-- LotteSuper BO ssh_Rollback -->
+	<!-- ================================================== -->
+	<!-- check_exist = /usr1/home/jeus/deploy/BO_20161117_1330 -->
+
+	
+	<target name="ssh_rollback_test" depends="check_exist">
+		<antcall target="check_valid"/>
+		<echo message="Rollback Java Applications"/>
+		<antcall target="rollbackbo_test"/>
+	</target>	
+
+	<target name="ssh_rollback" depends="check_exist">
+		<antcall target="check_valid"/>
+		<echo message="Rollback Java Applications"/>
+		<antcall target="rollbackbo"/>
+	</target>	
+
+	<!-- SSH Rollback -->
+	
+	<target name="rollbackbo" if="isExistBO">        
+        <copy todir="/esuper/project/back" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/project/back"
+                     includes="WEB-INF/**/*"/>
+        </copy>
+        <copy todir="/esuper/project/mback" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/project/mback"
+                     includes="WEB-INF/**/*"/>
+        </copy>
+        <copy todir="/esuper/project/partner" overwrite="yes" verbose="true">
+        <fileset dir="${source.dir}_backup/project/partner"
+                 includes="WEB-INF/**/*"/>
+       </copy>
+    </target>		
+
+	
+	<target name="rollbackbo_test" if="isExistBO">        
+        <copy todir="/esuper/project/rollbacktest/back" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/project/back"
+                     includes="WEB-INF/**/*"/>
+        </copy>
+        <copy todir="/esuper/project/rollbacktest/mback" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/project/mback"
+                     includes="WEB-INF/**/*"/>
+        </copy>
+        <copy todir="/esuper/project/rollbacktest/partner" overwrite="yes" verbose="true">
+        <fileset dir="${source.dir}_backup/project/partner"
+                 includes="WEB-INF/**/*"/>
+       </copy>
+    </target>		
+
+        	
+        	
+
+	<!-- file file= /usr1/home/jeus/deploy/bozipbackup/20170201_back_was.zip -->
+	<!-- file file= /usr1/home/jeus/deploy/bozipbackup/20170201_mback_was.zip -->
+	<!-- file file= /usr1/home/jeus/deploy/bozipbackup/20170201_partner_was.zip -->
+	<target name="ssh_bozipbackup_was">
+		<!-- check hostname -->
+        <condition property="bo.isWasHost">
+            	<contains string="${hostname}" substring="espbwas"/>
+        </condition>
+		<!-- check tar files -->
+		<condition property="bo.isProcWas">
+			<and>
+				<istrue value="${bo.isWasHost}"/>
+				<not>
+            		<resourceexists><file file="${bozipbackup.dir}/${deploy.id}_back_was.zip"/></resourceexists>
+				</not>
+				<not>
+            		<resourceexists><file file="${bozipbackup.dir}/${deploy.id}_mback_was.zip"/></resourceexists>
+				</not>
+				<not>
+            		<resourceexists><file file="${bozipbackup.dir}/${deploy.id}_partner_was.zip"/></resourceexists>
+				</not>
+				<not>
+            		<resourceexists><file file="${bozipbackup.dir}/${deploy.id}_back_full_was.zip"/></resourceexists>
+				</not>
+				<not>
+					<resourceexists><file file="${bozipbackup.dir}/${deploy.id}_mback_full_was.zip"/></resourceexists>
+				</not>
+				<not>
+					<resourceexists><file file="${bozipbackup.dir}/${deploy.id}_partner_full_was.zip"/></resourceexists>
+				</not>
+			</and>
+        </condition>
+		<echo>bo.isProcWas : 호스트가 espbwas 이며, ${deploy.id}_back_was.zip, ${deploy.id}_mback_was.zip, ${deploy.id}_partner_was.zip, ${deploy.id}_back_full_was.zip, ${deploy.id}_mback_full_was.zip, ${deploy.id}_partner_full_was.zip 이 없어야 True  / 적합성 ${bo.isProcWas}</echo>
+		<!--<antcall target="check_fileexist"/>-->
+		<antcall target="bo.fullbackup"/>
+	</target>
+	
+	
+	<target name="check_fileexist" depends="check_file" if="isexist">
+		<!--<fail message="파일이 존재합니다."/>-->
+		<echo>파일이 존재합니다.</echo>
+	</target>
+
+			
+			
+	<target name="check_file" >
+		<condition property="isexist">
+			<or>
+				<resourceexists><file file="${bozipbackup.dir}/${deploy.id}_partner_full_was.zip" /></resourceexists>
+				<resourceexists><file file="${bozipbackup.dir}/${deploy.id}_back_full_was.zip" /></resourceexists>
+				<resourceexists><file file="${bozipbackup.dir}/${deploy.id}_mback_full_was.zip" /></resourceexists>
+				<resourceexists><file file="${bozipbackup.dir}/${deploy.id}_partner_was.zip" /></resourceexists>
+				<resourceexists><file file="${bozipbackup.dir}/${deploy.id}_back_was.zip" /></resourceexists>
+				<resourceexists><file file="${bozipbackup.dir}/${deploy.id}_mback_was.zip" /></resourceexists>
+			</or>
+		</condition>
+	</target>
+
+	<!-- tar mode 추가 -->
+	<!--
+	<target name="bo.fullbackupWas" if="${bo.isProcWas}">
+        <mkdir dir="${bozipbackup.dir}"/>
+        <tar longfile="gnu" destfile="${bozipbackup.dir}/${deploy.id}_WAS.tar">
+           <tarfileset dir="${back.dir}/WEB-INF" filemode="664" dirmode="775">            	
+            <tarfileset dir="${back.dir}/WEB-INF">
+                <exclude name="**/*.tar"/>
+                <exclude name="**/*.zip"/>
+            </tarfileset>
+        </tar>
+    </target>	
+	-->
+
+	
+	<!--tar  mode 제외 -->
+	<!--
+	<target name="bo.fullbackupWas" if="${bo.isProcWas}">
+        <mkdir dir="${bozipbackup.dir}"/>
+        <tar longfile="gnu" destfile="${bozipbackup.dir}/${deploy.id}_WAS.tar">
+            <tarfileset dir="${back.dir}/WEB-INF">
+                <exclude name="**/*.tar"/>
+                <exclude name="**/*.zip"/>
+            </tarfileset>
+        </tar>
+    </target>	
+	-->
+
+     <!-- 	
+	<target name="bo.fullbackupWas" if="${bo.isProcWas}">
+	        <mkdir dir="${bozipbackup.dir}"/>
+		    <echo>Creating zip file...</echo>
+		    <zip destfile="${bozipbackup.dir}/${deploy.id}_back_was.zip" basedir="/esuper/project/back/WEB-INF"  excludes="x2log/**" />
+	        <zip destfile="${bozipbackup.dir}/${deploy.id}_mback_was.zip" basedir="/esuper/project/mback/WEB-INF"  excludes="x2log/**" />
+			<zip destfile="${bozipbackup.dir}/${deploy.id}_partner_was.zip" basedir="/esuper/project/partner/WEB-INF"  excludes="x2log/**" />
+		        <echo>...complete</echo>
+    </target>
+  -->
+	<!-- 
+		① 운영배포가 한번 나간다음에 동기화할때에는 운영배포 나간것이 문제가 있어서 테스트서버 동기화 필요하기때문에 기존 압축파일을 지우지 않는다.
+		② 운영배포가 한번 나간다음에 긴급배포가 나가야할 경우에는 기존 운영배포 나간것도 같이 말아야하므로 압축된 파일을 백업 받아놓던지, 혹은 지워야 한다.
+	-->
+	<target name="bo.fullbackup" if="bo.isWasHost"><!-- Host가 espbwas 이며, 당일 날짜 back_was.zip, mback_was.zip, partner_was.zip, back_full_was.zip, mback_full_was.zip, partner_full_was.zip 파일이 없다면 압축파일 생성. -->
+		<!--<antcall target="bozipbackupdelete" />-->
+		<antcall target="bo.fullbackupWas" />
+		<!--<antcall target="check_zip" />-->
+	</target>
+	<target name="bo.fullbackupWas">
+	        <!--<mkdir dir="${bozipbackup.dir}"/>-->
+		    <echo>Creating zip file...</echo>
+				<zip destFile="${bozipbackup.dir}/${deploy.id}_back_was.zip" basedir="/esuper/project/back/WEB-INF">
+					<!--<include name="classes/com/lottesuper/bos/auth/AuthMenu.class"/>-->
+					
+					<include name="classes/**"/>
+					<include name="dynamic_classes/**"/>
+					<include name="x2scenario/**"/>
+					<exclude name="jsp/ubireport/**"/>
+					<include name="jsp/**"/>
+					<include name="lib/lottesuper-commons.jar"/>
+					
+					<!--
+			      <exclude name="*.xml" />
+			      <exclude name="x2log/**" />
+				  <exclude name="tempdir/**" />
+					<exclude name="x2config/**" />
+					<exclude name="lib/**" />
+					-->
+			    </zip>
+				
+				<zip destFile="${bozipbackup.dir}/${deploy.id}_mback_was.zip" basedir="/esuper/project/mback/WEB-INF">
+					<include name="classes/**"/>
+					<include name="dynamic_classes/**"/>
+					<include name="x2scenario/**"/>
+					<exclude name="jsp/ubireport/**"/>
+					<include name="jsp/**"/>
+					<include name="lib/lottesuper-commons.jar"/>
+				
+					<!--
+				     <exclude name="*.xml" />
+				     <exclude name="x2log/**" />
+					 <exclude name="tempdir/**" />
+					<exclude name="x2config/**" />
+					<exclude name="lib/**" />
+					-->
+			    </zip>
+			    	
+				
+				<zip destFile="${bozipbackup.dir}/${deploy.id}_partner_was.zip" basedir="/esuper/project/partner/WEB-INF">
+					<include name="classes/**"/>
+					<include name="dynamic_classes/**"/>
+					<include name="x2scenario/**"/>
+					<exclude name="jsp/ubireport/**"/>
+					<include name="jsp/**"/>
+					<include name="lib/lottesuper-commons.jar"/>
+					<!--
+				     <exclude name="*.xml" />
+				     <exclude name="x2log/**" />
+					 <exclude name="tempdir/**" />
+					 <exclude name="x2config/**" />
+					 <exclude name="lib/**" />
+					 -->
+			    </zip>
+			    
+	        <echo>...complete</echo>
+		
+		
+	    <echo>Fullbackup Creating zip file...</echo>
+			<zip destFile="${bozipbackup.dir}/${deploy.id}_back_full_was.zip" basedir="/esuper/project/back">
+				<include name="*.html"/>
+				<include name="*.jsp"/>
+				<include name="WiseGrid/**"/>
+				<include name="ubireport/**"/>
+				<!--
+				<include name="WEB-INF/classes/**"/>
+				<include name="WEB-INF/dynamic_classes/**"/>
+				<include name="WEB-INF/tempdir/**"/>
+				<include name="WEB-INF/jsp/**"/>
+				<include name="WEB-INF/x2scenario/**"/>
+				<include name="WEB-INF/*.xml"/>
+				<include name="WEB-INF/x2config/**"/>
+				<include name="WEB-INF/lib/**"/>
+				-->
+				<exclude name="WEB-INF/x2log/**"/>
+				<include name="WEB-INF/**"/>
+				<exclude name="static-root/fileupload/**"/>
+				<exclude name="static-root/ep/**"/>
+				<include name="static-root/**"/>
+		    </zip>
+			<zip destFile="${bozipbackup.dir}/${deploy.id}_mback_full_was.zip" basedir="/esuper/project/mback">
+				<include name="*.html"/>
+				<include name="*.jsp"/>
+				<include name="WiseGrid/**"/>
+				<include name="ubireport/**"/>
+				<!--
+				<include name="WEB-INF/classes/**"/>
+				<include name="WEB-INF/dynamic_classes/**"/>
+				<include name="WEB-INF/tempdir/**"/>
+				<include name="WEB-INF/jsp/**"/>
+				<include name="WEB-INF/x2scenario/**"/>
+				<include name="WEB-INF/*.xml"/>
+				<include name="WEB-INF/x2config/**"/>
+				<include name="WEB-INF/lib/**"/>
+				-->
+				<exclude name="WEB-INF/x2log/**"/>
+				<include name="WEB-INF/**"/>
+				<exclude name="static-root/fileupload/**"/>
+				<exclude name="static-root/ep/**"/>
+				<include name="static-root/**"/>
+		    </zip>
+			<zip destFile="${bozipbackup.dir}/${deploy.id}_partner_full_was.zip" basedir="/esuper/project/partner">
+				<include name="*.html"/>
+				<include name="*.jsp"/>
+				<include name="WiseGrid/**"/>
+				<include name="ubireport/**"/>
+				<!--
+				<include name="WEB-INF/classes/**"/>
+				<include name="WEB-INF/dynamic_classes/**"/>
+				<include name="WEB-INF/tempdir/**"/>
+				<include name="WEB-INF/jsp/**"/>
+				<include name="WEB-INF/x2scenario/**"/>
+				<include name="WEB-INF/*.xml"/>
+				<include name="WEB-INF/x2config/**"/>
+				<include name="WEB-INF/lib/**"/>
+				-->
+				<exclude name="WEB-INF/x2log/**"/>
+				<include name="WEB-INF/**"/>
+				<exclude name="static-root/fileupload/**"/>
+				<exclude name="static-root/ep/**"/>
+				<include name="static-root/**"/>
+		    </zip>
+        <echo>...complete</echo>
+		
+		<!--<antcall target="check_zip"/>-->
+    </target>
+	<target name="check_zip"  unless="bo.isProcWas">
+		<!--<fail message="압축파일이 있습니다. 삭제후 다시 시도하십시오."/>-->
+		<echo message="압축파일이 있습니다. 삭제후 재 압축중입니다....."/>
+		<antcall target="bozipbackupdelete"/>
+		<antcall target="ssh_bozipbackup_was"/>
+	</target>
+
+	<target name="bozipbackupdelete">
+		<delete>
+	    		<fileset dir="${bozipbackup.dir}" includes="${deploy.id}_back_was.zip"/>
+			    <fileset dir="${bozipbackup.dir}" includes="${deploy.id}_mback_was.zip"/>
+	    		<fileset dir="${bozipbackup.dir}" includes="${deploy.id}_partner_was.zip"/>
+	    		<fileset dir="${bozipbackup.dir}" includes="${deploy.id}_back_full_was.zip"/><!-- Fullbackup File -->
+			    <fileset dir="${bozipbackup.dir}" includes="${deploy.id}_mback_full_was.zip"/><!-- Fullbackup File -->
+	    		<fileset dir="${bozipbackup.dir}" includes="${deploy.id}_partner_full_was.zip"/><!-- Fullbackup File -->
+	  </delete>
+	</target>
+
+</project>

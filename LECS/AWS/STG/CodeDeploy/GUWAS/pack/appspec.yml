@@ -1,0 +1,18 @@
+version: 0.0
+os: linux
+files:
+- source: /ROOT.war
+  destination: /lotte/lecs/webapp/gu
+
+permissions:
+- object: /lotte/lecs/webapp/gu
+  pattern: "**"
+  owner: jeus
+  group: www
+  mode: 644
+
+hooks:
+  ApplicationStart:
+   - location: scripts/Start.sh
+     timeout: 900
+     

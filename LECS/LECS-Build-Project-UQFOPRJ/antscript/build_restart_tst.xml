@@ -1,0 +1,52 @@
+<project name="LECS_Build_Restart_TST">
+	<target name="restart-bo">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${dev1}" />
+			<param name="container" value="bo" />
+		</antcall>
+	</target>
+
+	<target name="restart-bonike">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${dev1}" />
+			<param name="container" value="bonike" />
+		</antcall>
+	</target>
+
+	<target name="restart-lps">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${dev1}" />
+			<param name="container" value="lps" />
+		</antcall>
+	</target>
+
+	<target name="restart-wms-tst">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${dev2}" />
+			<param name="container" value="wms" />
+		</antcall>
+	</target>
+
+
+	<target name="restart-lpsnike">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${dev1}" />
+			<param name="container" value="lpsnike" />
+		</antcall>
+	</target>
+	<target name="restart-muji">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${dev2}" />
+			<param name="container" value="muji" />
+		</antcall>
+	</target>
+
+	<target name="restart-nike">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${dev2}" />
+			<param name="container" value="nike" />
+		</antcall>
+	</target>
+
+
+</project>

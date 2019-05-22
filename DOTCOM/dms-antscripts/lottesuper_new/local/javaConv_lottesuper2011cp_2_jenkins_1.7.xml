@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="javaConv_lottesuper2011cp_jenkins_1.7">
+    <!-- **************************************************************** -->
+	<!-- PROPERTY -->
+	<!-- **************************************************************** -->
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties" />
+	<property file="${deployer.home.dir}/scripts/${ant.project.name}.${deploy.phase}.properties"/>
+	<property name="user.id" value="${svrUserId}" />
+	<property name="user.pwd" value="${svrUserPassword}" />
+
+	
+	
+	
+	<!-- ###################### Java Real Class Send Start ######################### -->
+	<!--
+	<target name="move_real">
+			<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+				trust="true" verbose="false" command="cd /esuper/project/company/WEB-INF;\find . -name classes_1.7.zip | xargs rm -f " />
+			<antcall target="send_real" />
+	</target>
+	-->
+	
+	<target name="send_real">
+		<scp todir="${user.id}:${user.pwd}@${host}:/esuper/project/company/WEB-INF" trust="true">
+			<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_COMPANY_1_REAL_BUILD_${target}_1_1.7/workspace/lottesuper2011/pack/PROJECT">
+				<include name="classes_1.7.zip"></include>
+			</fileset>
+		</scp>
+		<antcall target="unzip_real"/>
+	</target>	
+	
+	<target name="unzip_real">
+		<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" command="cd /esuper/project/company/WEB-INF;unzip -o -q  ./classes_1.7.zip" />
+	</target>
+	
+	<!-- ###################### Java Real Class Send End ######################### -->
+
+	
+	<target name="ssh_company_precompile">
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" command="cd deploy;./ssh_companyjspcompile" />
+	</target>
+
+</project>

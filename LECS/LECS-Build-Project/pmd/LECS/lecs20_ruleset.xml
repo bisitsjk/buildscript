@@ -1,0 +1,98 @@
+<?xml version="1.0"?>
+<ruleset name="Custom ruleset"
+    xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 http://pmd.sourceforge.net/ruleset_2_0_0.xsd"
+    xsi:noNamespaceSchemaLocation="http://pmd.sourceforge.net/ruleset_2_0_0.xsd">
+
+  <description>
+  www.lotte.com
+  </description>
+  
+  <!-- Basic  -->
+  <rule ref="rulesets/basic.xml">
+  	<include name="BooleanInstantiation" />
+  	<include name="BrokenNullCheck" />
+  	<exclude name="BooleanInstantiation" />
+  </rule>
+  
+  <!-- Braces  -->
+  <rule ref="rulesets/braces.xml">
+    <include name="ForLoopsMustUseBraces"/>
+  </rule>
+  
+  <!-- Controversial  -->
+  <rule ref="rulesets/controversial.xml">
+  	<include name="DataflowAnomalyAnalysis" />
+  	<exclude name="AvoidUsingShortType" />
+  	<exclude name="AvoidUsingVolatile" />
+  </rule>
+
+  <!-- Design  -->
+  <rule ref="rulesets/design.xml">
+  	<include name="EmptyMethodInAbstractClassShouldBeAbstract" />
+  	<include name="ImmutableField" />
+  	<include name="SingularField" />
+  	<include name="UseCollectionIsEmpty" />
+	<include name="SimplifyBooleanExpressions" />
+  	<include name="UseSingleton" />
+	<exclude name="AbstractClassWithoutAnyMethod" />
+  	<exclude name="ConstructorCallsOverridableMethod" />
+  	<exclude name="AvoidReassigningParameters" />
+  	<exclude name="EqualsNull" />
+	<exclude name="ClassWithOnlyPrivateConstructorsShouldBeFinal" />
+  </rule>
+  
+    <!-- Java Logging -->
+  <rule ref="rulesets/logging-java.xml">
+  	<include name="AvoidPrintStackTrace" />
+  	<include name="LoggerIsNotStaticFinal" />
+  	<include name="SystemPrintln" />
+  </rule>
+  
+  <!-- Optimization -->
+  <rule ref="rulesets/optimizations.xml">
+  	<include name="AvoidArrayLoops" />
+  	<include name="LocalVariableCouldBeFinal" />
+  	<include name="MethodArgumentCouldBeFinal" />
+  </rule>
+  
+  <!-- Security Code Guidelines -->
+  <rule ref="rulesets/sunsecure.xml">
+  	<include name="ArrayIsStoredDirectly" />
+  	<include name="MethodReturnsInternalArray" />
+  </rule>
+  
+  <!-- Strict Exception -->
+  <rule ref="rulesets/strictexception.xml">
+  	<include name="AvoidThrowingRawExceptionTypes" />
+	<exclude name="AvoidThrowingNullPointerException" />
+  </rule>
+  
+  <!-- String and StringBuffer -->
+  <rule ref="rulesets/strings.xml">
+  	<include name="AvoidDuplicateLiterals" />
+  	<include name="ConsecutiveLiteralAppends" />
+  </rule>
+  
+  <rule ref="rulesets/strings.xml">
+  	<include name="StringInstantiation" />
+  </rule>
+  
+  <!-- Type Resolution -->
+  <rule ref="rulesets/typeresolution.xml">
+  	<include name="UnusedImports" />
+  </rule>
+  
+  <!-- Unused Code Rules -->
+  <rule ref="rulesets/unusedcode.xml">
+  	<include name="UnusedLocalVariable" />
+  	<include name="UnusedPrivateField" />
+  	<include name="UnusedPrivateMethod" />
+  </rule>
+  
+  <!-- OWASP top10 20150625 -->
+  <rule ref="rulesets/GDS/SecureCodingRuleset.xml">
+    <exclude name="SqlInjectionDfa" />
+  </rule>
+</ruleset>

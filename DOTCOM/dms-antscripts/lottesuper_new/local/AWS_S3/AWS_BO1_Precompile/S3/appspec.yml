@@ -1,0 +1,10 @@
+version: 0.0
+os: linux
+hooks:
+  ApplicationStop:
+   - location: scripts/aws_bo1_Precompile_Stop.sh
+     timeout: 120
+  ApplicationStart:
+   - location: scripts/aws_bo1_Precompile_Start.sh
+     timeout: 120
+     

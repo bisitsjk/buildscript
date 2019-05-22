@@ -1,0 +1,21 @@
+version: 0.0
+os: linux
+files:
+- source: /ROOT.war
+  destination: /lotte/lecs/webapp/wms
+
+permissions:
+- object: /lotte/lecs/webapp/wms
+  pattern: "**"
+  owner: jeus
+  group: www
+  mode: 644
+
+hooks:
+  ApplicationStop:
+   - location: scripts/Stop.sh
+     timeout: 900
+  ApplicationStart:
+   - location: scripts/Start.sh
+     timeout: 900
+     

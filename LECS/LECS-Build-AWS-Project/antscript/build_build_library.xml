@@ -1,0 +1,371 @@
+<project name="LECS-Library" xmlns:artifact="urn:maven-artifact-ant" xmlns:ivy="antlib:org.apache.ivy.ant" default="build">
+	<tstamp>
+		<format property="current.year" pattern="yyyy" />
+		<format property="DSTAMP" pattern="yyyy-MM-dd" />
+		<format property="TSTAMP" pattern="HH.mm.ss" />
+		<format property="DATETIMESTAMP" pattern="yyyy-MM-dd HH.mm.ss" />
+	</tstamp>
+
+	<taskdef name="groovy" classname="org.codehaus.groovy.ant.Groovy" />
+	<taskdef name="javancss" classname="javancss.JavancssAntTask" />
+	<taskdef resource="svntask.properties" />
+
+
+	<groovy>
+		basedir = properties["basedir"];
+		
+		
+		properties["build.dir"] 			= basedir + "/build";
+		properties["build.classes"] 		= basedir + "/build/classes";
+		properties["build.product.dir"] 	= basedir + "/build/product";
+		properties["build.test.dir"] 		= basedir + "/build/test";
+
+		properties["dist.dir"] 				= basedir + "/dist";
+
+		properties["lib.dir"] 				= basedir + "/lib"; 
+		properties["lib_test.dir"] 			= basedir + "/lib_test";
+		properties["doc.dir"] 				= properties["build.dir"] + "/doc";
+
+		properties["test.fixture.dir"]	 	= basedir + "/fixtures";
+		properties["test.output.dir"] 		= properties["doc.dir"]+ "/test-result"; 
+		properties["test.report.dir"] 		= properties["doc.dir"]+ "/test-report";
+		properties["test.includes"] 		= "**/*Test.java";
+
+
+		properties["javadoc.dir"] 			= properties["doc.dir"] + "/api";
+
+		properties["src.version"] 			= "1.6"; 
+		properties["target.version"]		= "1.6"; 
+		properties["src.encoding"] 			= "utf-8";
+
+		
+		classpath = ant.path(id:"project.classpath") { 
+				if (new java.io.File(properties["lib.dir"]).exists()) { 
+					fileset(dir: properties["lib.dir"]){ 
+						include(name: "*.jar") 
+					}
+		 		}
+				if (new java.io.File(properties["lib_test.dir"]).exists()) { 
+					fileset(dir: properties["lib_test.dir"]){ 
+						include(name: "*.jar") 
+					}
+				}
+				if (new java.io.File(basedir +"/WebContent/WEB-INF/lib").exists()) { 
+					fileset(dir: basedir +"/WebContent/WEB-INF/lib"){ 
+						include(name: "*.jar") 
+					}
+		 		}
+				if (new java.io.File(basedir +"/WebContent/WEB-INF/classes").exists()) { 
+					pathelement(path: basedir +"/WebContent/WEB-INF/classes")
+				}
+				pathelement(path: properties["build.product.classes"])
+				pathelement(path: properties["build.product.dir"])
+				pathelement(path: properties["build.test.dir"]) 
+				pathelement(path: properties["build.classes"]) 
+		}
+	</groovy>
+
+
+
+	<target name="init">
+		<mkdir dir="${build.product.dir}" />
+		<mkdir dir="${build.test.dir}" />
+		<antcall target="init_project" />
+	</target>
+
+	<!-- Sub project에서 overriding해서 사용함 -->
+
+	<target name="init_project">
+	</target>
+
+	<target name="clean" depends="clean-project">
+		<delete dir="${build.dir}" />
+		<delete dir="${dist.dir}" />
+		<delete dir="doc" />
+		<delete file="velocity.log" />
+	</target>
+
+	<!-- Sub Project에서 오버라이드 해서 사용할 clean-->
+	<target name="clean-project">
+	</target>
+
+	<target name="compile" depends="init, compile-core">
+		<!-- convenience target to compile core -->
+	</target>
+
+	<!-- Main source를 컴파일한다. -->
+	<target name="compile-core" description="Compiles core classes" depends="init">
+		<mkdir dir="${build.classes}" />
+
+		<mkdir dir="${build.product.dir}/lecs" />
+		<javac 
+			destdir="${build.product.dir}/lecs" 
+			source="${src.version}" 
+			target="${target.version}" 
+			debug="true" 
+			encoding="${src.encoding}" 
+			memorymaximumsize="1024m" 
+			fork="true">
+			<src path="src_common/java" />
+			<src path="src_platform_api/java" />
+			<src path="src_interface/java" />
+			<src path="src_platform_component/java" />
+			<classpath refid="project.classpath" />
+			<compilerarg value="-Xlint:unchecked" />
+		</javac>
+
+		<copy todir="${build.classes}">
+			<fileset dir="${build.product.dir}/lecs">
+				<include name="**/*" />
+			</fileset>
+		</copy>
+
+		<copy todir="${build.product.dir}/lecs">
+			<fileset dir="src_common/java">
+				<exclude name="**/*.java" />
+				<exclude name="**/.svn" />
+			</fileset>
+			<fileset dir="src_platform_api/java">
+				<exclude name="**/*.java" />
+				<exclude name="**/.svn" />
+			</fileset>
+			<fileset dir="src_platform_component/java">
+				<exclude name="**/*.java" />
+				<exclude name="**/.svn" />
+			</fileset>
+			<fileset dir="src_interface/java">
+				<exclude name="**/*.java" />
+				<exclude name="**/.svn" />
+			</fileset>
+		</copy>
+
+		<!-- Compile source -->
+		<!--<antcall target="compile-target">
+			<param name="target" value="common" />
+		</antcall>
+		<antcall target="compile-target">
+			<param name="target" value="platform_api" />
+		</antcall>
+		<antcall target="compile-target">
+			<param name="target" value="platform_component" />
+		</antcall>
+		<antcall target="compile-target">
+			<param name="target" value="store" />
+		</antcall>-->
+	</target>
+
+	<target name="compile-pg-Daemon">
+		<mkdir dir="${build.classes}" />
+
+		<mkdir dir="${build.product.dir}/lecs" />
+		<javac destdir="${build.product.dir}/lecs" source="${src.version}" target="${target.version}" debug="true" encoding="${src.encoding}" memorymaximumsize="1024m" fork="true">
+			<src path="src_common/java" />
+			<src path="src_platform_api/java" />
+			<src path="src_interface/java" />
+			<src path="src_platform_component/java" />
+			<classpath refid="project.classpath" />
+			<compilerarg value="-Xlint:unchecked" />
+		</javac>
+
+	</target>
+
+
+	<target name="compile-target">
+
+	</target>
+
+	<target name="compile-test" depends="compile-core">
+		<!--<antcall target="compile-test-target">
+			<param name="target" value="common" />
+		</antcall>
+		<antcall target="compile-test-target">
+			<param name="target" value="platform_api" />
+		</antcall>
+		<antcall target="compile-test-target">
+			<param name="target" value="platform_component" />
+		</antcall>-->
+	</target>
+
+	<target name="compile-test-target">
+		<mkdir dir="${build.test.dir}/lecs" />
+		<javac srcdir="src_${target}/test" destdir="${build.test.dir}/${target}" source="${src.version}" target="${target.version}" debug="true" encoding="${src.encoding}">
+			<classpath refid="project.classpath" />
+		</javac>
+
+		<copy todir="${build.classes}">
+			<fileset dir="${build.product.dir}/lecs">
+				<include name="**/*" />
+			</fileset>
+		</copy>
+
+		<copy todir="${build.test.dir}/${target}">
+			<fileset dir="src_${target}/test">
+				<exclude name="**/*.java" />
+				<exclude name="**/.svn" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="test" description="Runs unit tests" depends="test-compiled">
+	</target>
+
+	<target name="test-compiled">
+		<antcall target="test-target">
+			<param name="target" value="platform_api" />
+		</antcall>
+		<antcall target="test-target">
+			<param name="target" value="platform_component" />
+		</antcall>
+		<antcall target="test-report" />
+		<fail if="tests.failed">Tests failed!</fail>
+	</target>
+
+	<target name="test-target" description="Runs unit tests" depends="compile-test">
+		<mkdir dir="build/doc/${target}" />
+
+		<junit printsummary="off" haltonfailure="no" errorProperty="tests.failed" failureProperty="tests.failed">
+			<classpath path="build/test/${target}" />
+			<classpath path="build/classes" />
+			<classpath refid="project.classpath" />
+
+			<!-- TODO: create propertyset for test properties, so each project can have its own set -->
+			<sysproperty key="dataDir" file="${test.fixture.dir}" />
+			<sysproperty key="tempDir" file="${build.test.dir}" />
+
+			<!-- contrib/ant IndexTaskTest needs these two system properties -->
+			<sysproperty key="docs.dir" file="src/test" />
+			<sysproperty key="index.dir" file="${build.dir}/test/index" />
+
+			<formatter type="xml" />
+			<formatter type="brief" usefile="false" />
+			<batchtest fork="yes" todir="build/doc/${target}">
+				<fileset dir="src_${target}/test" includes="${test.includes}" />
+			</batchtest>
+		</junit>
+
+
+	</target>
+
+	<target name="test-report">
+		<mkdir dir="build/doc/test-report" />
+		<junitreport todir="build/doc/test-report">
+			<fileset dir="build/doc/" includes="**/TEST-*.xml" />
+			<report format="frames" todir="build/doc/test-report" />
+		</junitreport>
+	</target>
+
+	<target name="test-packed" description="Runs unit tests" depends="pack-jars">
+
+	</target>
+
+
+
+	<target name="pack" depends="pack-jars">
+	</target>
+
+	<target name="pack-jars">
+		<mkdir dir="build/dist" />
+
+
+		<jar basedir="${basedir}/build/product/lecs" destfile="${basedir}/build/dist/lecs.jar" update="true">
+			<manifest>
+				<attribute name="Build-Date" value="${DATETIMESTAMP}" />
+				<attribute name="Created-By" value="UZEN" />
+			</manifest>
+		</jar>
+		<!--		
+		<antcall target="pack-jar-target">
+			<param name="target" value="common" />
+			<param name="jar.name" value="lecs-common.jar" />
+		</antcall>
+
+		<antcall target="pack-jar-target">
+			<param name="target" value="platform_api" />
+			<param name="jar.name" value="lecs-platform-api.jar" />
+		</antcall>
+
+		<antcall target="pack-jar-target">
+			<param name="target" value="platform_component" />
+			<param name="jar.name" value="lecs-platform-component.jar" />
+		</antcall>
+		<antcall target="pack-jar-target">
+			<param name="target" value="store" />
+			<param name="jar.name" value="lecs-store.jar" />
+		</antcall>-->
+	</target>
+
+	<target name="pack-jar-target">
+		<echo>build/product/${target}</echo>
+		<jar basedir="${basedir}/build/product/${target}" destfile="${basedir}/build/dist/${jar.name}">
+			<manifest>
+				<attribute name="Build-Date" value="${DATETIMESTAMP}" />
+				<attribute name="Created-By" value="UZEN" />
+			</manifest>
+		</jar>
+	</target>
+
+
+	<target name="dist" depends="build">
+		<mkdir dir="${dist.dir}" />
+		<copy todir="${dist.dir}">
+			<fileset dir="${build.dir}" includes="${deliverables}" />
+		</copy>
+	</target>
+
+	<target name="doc" depends="javadoc, test-report,doc-project, indexpage">
+		<echo>Documentation creation finished</echo>
+	</target>
+
+	<target name="indexpage">
+		<echo file="${doc.dir}/index.html">
+			&lt;html&gt; &lt;head&gt;
+			&lt;title&gt;${project.name}&lt;/title&gt;
+
+			&lt;/head&gt;
+
+			&lt;body&gt; Created time: ${DSTAMP} ${TSTAMP} &lt;br&gt;
+			&lt;br&gt; &lt;li&gt; &lt;a
+			href="./api/index.html"&gt;Javadoc&lt;/a&gt; &lt;li&gt;
+			&lt;a href="./bundle/index.html"&gt;Bundle
+			document&lt;/a&gt; &lt;li&gt; &lt;a
+			href="./ncss/javancss_metrics.html"&gt;NCSS Report&lt;/a&gt;
+			&lt;li&gt; &lt;a href="./test-report/index.html"&gt;Unit
+			Test Report&lt;/a&gt; &lt;br&gt; &lt;br&gt;
+
+			&lt;li&gt; &lt;a href="../${bundle.packname}"&gt;Bundle:
+			${bundle.packname} (${component.version})&lt;/a&gt;
+			&lt;li&gt; &lt;a
+			href="../${component.id}_${component.version}.jar"&gt;Component:
+			${component.id}_${component.version}.jar&lt;/a&gt;
+
+
+
+			&lt;/body&gt; &lt;/html&gt;
+		</echo>
+	</target>
+
+	<target name="doc-project">
+	</target>
+
+	<target name="javadoc">
+		<antcall target="javadoc-core" />
+	</target>
+
+	<target name="javadoc-core">
+		<mkdir dir="${javadoc.dir}" />
+		<javadoc windowtitle="LECS API" destdir="${javadoc.dir}" encoding="${src.encoding}" docencoding="utf-8" additionalparam="-encoding UTF-8 ">
+			<fileset dir="src_platform_api/java/lecs/platform/api" defaultexcludes="yes">
+				<include name="**/service/*.java" />
+			</fileset>
+			<fileset dir="src_platform_component/java/lecs/platform/api" defaultexcludes="yes">
+				<include name="**/service/*.java" />
+			</fileset>
+			<classpath refid="project.classpath" />
+		</javadoc>
+	</target>
+
+	<target name="build" depends="clean, init, compile,  pack">
+		<echo>Build finished</echo>
+	</target>
+	<!-- Testasdasdasdas-->
+</project>

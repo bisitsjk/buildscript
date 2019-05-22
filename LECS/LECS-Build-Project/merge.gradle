@@ -1,0 +1,682 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath group:'org.tmatesoft.svnkit', name:'svnkit', version:'1.8.5'
+		classpath group:'commons-httpclient', name:'commons-httpclient', version:'3.1'
+		classpath files("lib/lecs-tools.jar")       	
+		classpath files("lib/lecs-library.jar")       	
+		classpath gradleApi() // $GRADLE_HOME/lib 에 있는 라이브러리들중 .guava.jar 를 사용하기 위
+    }
+}
+
+import com.google.common.io.Files;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.security.MessageDigest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import framework.util.excel.ExcelCallback;
+import framework.util.excel.ExcelUtil;
+
+import org.tmatesoft.svn.core.SVNCommitInfo;
+import org.tmatesoft.svn.core.SVNDepth;
+import org.tmatesoft.svn.core.SVNDirEntry;
+import org.tmatesoft.svn.core.SVNException;
+import org.tmatesoft.svn.core.SVNNodeKind;
+import org.tmatesoft.svn.core.SVNProperties;
+import org.tmatesoft.svn.core.*;
+import org.tmatesoft.svn.core.auth.ISVNAuthenticationManager;
+import org.tmatesoft.svn.core.internal.io.svn.SVNRepositoryFactoryImpl;
+import org.tmatesoft.svn.core.internal.wc.DefaultSVNOptions;
+import org.tmatesoft.svn.core.io.SVNRepository;
+import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
+import org.tmatesoft.svn.core.wc.SVNClientManager;
+import org.tmatesoft.svn.core.wc.SVNCopySource;
+import org.tmatesoft.svn.core.wc.*;
+import org.tmatesoft.svn.core.wc.SVNRevision;
+import org.tmatesoft.svn.core.wc.SVNUpdateClient;
+import org.tmatesoft.svn.core.wc.SVNWCUtil;
+import org.tmatesoft.svn.core.SVNCommitInfo; 
+import org.tmatesoft.svn.core.SVNDepth; 
+import org.tmatesoft.svn.core.SVNException; 
+import org.tmatesoft.svn.core.SVNPropertyValue; 
+import org.tmatesoft.svn.core.SVNURL; 
+import org.tmatesoft.svn.core.internal.io.dav.DAVRepositoryFactory; 
+import org.tmatesoft.svn.core.io.ISVNEditor; 
+import org.tmatesoft.svn.core.io.ISVNReporter; 
+import org.tmatesoft.svn.core.io.ISVNReporterBaton; 
+import org.tmatesoft.svn.core.io.SVNRepository; 
+import org.tmatesoft.svn.core.io.SVNRepositoryFactory; 
+import org.tmatesoft.svn.core.io.diff.SVNDiffWindow;
+import org.tmatesoft.svn.core.wc.SVNRevision;
+
+REQUEST_VERSION = 1
+ 
+class Request {
+	String name
+	def changes = []
+	
+	def addChange(change){
+		changes.add(change)
+		change.request = this
+	}
+	
+}
+class Change {
+	Owner owner
+	Request request
+	String path
+	Long revision
+	String comments
+	
+	public void setPath(String path) {
+		this.path = path.replace((char)160, (char)' ').trim()
+	}
+	
+	String toString() {"$path:$revision:${request.name}"}
+	String toReport() {"$path($revision,${request.name})"}
+	boolean isDeleted() { comments?.startsWith('[DELETED]') }
+}
+
+class History {
+	def changes = []
+	
+	public String getPath() {
+		return changes[0].path
+	}
+	
+	public Change getLatestChange() {
+		def latest = changes[0]
+		changes.each { change ->
+			if (change.revision > latest.revision){
+				latest = change
+			}
+		}		
+		return latest
+	}
+	
+	public boolean isConflict() {
+		return changes.size() >=2 
+	}
+	
+	public void addChange(change){
+		changes.add(change)
+	}
+	
+	String toString() {"${getPath()}=${changes*.revision}"}
+	String toReport() {"${getPath()}=${changes*.revision}"}
+	String toConflictReport() {"${getPath()}={${changes*.revision}:${changes*.request*.name}}"}
+}
+
+
+class Owner {
+	def name
+	def changes = []
+	
+	
+	def addChange(change){
+		changes.add(change)
+		change.owner = this
+	}
+	
+}
+
+class ChangeSet {
+	def ownerMap = [:]
+	def requests = []
+	def changeMap = [:]
+	
+	Owner findOwner(String ownerName){
+		if (ownerMap.containsKey(ownerName)) {
+			return ownerMap[(ownerName)]
+		}
+		def owner = new Owner()
+		owner.name = ownerName
+		ownerMap[(ownerName), owner]
+		return owner
+	}
+	
+	
+	def addChange(change){
+		def changes = changeMap[(change.path)]
+		if (changes == null){
+			changes = new History()
+		}
+		changes.addChange(change);
+		changeMap[(change.path)] = changes
+	}	
+
+	def 최신변경사항들() {
+		return changeMap.values().collect{ it.latestChange }
+	}
+	
+	def 충돌된_변경사항들() {
+		return changeMap.values().findAll{ it.isConflict() }
+	}
+}
+
+
+def parseCeresRequest =  { dir ->
+	def requestFiles = []
+	
+	dir.eachFileMatch ( ~/^[^~].*xls.?$/) { 
+		requestFiles.add it
+	}
+	println requestFiles
+	final changeSet = new ChangeSet();
+	
+	
+	requestFiles.each { requestFile ->
+		println "${requestFile.name}을 분석합니다."
+		REQUEST_VERSION = 1 // default version
+		Request request = new Request()
+		request.name = requestFile.name
+		changeSet.requests.add(request)
+		Owner owner = null
+		execlExecute requestFile, 0, {row, cellData -> 
+			if (row == 2){
+				owner = changeSet.findOwner(cellData[1])
+				if (cellData.length >= 6 && cellData[5] != null){
+					REQUEST_VERSION = cellData[5].intValue()
+				}
+			}
+			
+			if (row < 5){
+				return
+			}
+			
+			if (cellData[0] == null ){
+				return
+			}
+			
+			def change = new Change()
+			
+			if (REQUEST_VERSION == 1){
+				change.path = "${cellData[0]}/${cellData[1]}/${cellData[2]}"
+				change.revision = cellData[3].intValue()
+				change.comments = cellData[4]
+			}
+			else if (REQUEST_VERSION == 2){
+				change.path = cellData[0]
+				change.revision = cellData[1].intValue()
+				change.comments = cellData[2]
+			}		
+			
+			change.path = change.path.replaceAll("//","/")
+			if (change.path.startsWith("/")) {
+				change.path = change.path[1..-1]
+			}
+			
+			changeSet.addChange(change)
+			owner.addChange(change)
+			request.addChange(change)			
+		}
+	}
+	
+	return changeSet
+	
+}
+
+
+mergeChangeSet = { changeSet, targetBranch ->
+	changeSet.최신변경사항들().each { change ->
+		
+	}
+}
+
+
+createMergeListReport = { workDir, changeSet ->
+	println ""
+	println "머지 대상 소스 목록"
+	
+	report = new File(workDir, "mergeList.txt")
+	if (report.exists()){
+		report.delete()
+	}
+	changeSet.최신변경사항들().sort({it.path}).each{
+		println it.toReport()
+		report.append("${it.toReport()}\n") 
+	}
+}
+
+createConflictReport = { workDir, changeSet ->
+	println ""
+	println "충돌 소스 목록"
+	
+	report = new File(workDir, "conflict.txt")
+	if (report.exists()){
+		report.delete()
+	}
+	changeSet.충돌된_변경사항들().sort({it.path}).each{ 
+		println it.toConflictReport()
+		report.append("${it.toReport()}\n") 
+	}
+}
+
+
+
+class SvnTmpFile {
+	File file
+	String md5
+	public SvnTmpFile(File f, String m5){
+		file = f
+		md5 = m5
+	}
+}
+
+
+class Svn {
+	String repoUrl
+	String id
+	String password
+	SVNRepository repository
+	SVNClientManager ourClientManager
+	long latestedRevision = -1;
+	Svn (repoUrl, id, password) {
+		this.repoUrl = repoUrl
+		this.id = id
+		this.password = password
+		SVNRepositoryFactoryImpl.setup();
+		repository = SVNRepositoryFactory.create(SVNURL.parseURIDecoded(repoUrl));
+		ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager(id, password);
+		repository.setAuthenticationManager(authManager);
+		ourClientManager = SVNClientManager.newInstance(new DefaultSVNOptions(), id, password);
+	}
+	
+	void checkout(String path, long revision, File workDir){
+		def svnRevision = SVNRevision.create(revision);		
+		def svnUrl = SVNURL.parseURIDecoded("$repoUrl/$path").removePathTail()
+		ourClientManager.getUpdateClient().doCheckout(svnUrl, workDir, svnRevision, SVNRevision.HEAD, SVNDepth.IMMEDIATES, false);
+	}
+	
+	void export(String path, long revision, File workDir){
+		def svnRevision = SVNRevision.create(revision);		
+		def svnUrl = SVNURL.parseURIDecoded("$repoUrl/$path")
+		ourClientManager.getUpdateClient().doExport(svnUrl, workDir, svnRevision, svnRevision,'\n', false, SVNDepth.IMMEDIATES);
+	}
+	
+	boolean exists(String path, long revision){
+		SVNNodeKind nodeKind = repository.checkPath(path, revision);
+		return (nodeKind == SVNNodeKind.FILE) ||  (nodeKind == SVNNodeKind.DIR) ;
+	}
+	
+	boolean isDirectory(String path, long revision){
+		SVNNodeKind nodeKind = repository.checkPath(path, revision);
+		return (nodeKind == SVNNodeKind.DIR);
+	}
+	
+	long  lastestRevision() {
+		if (latestedRevision == -1){
+			latestedRevision = repository.getLatestRevision() 
+		}
+		return latestedRevision
+	}
+	
+	void delete(String path) {
+//		org.tmatesoft.svn.core.SVNURL[] urls = []
+//		urls +=  SVNURL.parseURIDecoded("$repoUrl/$path")
+//		ourClientManager.getCommitClient().doDelete(urls, "DELETE")
+	}
+	
+	/*void svnGetFile (dirName, change, work ){
+			dir = new File(dirName)
+			dir.deleteDir()
+			dir.mkdirs()
+			work(dir)
+			tmpFile = file("${dirName}/"+(change.path.split('/')[-1]))
+			tmpFileMD5 = md5(tmpFile)
+			return new SvnTmpFile(tmpFile, tmpFileMD5)
+		}*/
+	
+	void copyContents(Change change, String fromBranch, String toBranch, Closure printer) {
+		def fromDir = new File('tmpFrom')
+		fromDir.deleteDir()
+		fromDir.mkdirs()
+		export("${fromBranch}/${change.path}", change.revision, fromDir)
+		
+		def toDir = new File('tmpTo')
+		toDir.deleteDir()
+		toDir.mkdirs()
+		checkout("${toBranch}/${change.path}", -1, toDir)	
+		
+		def fileName = change.path.split('/')[-1]
+		
+		def mergeSource = new File(fromDir, fileName)		
+		def mergeTarget = new File(toDir, fileName)
+		
+		def mergeSourceMD5 = fileMD5(mergeSource)
+		def mergeTargetMD5 = fileMD5(mergeTarget)
+		if ( mergeSourceMD5 == mergeTargetMD5){
+			printer(" !! Real MD5 is same. skip.")
+			return
+		}
+		mergeTarget.writable = true
+		com.google.common.io.Files.copy(new File(fromDir, fileName), mergeTarget)
+		
+		def commitMessage = "copy from ${fromBranch}/${change.path}(${change.request.name}:${change.revision}) to ${toBranch}/${change.path}"
+		//println commitMessage
+		ourClientManager.getCommitClient().doCommit(([mergeTarget] as File[]), false, commitMessage, null, null,false, true, SVNDepth.IMMEDIATES)
+	}
+	String fileMD5(File  file ) {
+		MessageDigest digest = MessageDigest.getInstance("MD5");
+		byte[] digested = digest.digest(file.getBytes());
+		StringBuffer buf = new StringBuffer();
+		for (byte b : digested) {
+			buf.append(Integer.toHexString(0xFF & b));
+		}
+		return buf.toString();
+	}
+	
+	void addNewFile(Change change, String fromBranch, String toBranch) {
+		SVNRevision fromRevision = SVNRevision.create(change.revision)
+		def fromUrl = SVNURL.parseURIDecoded("${repoUrl}/${fromBranch}/${change.path}".toString())
+		def copySources = [ new SVNCopySource(SVNRevision.UNDEFINED, fromRevision, fromUrl) ] as SVNCopySource[]		
+		
+		def changePathDir = change.path[0..change.path.lastIndexOf('/')]
+		def toUrl = SVNURL.parseURIDecoded("${repoUrl}/${toBranch}/${change.path}".toString())		
+		
+		boolean isMove = false;
+		boolean makeParents = true;
+		boolean failWhenDstExists = true;
+		SVNProperties revisionProperties = null;
+		
+		println toUrl
+		def commitMessage = "copy from ${fromBranch}/${change.path}(${change.request.name}:${change.revision}) to ${toBranch}/${change.path}"
+		
+		ourClientManager.getCopyClient().doCopy( copySources, toUrl, isMove, makeParents, failWhenDstExists, commitMessage, revisionProperties);		
+	}	
+
+	
+	List log(String path){
+		Collection logEntries = repository.log(([path]as String[]),null, 1, SVNRevision.HEAD.number,true,false);
+	}
+	
+	String md5(String filePath, long fileRevision){
+		def md5 = null;
+		repository.status(fileRevision, filePath, SVNDepth.INFINITY, new ISVNReporterBaton() { 
+				public void report(ISVNReporter reporter) throws SVNException { 
+			                reporter.setPath("", null, fileRevision, SVNDepth.INFINITY, true); 
+			                reporter.finishReport(); 
+			            }
+			},   
+			new ISVNEditor() { 
+				public void textDeltaEnd(String path) throws SVNException { 
+				} 
+
+				public OutputStream textDeltaChunk(String path, SVNDiffWindow diffWindow) throws SVNException { 
+				return null; 
+				} 
+
+				public void applyTextDelta(String path, String baseChecksum) throws SVNException { 
+				} 
+
+				public void targetRevision(long revision) throws SVNException { 
+				} 
+
+				public void openRoot(long revision) throws SVNException { 
+				} 
+
+				public void openFile(String path, long revision) throws SVNException { 
+				} 
+
+				public void openDir(String path, long revision) throws SVNException { 
+				} 
+
+				public void deleteEntry(String path, long revision) throws SVNException { 
+				} 
+
+				public void closeFile(String path, String textChecksum) throws SVNException { 
+				md5 = textChecksum
+				} 
+
+				public SVNCommitInfo closeEdit() throws SVNException { 
+				return null; 
+				} 
+
+				public void closeDir() throws SVNException { 
+				} 
+
+				public void changeFileProperty(String path, String propertyName, SVNPropertyValue propertyValue) throws SVNException { 
+				} 
+
+				public void changeDirProperty(String name, SVNPropertyValue value) throws SVNException { 
+				} 
+
+				public void addFile(String path, String copyFromPath, long copyFromRevision) throws SVNException { 
+				} 
+
+				public void addDir(String path, String copyFromPath, long copyFromRevision) throws SVNException { 
+				} 
+
+				public void absentFile(String path) throws SVNException { 
+				} 
+
+				public void absentDir(String path) throws SVNException { 
+				} 
+
+				public void abortEdit() throws SVNException { 
+				} 
+			}
+		);
+		return md5
+	}
+   	
+	
+}
+
+
+svn = new Svn (SVN_REPOSITORY,SVN_ID,SVN_PASSWORD)
+
+
+
+
+
+printMergeResult = {change, fromBranch, toBranch ->
+	print "Merge Resource ${change} from $fromBranch to $toBranch   "
+	return { message -> println "Result: $message"}
+}
+
+
+class MergeResult {
+	def addedList = []
+	def deletedList = []
+	def mergedList = []
+	def skippedList = []
+	def historyConflistList = []
+	
+	void addAdded(change){
+		addedList.add(change)
+	}
+	
+	void addDeleted(change){
+		deletedList.add(change)
+	}
+	
+	void addMerged(change){
+		mergedList.add(change)
+	}
+	
+	void addSkipped(change){
+		skippedList.add(change)
+	}
+	
+	void addHistoryConflict(change, confilist){
+		historyConflistList.add([change, confilist])
+	}
+}
+
+deleteResource = { change, toBranch, resultCollector, checkHistory ->
+	println "DELETE $toBranch/${change.path}"
+	svn.delete("$toBranch/${change.path}")
+	resultCollector.addDeleted(change)
+}
+
+checkoutResource = { svnUrl ->
+	
+}
+
+mergeResource = { change, fromBranch, toBranch, resultCollector, checkHistory ->
+	def printer = printMergeResult(change, fromBranch, toBranch)
+	
+	
+	if (svn.exists("${toBranch}/${change.path}", -1) == false){
+		printer( "New File. Add file to ${toBranch}/${change.path}")
+		svn.addNewFile(change, fromBranch, toBranch)
+		resultCollector.addAdded(change)
+	}
+	else if (svn.isDirectory("${fromBranch}/${change.path}", change.revision)) {
+		printer("Directory. Skip");
+	}
+	else {
+		if (checkHistory){
+			def historyConflict = isHistoryConflict(toBranch,change)
+			if (historyConflict != null) {
+				resultCollector.addHistoryConflict(change,historyConflict )
+				printer(  "${change.path}:${change.owner.name}:${change.revision}은 이미 배포된 버전(${historyConflict})보다 과거 버전입니다.")
+				return
+			}
+		}
+		
+		fromMD5 = svn.md5("${fromBranch}/${change.path}", change.revision)
+		toMD5 = svn.md5("${toBranch}/${change.path}", svn.lastestRevision())
+		if (fromMD5 == toMD5){
+			printer("Same Contents. Skip to merge")
+			resultCollector.addSkipped(change)
+			return
+		}
+		
+		
+		
+		printer( "MD5 is diffrent( From:${fromMD5} TO:${toMD5}). Copy content")		
+
+
+		svn.copyContents(change, fromBranch, toBranch, printer)
+		resultCollector.addMerged(change)
+	}
+}
+
+// 반영요청서, revision의 목록을 반환함
+historyOn = { path -> 
+	return svn.log(path).findAll { 
+		it.message =~ /\([^:]+:\d+\)/ 
+	}.collect{
+		(it.message =~ /\(([^:]+):(\d+)\)/)[0][1..2]
+	}.sort{it[1].toInteger()}
+}
+
+task svnlogtest <<{
+	def history =  historyOn('/branches/R20110317-Release/LECS-Platform-LPS/src/lecs/platform/lps/mypage/controller/MypageController.java')
+	println history
+	println "#################"
+	println history[-1]
+}
+
+lastHistory = { path ->
+	history = historyOn(path)
+	return (history == null || history.size() ==0) ? null : history[-1]
+}
+
+
+isHistoryConflict = { toBranch,change ->
+	latest = lastHistory("$toBranch/${change.path}")
+	if (latest == null){
+		return null;
+	}
+	
+	return latest[1].toInteger() > change.revision ? latest : null
+}
+
+
+resultCollector = new MergeResult()
+
+mergeResources = { changeSet, fromBranch, toBranch, checkHistory ->
+	println ""
+	println "소스 머지를 시작합니다. $fromBranch --> $toBranch"
+	
+	changeSet.최신변경사항들().each {change ->
+		
+		if ( change.comments?.startsWith('[DELETED]')){
+			deleteResource( change, toBranch, resultCollector, checkHistory)
+		}
+		else {
+			mergeResource (change, fromBranch, toBranch, resultCollector,checkHistory)
+		}
+	}
+	return 	resultCollector
+}
+
+
+doMerge = { fromBranch, toBranch, checkHistory ->
+	downloadCeresRequest.execute()
+	def workDir = file("src/request/${DEPLOY}/${TIMESTAMP}")
+//	def workDir = file("src/request/tst/20111129-1821")
+	changeSet = parseCeresRequest (workDir)
+	println changeSet.최신변경사항들()
+	println changeSet.충돌된_변경사항들()
+	
+	createMergeListReport (workDir, changeSet)
+	createConflictReport (workDir, changeSet)
+	result = mergeResources (changeSet, fromBranch, toBranch, checkHistory)
+	
+	
+	println result.addedList
+	println result.skippedList
+	println result.mergedList
+	if (result.historyConflistList.size() > 0){
+		println ""
+		println "버전 충돌 목록"
+		result.historyConflistList.each { entity ->
+			change = entity[0]
+			conflict = entity[1]
+			println  "${change.path}:${change.request.name}:${change.revision}은 이미 배포된 버전(${conflict})보다 과거 버전입니다."
+		}
+		throw new IllegalStateException("History Conflited!!!!!!")
+	}
+	file('tempFrom').deleteDir()
+	file('tempTo').deleteDir()
+	
+}
+
+
+task doMerge << {
+	doMerge(소스_통합_규칙[DEPLOY]['from'], 소스_통합_규칙[DEPLOY]['to'], false)	
+	ceresStatusUpdate.execute();
+}
+
+task doMergeWithHistoryCheck << {
+	doMerge(소스_통합_규칙[DEPLOY]['from'], 소스_통합_규칙[DEPLOY]['to'], true)
+	ceresCompleteStatusUpdate.execute();
+}
+
+
+
+
+
+
+task testLog << {
+	downloadCeresRequest.execute()
+	def workDir = file("src/request/${DEPLOY}/${TIMESTAMP}")
+//	def workDir = file("src/request/tst/20111129-1821")
+	changeSet = parseCeresRequest (workDir)
+	println changeSet.최신변경사항들()
+	println changeSet.충돌된_변경사항들()
+	
+}
+
+
+task testMerge << {
+	svn.md5('/trunk/LECS-Library/lib/secure.jar', 68149L)
+}

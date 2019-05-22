@@ -1,0 +1,512 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottesuper2011cm_bo_test">
+	<property name="deploy.id" value="${DEPLOY_ID}"/>
+	<property name="deploy.dir" value="/usr1/home/jeus/deploy"/>
+	<property name="app.dir" value="project/back"/>
+	<property name="app.dir1" value="project/back/WEB-INF"/>
+
+	<property name="cm_back.dir" value="/esuper/project/back/WEB-INF/lib"/>
+	<property name="cm_partner.dir" value="/esuper/project/partner/WEB-INF/lib"/>
+	<property name="cm_mback.dir" value="/esuper/project/mback/WEB-INF/lib"/>
+	<property name="cm_batch.dir" value="/esuper/project/batch/lib"/>
+
+	
+	<property name="base.dir" value="/esuper/project"/>
+
+	<!-- /esuper/project/back -->
+	<property name="back.dir" value="${base.dir}/back"/>
+
+	<!-- /esuper/project/mback-->
+	<property name="mback.dir" value="${base.dir}/mback"/>
+
+	<!-- /esuper/project/partner-->
+	<property name="partner.dir" value="${base.dir}/partner"/>
+
+
+	<!-- 참고 : source.dir/app.dir =  /usr1/home/jeus/deploy/CM_20161223_1330/project/back -->
+	
+	<!-- source.dir = /usr1/home/jeus/deploy/CM_20161108_1330 -->
+	<!-- source.dir = /usr1/home/jeus/deploy/CM_20161031_TEST_HCCHE -->
+	<property name="source.dir" value="${deploy.dir}/${deploy.id}"/>
+
+	
+	<!-- /usr1/home/jeus/deploy/CM_20161223_1330/project/back -->
+	
+	<!-- 2016-11-05 Java Home , ant Home , docroot 추가 -->
+	<!--
+	<property name="java.home" value="/usr/java1.5" />
+	<property name="ant.home" value="/usr1/home/xclass/downloads/apache-ant-1.8.2" />
+	<property name="docroot" value="/esuper" />
+	-->
+	
+	<!-- deploy id ( for test only ) -->
+	<property name="prefix.dep.id" value="CM_" />
+	<property name="infix.dep.id" value="_TEST_" />
+
+	
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->
+	<target name="check_exist">
+		<condition property="isExistCM_BO">
+			<resourceexists>
+				<!-- /usr1/home/xclass/deploy/src/BO_20161108_1330 -->
+				<file file="${source.dir}"/>
+			</resourceexists>
+		   <!-- <echo message="체크함"/> -->
+		</condition>
+		<!--<echo message="체크함"/>-->
+	</target>
+
+			
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->
+	<!-- ${prefix.dep.id} = CM_  , infix.dep.id = _TEST_ -->
+	<target name="check_test_deploy_id">
+		<condition property="isTestOnly">
+		  <and>
+			<length string="${deploy.id}" when="greater" length="10"/>
+			<contains string="${deploy.id}" substring="${prefix.dep.id}" casesensitive="true"/>
+			<contains string="${deploy.id}" substring="${infix.dep.id}" casesensitive="true"/>
+		  </and>
+		</condition>
+		<echo>TEST DEPLOY ID ${deploy.id} / Valid ${isTestOnly}</echo>
+	</target>
+	
+	<target name="check_host">
+		<condition property="isHost">
+			<contains string="${hostname}" substring="esptstb"/>
+		</condition>
+		<echo>hostname is `${hostname}`</echo>
+	</target>
+	
+	<target name="check_valid" depends="check_host" unless="isHost">
+		<fail message="배포 대상 서버가 아닙니다."/>
+	</target>
+	
+	
+	<!-- file file= /usr1/home/jeus/deploy/BO_20161108_1330/project/back/WEB-INF/x2config/x2config.xml -->
+	<target name="check_x2config">
+		<echo>x2config.xml 파일이 있는지 확인합니다.</echo>
+		<condition property="existX2config">
+			<resourceexists><file file="${source.dir}/${app.dir}/WEB-INF/x2config/x2config.xml" /></resourceexists>
+		</condition>
+		<echo>x2config.xml : ${existX2config}</echo>
+	</target>	
+	
+    <target name="check_x2config_mpick">
+        <echo> checking  x2config_mpicking.xml file ......</echo>
+        <condition property="existX2config_mpick">
+            <resourceexists><file file="${source.dir}/${app.dir}/WEB-INF/x2config/x2configMpicking.xml" /></resourceexists>
+        </condition> 
+        <echo> x2config-mpicking.xml : ${existX2config_mpick} ></echo>
+    </target>
+    
+    <target name="check_log4jconfig_mpick">
+        <echo> checking log4jconfig_mpicking.xml file.....</echo>
+        <condition property="existLog4jconfig_mpick">  
+            <resourceexists><file file="${source.dir}/${app.dir}/WEB-INF/x2config/log4jconfigMpicking.xml"/></resourceexists> 
+        </condition>
+        <echo> log4jconfig-mpicking.xml : ${existLog4jconfig_mpick} ></echo>
+    </target>
+
+    <target name="check_x2config_partner">
+        <echo> checking x2config_partner.xml .....</echo> 
+        <condition property="existX2config_partner">
+            <resourceexists><file file="${source.dir}/${app.dir}/WEB-INF/x2config/x2configPartner.xml" /></resourceexists>
+        </condition>
+        <echo> x2config-partner.xml : ${existX2config_partner} ></echo>
+    </target>
+
+    <target name="check_log4jconfig_partner">
+        <echo> checking log4jconfig_partner.xml file.....</echo>
+        <condition property="existLog4jconfig_partner">
+            <resourceexists><file file="${source.dir}/${app.dir}/WEB-INF/x2config/log4jconfigPartner.xml"/></resourceexists> 
+        </condition>
+        <echo> log4jconfig-partner.xml : ${existLog4jconfig_partner} ></echo>
+    </target>
+
+    <target name="check_removeConfig">
+        <echo> Searching remove config file........</echo>
+        <condition property="isRemove_config">
+            <or>
+            <resourceexists><file file="${back.dir}/WEB-INF/x2config/x2configMpicking.xml"/></resourceexists>
+            <resourceexists><file file="${back.dir}/WEB-INF/x2config/x2configPartner.xml"/></resourceexists>
+            <resourceexists><file file="${back.dir}/WEB-INF/x2config/log4jconfigMpicking.xml"/></resourceexists>
+            <resourceexists><file file="${back.dir}/WEB-INF/x2config/log4jconfigPartner.xml"/></resourceexists>
+            <resourceexists><file file="${mback.dir}/WEB-INF/x2config/x2configMpicking.xml"/></resourceexists>
+            <resourceexists><file file="${mback.dir}/WEB-INF/x2config/x2configPartner.xml"/></resourceexists>  
+            <resourceexists><file file="${mback.dir}/WEB-INF/x2config/log4jconfigMpicking.xml"/></resourceexists>
+            <resourceexists><file file="${mback.dir}/WEB-INF/x2config/log4jconfigPartner.xml"/></resourceexists>
+            <resourceexists><file file="${partner.dir}/WEB-INF/x2config/x2configMpicking.xml"/></resourceexists>
+            <resourceexists><file file="${partner.dir}/WEB-INF/x2config/x2configPartner.xml"/></resourceexists>
+            <resourceexists><file file="${partner.dir}/WEB-INF/x2config/log4jconfigMpicking.xml"/></resourceexists>
+            <resourceexists><file file="${partner.dir}/WEB-INF/x2config/log4jconfigPartner.xml"/></resourceexists>
+            </or>
+        </condition>
+        <echo> find out junk File : ${isRemove_config} </echo> 
+    </target>
+
+	<!-- ================================================== -->
+	<!-- only test deploy -->
+	<!-- ================================================== -->	
+	<target name="test_deploy_was" depends="check_test_deploy_id">
+		<antcall target="rename_was" />
+		<antcall target="copy_was" />
+	</target>
+
+
+	<!-- #### SSH 적용 #### -->
+	<target name="ssh_test_deploy_was" depends="check_test_deploy_id">
+		<!--<antcall target="ssh_rename_was" />-->
+		<antcall target="ssh_backup_was" />
+		<antcall target="ssh_copy_was" />
+	</target>
+
+	
+	<target name="check_test_deploy_id_test" depends="check_test_deploy_id">
+	</target>
+
+	
+		
+	<!-- #### SSH 적용 #### -->
+	<!-- source.dir = /usr1/home/jeus/deploy/BO_20161026_1330 -->
+	<!-- base.dir    = /esuper -->
+	<!-- backupdir  = /usr1/home/jeus/deploy/BO_20161026_1330_backup -->
+	<!-- 
+	source.dir = /usr1/home/jeus/deploy/BO_20161026_1330
+	jvm        = /usr/java1.5/bin/java
+	docroot    = /esuper/project/back
+	-->
+
+	<!-- # 1번째 방법 -->
+	<!-- ${source.dir}/${app.dir}  = /usr1/home/jeus/deploy/BO_20161026_1330/project/back -->
+	<!-- ${back.dir}               = /esuper/project/back -->
+	<!--${source.dir}_backup       = -->
+	<!--
+	<target name="ssh_backup_was">
+		<echo>Backup ${source.dir}</echo>
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte.jar">
+			<arg value="${source.dir}/${app.dir}"/>
+			<arg value="${back.dir}"/>
+			<arg value="${source.dir}_backup"/>
+		</java>
+	</target>
+	-->
+
+	<!-- # 2번째 방법 -->
+	<!-- 
+		  source.dir        = /usr1/home/jeus/deploy/BO_20161026_1330
+		  ※ source.dir 이 /esuper 하위폴더인 "/project/back" 이므로 docroot 도 경로를 맞추기위해서 "/esuper"
+		  docroot           = /esuper
+		  source.dir_backup = /usr1/home/jeus/deploy/BO_20161026_1330_backup
+	-->
+
+	<!--
+	<target name="ssh_backup_was">
+		<echo>Backup ${source.dir}</echo>
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte.jar">
+			<arg value="${source.dir}"/>
+			<arg value="${docroot}"/>
+			<arg value="${source.dir}_backup"/>
+		</java>
+	</target>
+	-->
+			
+	<!-- ================================================== -->
+	<!-- ssh backup -->
+	<!-- ================================================== -->	
+
+	<!-- cm_back.dir                                       =         /esuper/project/back/WEB-INF/lib -->
+	<!-- cm_partner.dir                                    =         /esuper/project/partner/WEB-INF/lib -->
+	<!-- cm_mback.dir                                     =         /esuper/project/mback/WEB-INF/lib -->
+	<!-- cm_batch.dir                                     =         /esuper/project/batch/lib -->
+	<!-- source.dir_backup/project/back             =         /usr1/home/jeus/deploy/CM_20161212_1330_backup/project/back/lib -->
+
+
+	<!--	
+	<property name="cm_back.dir" value="/esuper/project/back/WEB-INF/lib"/>
+	<property name="cm_partner.dir" value="/esuper/project/partner/WEB-INF/lib"/>
+	<property name="cm_mback.dir" value="/esuper/project/mback/WEB-INF/lib"/>
+	<property name="cm_batch.dir" value="/esuper/project/batch/lib"/>
+	
+	<property name="source.dir" value="${deploy.dir}/${deploy.id}"/>
+	: source.dir = /usr1/home/jeus/deploy/CM_20161031_1330
+	-->
+
+	<!-- back Backup -->
+	<target name="ssh_backup_was">
+		<echo>Backup ${source.dir}</echo>
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte.jar">
+			<arg value="${source.dir}/project/back/WEB-INF/lib"/>
+			<arg value="${cm_back.dir}"/>
+			<arg value="${source.dir}_backup/project/back/WEB-INF/lib"/>
+		</java>
+		<antcall target="ssh_backup_mback_was" />
+	</target>
+	<!-- Mback Backup -->
+	<target name="ssh_backup_mback_was">
+			<echo>Backup ${source.dir}</echo>
+			<java jvm="${java.home}/bin/java" fork="yes"
+			      failonerror="yes"
+			      jar="${ant.home}/bin/lotte.jar">
+				<arg value="${source.dir}/project/back/WEB-INF/lib"/>
+				<arg value="${cm_mback.dir}"/>
+				<arg value="${source.dir}_backup/project/mback/WEB-INF/lib"/>
+			</java>
+			<antcall target="ssh_backup_partner_was" />
+	</target>
+	<!-- Partner Backup-->
+	<target name="ssh_backup_partner_was">
+			<echo>Backup ${source.dir}</echo>
+			<java jvm="${java.home}/bin/java" fork="yes"
+			      failonerror="yes"
+			      jar="${ant.home}/bin/lotte.jar">
+				<arg value="${source.dir}/project/back/WEB-INF/lib"/>
+				<arg value="${cm_partner.dir}"/>
+				<arg value="${source.dir}_backup/project/partner/WEB-INF/lib"/>
+			</java>
+		   <antcall target="ssh_backup_batch_was" />
+	</target>
+	<!-- Batch Backup-->
+	<target name="ssh_backup_batch_was">
+			<echo>Backup ${source.dir}</echo>
+			<java jvm="${java.home}/bin/java" fork="yes"
+			      failonerror="yes"
+			      jar="${ant.home}/bin/lotte.jar">
+				<arg value="${source.dir}/project/back/WEB-INF/lib"/>
+				<arg value="${cm_batch.dir}"/>
+				<arg value="${source.dir}_backup/project/batch/lib"/>
+			</java>
+	</target>
+	
+
+	
+		
+	<!-- ================================================== -->
+	<!-- init -->
+	<!-- ================================================== -->
+	<target name="init">
+		<antcall target="check_valid" />
+		<antcall target="delete_sources" />
+		<antcall target="make_directory" />
+	</target>
+
+	
+	<!-- ================================================== -->
+	<!-- ssh_init -->
+	<!-- ================================================== -->
+	<target name="ssh_init">
+		<antcall target="check_valid" />
+		<antcall target="delete_sources" />
+		<antcall target="make_directory" />
+	</target>
+
+		
+	<!-- delete dir = /usr1/home/jeus/deploy/CM_20161223_1330 -->	
+	<target name="delete_sources">
+		<!--<echo>Target directory `${source.dir}/project`...</echo>-->
+		<echo>Target directory `${source.dir}`...</echo>
+		<!--<delete dir="${source.dir}/project" />-->
+		<delete dir="${source.dir}" />
+	</target>
+	
+	<!-- mkdir dir =  /usr1/home/jeus/deploy/CM_20161223_1330/project/back/WEB-INF/lib -->
+	<target name="make_directory">
+		<echo>Target directory `${source.dir}/project/back/WEB-INF/lib`...</echo>
+		<!--<mkdir dir="${source.dir}" />-->
+		<mkdir dir="${source.dir}/project/back/WEB-INF/lib" />
+	</target>
+	
+	<!-- ================================================== -->
+	<!-- rename (for test only) -->
+	<!-- ================================================== -->	
+	<!-- 장단기 테스트일경우에만 사용 -->
+	<target name="rename_was" if="isTestOnly">
+		<echo>change lotte-super-bos to project</echo>
+		<exec executable="mv" dir="${source.dir}">
+			<arg value="lotte-super-bos" />
+			<arg value="project" />
+		</exec>
+		<echo>change WebContent to back</echo>
+		<exec executable="mv" dir="${source.dir}/project">
+			<arg line="WebContent back" />
+		</exec>
+	</target>
+
+	<!-- source.dir = /usr1/home/jeus/deploy/CM_20161031_TEST_HCCHE -->
+	<!-- Only Test 일 경우 수정 바람 -->
+	
+	<target name="ssh_rename_was" if="isTestOnly">
+		<echo>change lotte-super-commons to project</echo>
+		<exec executable="mv" dir="${source.dir}">
+			<arg value="lotte-super-commons" />
+			<arg value="project" />
+		</exec>
+		<echo>change lib to back/WEB-INF/lib</echo>
+		<exec executable="mv" dir="${source.dir}/project">
+			<arg line="lib back" />
+		</exec>
+	</target>
+	
+	
+	<!-- ================================================== -->
+	<!-- LotteSuper BO ssh_Rollback -->
+	<!-- ================================================== -->
+	<!-- check_exist = /usr1/home/jeus/deploy/BO_20161117_1330 -->
+	
+	<target name="ssh_rollback" depends="check_exist">
+		<antcall target="check_valid"/>
+		<echo message="Rollback Java Applications"/>
+		<antcall target="rollbackbo"/>
+	</target>	
+
+	
+	<target name="ssh_rollback_test" depends="check_exist">
+		<antcall target="check_valid"/>
+		<echo message="Rollback Java Applications"/>
+		<antcall target="rollbackbotest"/>
+	</target>	
+
+	<!-- SSH Rollback -->
+	<!-- SSH Back Rollback-->
+	<!-- SSH mBack Rollback-->
+	<!-- SSH Partner Rollback-->
+	<!-- SSH Batch Rollback-->
+	
+	<!-- Rollback 테스트용 -->
+	<!-- Batch는 경로 주의요망 -->
+	<!--
+	<target name="rollbackbo" if="isExistCM_BO">        
+        <copy todir="/esuper/project/rollbacktest/back" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/project/back"
+                     includes="WEB-INF/**/*"/>
+        </copy>
+        <copy todir="/esuper/project/rollbacktest/mback" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/project/mback"
+                     includes="WEB-INF/**/*"/>
+        </copy>
+        <copy todir="/esuper/project/rollbacktest/partner" overwrite="yes" verbose="true">
+        <fileset dir="${source.dir}_backup/project/partner"
+                 includes="WEB-INF/**/*"/>
+       </copy>
+        <copy todir="/esuper/project/rollbacktest/batch" overwrite="yes" verbose="true">
+        <fileset dir="${source.dir}_backup/project/batch"
+                 includes="lib/**/*"/>
+       </copy>
+    </target>		
+-->
+	
+
+	<!-- TEST는 Company가 Front 에 있음 -->
+	<target name="rollbackbo" if="isExistCM_BO">        
+        <copy todir="/esuper/project/back" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/project/back"
+                     includes="WEB-INF/**/*"/>
+        </copy>
+        <copy todir="/esuper/project/mback" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/project/mback"
+                     includes="WEB-INF/**/*"/>
+        </copy>
+        <copy todir="/esuper/project/partner" overwrite="yes" verbose="true">
+        <fileset dir="${source.dir}_backup/project/partner"
+                 includes="WEB-INF/**/*"/>
+       </copy>
+        <copy todir="/esuper/project/batch" overwrite="yes" verbose="true">
+        <fileset dir="${source.dir}_backup/project/batch"
+                 includes="lib/**/*"/>
+       </copy>
+   </target>
+	
+	<target name="rollbackbotest" if="isExistCM_BO">        
+        <copy todir="/esuper/project/rolbacktest/back" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/project/back"
+                     includes="WEB-INF/**/*"/>
+        </copy>
+        <copy todir="/esuper/project/rolbacktest/mback" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/project/mback"
+                     includes="WEB-INF/**/*"/>
+        </copy>
+        <copy todir="/esuper/project/rolbacktest/partner" overwrite="yes" verbose="true">
+        <fileset dir="${source.dir}_backup/project/partner"
+                 includes="WEB-INF/**/*"/>
+       </copy>
+        <copy todir="/esuper/project/rolbacktest/batch" overwrite="yes" verbose="true">
+        <fileset dir="${source.dir}_backup/project/batch"
+                 includes="lib/**/*"/>
+       </copy>
+    </target>
+
+	
+
+	
+	<!-- ================================================== -->
+	<!-- ssh 공통라이브러리 copy : 2016-12-20 -->
+	<!-- back, partner, mback, batch 배포 -->
+	<!-- ================================================== -->
+	
+	<!-- source.dir     = /usr1/home/jeus/deploy/CM_20161031_1330 -->
+	<!-- app.dir         = /project/back -->
+	<!-- ${source.dir}/${app.dir} = /usr1/home/jeus/deploy/CM_20161031_1330/project/back -->
+	
+	<!-- DocRoot = /esuper/project/back/WEB-INF/lib -->
+	<!-- fileset dir="/usr1/home/jeus/deploy/CM_20161031_1330/project/back" -->
+
+
+	<!-- ##### 테스트 용도 ##### -->
+<!--
+	<target name="ssh_copy_test_was">
+		<copy todir="/esuper/project/deploytest/back" overwrite="true" verbose="true">
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="**/*"/>
+		    </fileset>
+		</copy>
+		<copy todir="/esuper/project/deploytest/partner" overwrite="true" verbose="true">
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="**/*"/>
+		    </fileset>
+		</copy>
+		<copy todir="/esuper/project/deploytest/mback" overwrite="true" verbose="true">
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="**/*"/>
+		    </fileset>
+		</copy>
+		<copy todir="/esuper/project/deploytest/batch/lib" overwrite="true" verbose="true">
+			<fileset dir="${source.dir}/${app.dir}/WEB-INF/lib">
+				<include name="**/*"/>
+		    </fileset>
+		</copy>
+   </target>	
+-->
+
+	<target name="ssh_copy_was">
+		<copy todir="/esuper/project/back" overwrite="true" verbose="true">
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="**/*"/>
+		    </fileset>
+		</copy>
+		<copy todir="/esuper/project/partner" overwrite="true" verbose="true">
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="**/*"/>
+		    </fileset>
+		</copy>
+		<copy todir="/esuper/project/mback" overwrite="true" verbose="true">
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="**/*"/>
+		    </fileset>
+		</copy>
+		<copy todir="/esuper/project/batch/lib" overwrite="true" verbose="true">
+			<fileset dir="${source.dir}/${app.dir}/WEB-INF/lib">
+				<include name="**/*"/>
+		    </fileset>
+		</copy>
+   </target>	
+	
+</project>

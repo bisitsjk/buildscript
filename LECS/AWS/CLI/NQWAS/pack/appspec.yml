@@ -1,0 +1,17 @@
+version: 0.0
+os: linux
+files:
+- source: /deploy_real_new
+  destination: /usr1/home/jeus/awsscript/UQWAS
+
+permissions:
+- object: /usr1/home/jeus/awsscript/UQWAS
+  pattern: "**"
+  owner: jeus
+  group: www
+  mode: 644
+
+hooks:
+  ApplicationStart:
+   - location: scripts/ApplicationStart.sh
+     timeout: 10000

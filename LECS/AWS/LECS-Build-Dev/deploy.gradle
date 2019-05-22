@@ -1,0 +1,248 @@
+// 서버에 assemble을 배포하는 스크립트 
+
+
+
+sshExecViaCfg = {cfg ->
+	return sshExec( cfg.address, cfg.id, cfg.password)
+}
+
+
+scpViaCfg = { cfg,  file, path ->
+	scp (cfg.address, cfg.id, cfg.password, file, path)
+}
+
+
+find_최근_배포본		= { 프로젝트,  filter ->
+	def latestDate = new Date(0)
+	def res = null
+	file(프로젝트_빌드패스(프로젝트)).listFiles().each { f ->
+		if (f.name.endsWith(".zip")==false || f.name.contains(filter) == false) {
+			return false
+		}
+		def fileName =  f.getName()
+		fileName = fileName[(fileName.indexOf( '-', fileName.indexOf(filter)+filter.length()+1)+1)..-5]
+		def d = Date.parse("yyyyMMdd-HHmm", fileName);
+		if (d.after(latestDate)){
+			res = f
+			latestDate = d
+		}
+	}
+	return res
+}
+
+
+배포본_업로드  = { 배포_목적_정보, 배포본_파일 ->
+	scpViaCfg 배포_목적_정보, 배포본_파일.absolutePath, "/lotte/lecsDocs/temp/"			
+}
+
+
+배포본_풀기 = { 배포_목적_정보, 배포본_정보, 배포본_파일 ->
+	def exec = sshExecViaCfg ( 배포_목적_정보 )
+	if ( 배포본_정보.is교체대상 ){
+		println "${배포본_파일}은 교체 대상입니다. "
+		exec "mv ${배포본_정보.배포경로} ${배포본_정보.배포경로+'_before_'+TIMESTAMP} || true"
+	}
+	exec "mkdir -p ${배포본_정보.배포경로}"
+	exec "unzip -o -q /lotte/lecsDocs/temp/${배포본_파일.name} -d ${배포본_정보.배포경로}"
+	exec "mkdir -p ${배포본_정보.배포경로}/WEB-INF/tempdir"
+	
+}
+
+deploy_배포폰  ={ 프로젝트, 배포본_이름, 배포본_정보, alt ->
+	배포_목적_정보 = null;
+	if (alt != null && "".equals(alt) == false && 배포본_정보['SERVER']["$DEPLOY"].containsKey("mobile")) {
+		배포_목적_정보 = 배포본_정보['SERVER']["$DEPLOY"][alt]["$MACHINE"]
+	}else {
+		배포_목적_정보 = 배포본_정보['SERVER']["$DEPLOY"]["$MACHINE"]
+	} 
+	
+	배포본_파일 = find_최근_배포본 (프로젝트, 배포본_이름)		
+	if (배포본_파일 == null || 배포본_파일.exists() == false){
+		throw new IllegalArgumentException("배포본 파일이 없습니다.")
+	}
+	배포본_업로드 배포_목적_정보, 배포본_파일
+	배포본_풀기 	배포_목적_정보, 배포본_정보, 배포본_파일
+	
+}
+
+
+deploy_assembles = { 프로젝트, alt = null ->
+	println "$프로젝트 is deploying at ${new Date()}"
+	
+	if ( hasProperty("DEPLOY_FILTER")){
+		println " 배포 목록 필터가 있습니다. $DEPLOY_FILTER"
+	
+		if (DEPLOY_FILTER.contains("app") || DEPLOY_FILTER.contains("all")){
+			
+			DeployConfig[프로젝트].배포본_목록.each { 배포본_이름, 배포본_정보 ->
+				if (배포본_이름.contains("WEBAPP") || 배포본_이름.contains( "UPLOAD-RULE") ||  배포본_이름.contains("Batch")){
+					println "$배포본_이름  을 배포합니다."
+					deploy_배포폰 (프로젝트, 배포본_이름, 배포본_정보, alt)
+				}
+			}
+		}
+		
+		if (DEPLOY_FILTER.contains("contents") || DEPLOY_FILTER.contains("all")){
+			println "CONTENT  을 배포합니다."
+			deploy_배포폰 (프로젝트, "CONTENT", DeployConfig[프로젝트].배포본_목록["CONTENT"], alt)
+		}
+		if (DEPLOY_FILTER.contains("images") || DEPLOY_FILTER.contains("all")){
+			println "IMAGE  을 배포합니다."
+			deploy_배포폰 (프로젝트, "IMAGE", DeployConfig[프로젝트].배포본_목록["IMAGE"], alt)
+		}
+	}
+	else {
+		DeployConfig[프로젝트].배포본_목록.each { 배포본_이름, 배포본_정보 ->
+			deploy_배포폰 (프로젝트, 배포본_이름, 배포본_정보, alt)
+		}
+	}
+	
+	println "$프로젝트 is deployed at ${new Date()}"
+	println ""
+}
+
+deploy_assembles_From = { 원본_프로젝트, 프로젝트, alt = null ->
+	println "$프로젝트 is deploying at ${new Date()}"
+	
+	DF = System.properties['DEPLOY_FILTER']
+	if ( DF != null && DF.length() > 0){
+		println " 배포 목록 필터가 있습니다. $DF"
+		
+		if (DF.contains("app") || DF.contains("all")){
+			
+			DeployConfig[프로젝트].배포본_목록.each { 배포본_이름, 배포본_정보 ->
+				if (배포본_이름.contains("WEBAPP") || 배포본_이름.contains( "UPLOAD-RULE") ||  배포본_이름.contains("Batch")){
+					println "$배포본_이름  을 배포합니다."
+					deploy_배포폰 (프로젝트, 배포본_이름, 배포본_정보, alt)
+				}
+			}
+		}
+		
+		if (DeployConfig[프로젝트].배포본_목록["CONTENT"] != null && (DF.contains("contents") || DF.contains("all"))){
+			println "CONTENT  을 배포합니다."
+			deploy_배포폰 (원본_프로젝트, "CONTENT", DeployConfig[프로젝트].배포본_목록["CONTENT"], alt)
+		}
+		if (DeployConfig[프로젝트].배포본_목록["IMAGE"] != null && (DF.contains("images") || DF.contains("all"))){
+			println "IMAGE  을 배포합니다."
+			deploy_배포폰 (원본_프로젝트, "IMAGE", DeployConfig[프로젝트].배포본_목록["IMAGE"], alt)
+		}
+
+	}
+	else {
+		DeployConfig[프로젝트].배포본_목록.each { 배포본_이름, 배포본_정보 ->
+			deploy_배포폰 (원본_프로젝트, 배포본_이름, 배포본_정보, alt)
+		}
+	}
+	
+	println "$프로젝트 is deployed at ${new Date()}"
+	println ""
+}
+
+
+
+
+task deploy_bo << {
+	deploy_assembles Bo	
+}
+
+task deploy_cc << {
+	deploy_assembles_From Bo, Cc
+}
+
+task deploy_po << {
+	deploy_assembles_From Bo, Po
+}
+
+task deploy_wms << {
+	deploy_assembles Wms, 'default'
+}
+
+task deploy_oa << {
+	deploy_assembles Oa, 'default'
+}
+
+task deploy_muji << {
+	deploy_assembles Muji
+}
+
+task deploy_nike << {
+	deploy_assembles Nike, 'default'
+}
+
+task deploy_nike_mobile << {
+	deploy_assembles Nike, 'mobile'
+}
+
+task deploy_lps << {
+	deploy_assembles Lps, 'default'
+}
+
+task deploy_lps_mobile << {
+	deploy_assembles Lps, 'mobile'
+}
+
+
+task deploy_puma << {
+	deploy_assembles Puma
+}
+
+task deploy_uniqlo << {
+	deploy_assembles Uniqlo, 'default'
+}
+
+task deploy_uniqlo_mobile << {
+	deploy_assembles Uniqlo, 'mobile'
+}
+
+task deploy_uniqloapi << {
+	deploy_assembles Uniqloapi, 'default'
+}
+task deploy_uniqloapi_mobile << {
+	deploy_assembles Uniqloapi, 'mobile'
+}
+
+task deploy_northface << {
+	deploy_assembles Northface, 'default'
+}
+
+task deploy_northface_mobile << {
+	deploy_assembles Northface, 'mobile'
+}
+
+task deploy_youngone << {
+	deploy_assembles Youngone, 'default'
+}
+
+
+task deploy_kiehls << {
+	deploy_assembles Kiehls
+}
+
+task deploy_gu << {
+	deploy_assembles Gu, 'default'
+}
+
+task deploy_batch << {
+	deploy_assembles Batch
+	def exec = sshExecViaCfg ( DeployConfig[Batch].배포본_목록['Batch']['SERVER']["$DEPLOY"]["$MACHINE"] )
+	exec "chmod +x /lotte/lecs/batch/bin/*.sh"
+}
+
+task deploy_all << {
+	def threads = []
+	println new Date();
+	threads.add( Thread.start {	
+		deploy_bo()
+		deploy_lps()
+		deploy_batch()
+	})
+		
+	threads.add( Thread.start {			
+		deploy_muji()
+		deploy_nike()
+	})
+
+	threads.each{thread->thread.join()}
+	println new Date();
+}
+

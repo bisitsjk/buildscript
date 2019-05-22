@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="spp2014webbotest" basedir=".">
+    <!-- **************************************************************** -->
+	<!-- PROPERTY -->
+	<!-- **************************************************************** -->
+	<property name="java.home"   value="c:/Program Files (x86)/Java/jdk1.6.0_25" />
+	<property name="jeus.home"   value="c:/TmaxSoft/JEUS6.0" />
+	<property name="hudson.home" value="e:/hudson-spp" />
+	
+	<property name="job.name"    value="ONLY_TEST_SPP_WEB_BO" />
+	<property name="workspace"   value="${hudson.home}/jobs/${job.name}/workspace" />
+	<property name="project.bo"  value="spp-web-bo" />
+	<property name="project.cm"  value="spp-web-cm" />
+	
+	<property name="src.dir"     value="src/main" />
+	<property name="docroot"     value="/lotte/spp_bo" />
+	<property name="webapp"      value="webapp" />
+	<property name="svr.lib.dir" value="${webapp}/WEB-INF/lib" />
+		
+	<property name="cm.java.dir"  value="spp-web-common-lib/${src.dir}/java" />
+	<property name="cm.lib.dir"   value="spp-web-common-lib/LIB-INF/common-lib" />
+	<property name="cm.class.dir" value="spp-web-common-lib/classes" />
+	<property name="cm.jar.dir"   value="spp-web-common-lib/jar" />
+	<property name="cm.jar.name"  value="spp-web-common-lib.jar" />
+		
+	<property name="bo.java.dir"          value="${src.dir}/java" />
+	<property name="bo.resource.original" value="${src.dir}/resources" />
+	<property name="bo.properties"        value="deploy/${PARAM1}" />
+	<property name="bo.lib.dir"           value="${src.dir}/${svr.lib.dir}" />
+	<property name="bo.resource.copy"     value="${src.dir}/${webapp}/WEB-INF/resources" />
+	<property name="bo.class.dir"         value="${src.dir}/${webapp}/WEB-INF/classes" />
+	
+	<property name="package.dir"  value="${workspace}/spp-web-package" />
+	<property name="package.name" value="spp-web-bo.tar" />
+	<property name="package.zip.name" value="spp-web-bo.zip" />
+	
+	<property name="server.ip" value="${PARAM2}" />
+	<property name="user.id"   value="jeus" />
+	<property name="user.pwd"  value="w&uch6raDa*r" />
+		
+	
+	<!-- **************************************************************** -->
+	<!-- CHECK -->
+	<!-- **************************************************************** -->
+	<target name="check_remote_work" unless="isSuccess">
+		<fail message="connect fails..." />
+	</target>
+	
+	<target name="check_param">
+		<condition property="isTest">
+			<and>
+				<equals arg1="test" arg2="${PARAM1}" casesensitive="true"/>
+				<equals arg1="10.129.100.43" arg2="${PARAM2}" casesensitive="true"/>
+			</and>
+		</condition>
+	</target>
+	
+	
+	<!-- **************************************************************** -->
+	<!-- BUILD -->
+	<!-- **************************************************************** -->
+	<target name="build_cm">
+		<path id="cm.classpath">
+			<fileset dir="${java.home}/lib">
+				<include name="*.jar" />
+			</fileset>
+			<fileset dir="${workspace}/${project.cm}/${cm.lib.dir}">
+				<include name="*.jar"/>
+			</fileset>				
+		</path>
+		
+		<!-- compile -->
+		<echo>clean class path</echo>
+		<mkdir dir="${workspace}/${project.cm}/${cm.class.dir}" />
+		<delete includeemptydirs="true">
+			<fileset dir="${workspace}/${project.cm}/${cm.class.dir}" includes="**/*"/>
+    	</delete>
+		<echo>compile common sources</echo>
+		<javac classpathref="cm.classpath" 
+			srcdir="${workspace}/${project.cm}/${cm.java.dir}" 
+			destdir="${workspace}/${project.cm}/${cm.class.dir}"			
+			nowarn="true" 
+			deprecation="true"
+			debug="true"
+			listfiles="false" 
+			failonerror="true" 
+			optimize="false" 
+			includeantruntime="false"
+			target="1.6"
+			encoding="UTF-8" />		
+		
+		<!-- jar -->
+		<echo>delete jar file</echo>
+		<mkdir dir="${workspace}/${project.cm}/${cm.jar.dir}" />
+		<delete includeemptydirs="true">
+			<fileset dir="${workspace}/${project.cm}/${cm.jar.dir}" includes="**/*"/>
+    	</delete>
+		<echo>create jar file</echo>
+		<jar encoding="UTF-8" 
+			 destfile="${workspace}/${project.cm}/${cm.jar.dir}/${cm.jar.name}">
+			<fileset dir="${workspace}/${project.cm}/${cm.class.dir}" />
+		</jar>
+	</target>
+	
+	<target name="build_bo">
+		<path id="bo.classpath">
+			<fileset dir="${java.home}/lib">
+				<include name="*.jar" />
+			</fileset>
+			<fileset dir="${workspace}/${project.cm}/${cm.lib.dir}">
+				<include name="*.jar"/>
+			</fileset>
+			<fileset dir="${workspace}/${project.cm}/${cm.jar.dir}">
+				<include name="${cm.jar.name}"/>
+			</fileset>
+			<fileset dir="${workspace}/${project.bo}/${bo.lib.dir}">
+				<include name="*.jar"/>
+			</fileset>
+		</path>
+
+		<!-- compile -->
+		<echo>clean class path</echo>
+		<mkdir dir="${workspace}/${project.bo}/${bo.class.dir}" />
+		<delete includeemptydirs="true">
+			<fileset dir="${workspace}/${project.bo}/${bo.class.dir}" includes="**/*"/>
+    	</delete>
+		<echo>compile web application sources</echo>
+		<javac 
+			srcdir="${workspace}/${project.bo}/${bo.java.dir}" 
+			destdir="${workspace}/${project.bo}/${bo.class.dir}"
+			classpathref="bo.classpath"
+			nowarn="true" 
+			deprecation="true"
+			debug="true"
+			listfiles="false" 
+			failonerror="true" 
+			optimize="false" 
+			includeantruntime="false"
+			target="1.6"
+			encoding="UTF-8" />
+		
+		<!-- resource -->
+		<echo>clean resources path</echo>
+		<mkdir dir="${workspace}/${project.bo}/${bo.resource.copy}" />
+		<delete includeemptydirs="true">
+			<fileset dir="${workspace}/${project.bo}/${bo.resource.copy}" includes="**/*"/>
+    	</delete>
+		<echo>copy resources</echo>
+		<copy todir="${workspace}/${project.bo}/${bo.resource.copy}">
+			<fileset dir="${workspace}/${project.bo}/${bo.resource.original}">
+				<include name="**/*"/>
+				<exclude name="**/.svn/**"/>
+		    </fileset>
+		</copy>		
+		<copy todir="${workspace}/${project.bo}/${bo.resource.copy}" overwrite="true">
+			<fileset dir="${workspace}/${project.bo}/${bo.properties}">
+				<include name="*.properties"/>
+		    </fileset>
+		</copy>		
+		
+		<!-- package -->
+		<echo>clean package path</echo>
+		<mkdir dir="${package.dir}" />
+		<echo>package spp web application</echo>
+		<!-- tar -->
+		<antcall target="tar" />
+		<!-- zip -->
+		<antcall target="zip" />
+	</target>
+	
+	<target name="tar">
+		<delete includeemptydirs="true">
+			<fileset dir="${package.dir}" includes="${package.name}"/>
+    	</delete>
+		<tar destfile="${package.dir}/${package.name}" longfile="gnu">
+			<tarfileset dir="${workspace}/${project.bo}/${src.dir}"
+				prefix="${docroot}"
+				preserveLeadingSlashes="true">
+				<include name="${webapp}/**"/>
+			</tarfileset>
+			<tarfileset dir="${workspace}/${project.cm}/${cm.lib.dir}"
+				prefix="${docroot}/${svr.lib.dir}"
+				preserveLeadingSlashes="true">
+				<include name="*.jar"/>
+				<exclude name="aopalliance-1.0.jar"/>
+				<exclude name="aspectjrt-1.6.8.jar"/>
+				<exclude name="aspectjweaver-1.6.8.jar"/>
+				<exclude name="commons-beanutils-1.8.0.jar"/>
+				<exclude name="commons-collections-3.2.jar"/>
+				<exclude name="commons-dbcp-1.2.2.jar"/>
+				<exclude name="commons-io-1.4.jar"/>
+				<exclude name="commons-logging-1.1.1.jar"/>
+				<exclude name="commons-pool-1.5.3.jar"/>
+				<exclude name="fasoo-jni-2.7.7u.jar"/>
+				<exclude name="ibatis-2.3.4.726.jar"/>
+				<exclude name="javax.inject-1.jar"/>
+				<exclude name="json_simple-1.1.jar"/>
+				<exclude name="junit-4.9.jar"/>
+				<exclude name="ojdbc5.jar"/>
+				<exclude name="poi-3.6-20091214.jar"/>
+				<exclude name="spring-*"/>
+				<exclude name="ZipIt.jar"/>
+			</tarfileset>
+			<tarfileset dir="${workspace}/${project.cm}/${cm.jar.dir}"
+				prefix="${docroot}/${svr.lib.dir}"
+				preserveLeadingSlashes="true">
+				<include name="${cm.jar.name}"/>
+			</tarfileset>
+		</tar>			
+	</target>
+	
+	<target name="zip">
+		<delete includeemptydirs="true">
+			<fileset dir="${package.dir}" includes="${package.zip.name}"/>
+    	</delete>
+		<zip zipfile="${package.dir}/${package.zip.name}">
+			<zipfileset dir="${workspace}/${project.bo}/${src.dir}">
+				<include name="${webapp}/**"/>
+			</zipfileset>
+			<zipfileset dir="${workspace}/${project.cm}/${cm.lib.dir}"
+				prefix="webapp/WEB-INF/lib">
+				<include name="*.jar"/>
+				<exclude name="aopalliance-1.0.jar"/>
+				<exclude name="aspectjrt-1.6.8.jar"/>
+				<exclude name="aspectjweaver-1.6.8.jar"/>
+				<exclude name="commons-beanutils-1.8.0.jar"/>
+				<exclude name="commons-collections-3.2.jar"/>
+				<exclude name="commons-dbcp-1.2.2.jar"/>
+				<exclude name="commons-io-1.4.jar"/>
+				<exclude name="commons-logging-1.1.1.jar"/>
+				<exclude name="commons-pool-1.5.3.jar"/>
+				<exclude name="fasoo-jni-2.7.7u.jar"/>
+				<exclude name="ibatis-2.3.4.726.jar"/>
+				<exclude name="javax.inject-1.jar"/>
+				<exclude name="json_simple-1.1.jar"/>
+				<exclude name="junit-4.9.jar"/>
+				<exclude name="ojdbc5.jar"/>
+				<exclude name="poi-3.6-20091214.jar"/>
+				<exclude name="spring-*"/>
+				<exclude name="ZipIt.jar"/>
+			</zipfileset>
+			<zipfileset dir="${workspace}/${project.cm}/${cm.jar.dir}"
+				prefix="webapp/WEB-INF/lib">
+				<include name="${cm.jar.name}"/>
+			</zipfileset>			
+		</zip>		
+	</target>
+	
+	
+	<!-- **************************************************************** -->
+	<!-- DEPLOY -->
+	<!-- **************************************************************** -->	
+	<target name="send">
+		<scp todir="${user.id}:${user.pwd}@${server.ip}:${docroot}" port="22" verbose="yes" trust="yes">
+			<fileset dir="${package.dir}">
+				<include name="${package.name}"></include>
+			</fileset>
+		
+		</scp>
+	</target>
+	
+	<target name="deploy">
+		<property name="deploy.log.file"    value="../logs/${ant.project.name}/deploy_sppboprj.log" />
+		<tstamp>
+			<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>remote cotrol...</echo>
+		<echo>${server.ip} connect start... [${conn_time}]</echo>
+		<record name="${deploy.log.file}" action="start"/>
+		<sshexec host="${server.ip}" username="${user.id}" password="${user.pwd}" trust="true" verbose="false"
+			command="cd ${docroot};
+			ls -al ${package.name};
+			ja downcon sppboprj_spp;
+			\rm -rf z_webapp;
+			mv webapp z_webapp;
+			./build ${package.name};
+			ja startcon sppboprj_spp;
+			\rm -rf ${package.name};
+			exit" />
+		<record name="${deploy.log.file}" action="stop"/>
+		<tstamp>
+			<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${server.ip} connect end... [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<and>
+				<resourcecontains resource="${deploy.log.file}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+				<resourcecontains resource="${deploy.log.file}" substring="Succeeded to start sppboprj_spp" casesensitive="true" />
+			</and>
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>trans ended...</echo>		
+	</target>
+	
+	
+	<target name="deploy_real" depends="check_param" unless="${isTest}">
+		<property name="deploy.log.file"    value="../logs/${ant.project.name}/deploy_sppbotst_spp.log" />
+		<tstamp>
+			<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>remote cotrol...</echo>
+		<echo>${server.ip} connect start... [${conn_time}]</echo>
+		<record name="${deploy.log.file}" action="start"/>	
+		<telnet server="${server.ip}" userid="${user.id}" password="${user.pwd}">
+			<read>/jeus></read>
+			<write>cd ${docroot}</write>
+			<read>${docroot}></read>
+			<write>ls -al ${package.zip.name}</write>
+			<read>${docroot}></read>
+			<write>ja downcon sppbotst_spp</write>
+			<read>${docroot}></read>			
+			<write>\rm -rf z_webapp</write>
+			<read>${docroot}></read>
+			<write>mv webapp z_webapp</write>
+			<read>${docroot}></read>
+			<write>./build ${package.zip.name}</write>
+			<read>${docroot}></read>
+			<write>ja startcon sppbotst_spp</write>			
+			<read>${docroot}></read>
+			<write>\rm -rf ${package.zip.name}</write>
+			<read>${docroot}></read>			
+			<write>exit</write>
+		</telnet>
+		<record name="${deploy.log.file}" action="stop"/>
+		<tstamp>
+			<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${server.ip} connect end...  [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<and>
+				<resourcecontains resource="${deploy.log.file}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+				<resourcecontains resource="${deploy.log.file}" substring="Succeeded to start sppbotst_spp" casesensitive="true" />
+			</and>
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>trans ended...</echo>		
+	</target>		
+</project>

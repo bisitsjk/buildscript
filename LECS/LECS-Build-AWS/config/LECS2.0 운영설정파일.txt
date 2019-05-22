@@ -1,0 +1,77 @@
+cp -f /lotte/lecs/webapp/muji/WEB-INF/classes/config/spring/common/spring_properties.properties.prd.fo    /lotte/lecs/webapp/muji//WEB-INF/classes/config/spring/common/spring_properties.properties
+cp -f /lotte/lecs/webapp/muji/WEB-INF/classes/config/system/lecs/config_lecs.xml.prd  /lotte/lecs/webapp/muji/WEB-INF/classes/config/system/lecs/config_lecs.xml
+cp -f /lotte/lecs/webapp/muji/WEB-INF/classes/config/system/muji/config_muji.xml.prd  /lotte/lecs/webapp/muji/WEB-INF/classes/config/system/muji/config_muji.xml
+cp -f /lotte/lecs/webapp/muji/WEB-INF/classes/config/log4j/log4j.xml.prd /lotte/lecs/webapp/muji//WEB-INF/classes/config/log4j/log4j.xml
+cp -f /lotte/lecs/webapp/muji/WEB-INF/classes/config/spring/bean/common.xml.prd /lotte/lecs/webapp/muji/WEB-INF/classes/config/spring/bean/common.xml
+cp -f /lotte/lecs/webapp/muji/WEB-INF/classes/interfaces.properties.prd /lotte/lecs/webapp/muji/WEB-INF/classes/interfaces.properties
+cp -f /lotte/lecs/webapp/muji/WEB-INF/classes/xdsp_pool.properties.prd /lotte/lecs/webapp/muji/WEB-INF/classes/xdsp_pool.properties
+
+
+
+cp -f /lotte/lecs/webapp/nike/WEB-INF/classes/config/spring/common/spring_properties.properties.prd.fo    /lotte/lecs/webapp/nike//WEB-INF/classes/config/spring/common/spring_properties.properties
+cp -f /lotte/lecs/webapp/nike/WEB-INF/classes/config/system/lecs/config_lecs.xml.prd  /lotte/lecs/webapp/nike/WEB-INF/classes/config/system/lecs/config_lecs.xml
+cp -f /lotte/lecs/webapp/nike/WEB-INF/classes/config/system/nike/config_nike.xml.prd  /lotte/lecs/webapp/nike/WEB-INF/classes/config/system/nike/config_nike.xml
+cp -f /lotte/lecs/webapp/nike/WEB-INF/classes/config/log4j/log4j.xml.prd /lotte/lecs/webapp/nike//WEB-INF/classes/config/log4j/log4j.xml
+cp -f /lotte/lecs/webapp/nike/WEB-INF/classes/config/spring/bean/common.xml.prd /lotte/lecs/webapp/nike/WEB-INF/classes/config/spring/bean/common.xml
+cp -f /lotte/lecs/webapp/nike/WEB-INF/classes/interfaces.properties.prd /lotte/lecs/webapp/nike/WEB-INF/classes/interfaces.properties
+cp -f /lotte/lecs/webapp/nike/WEB-INF/classes/xdsp_pool.properties.prd /lotte/lecs/webapp/nike/WEB-INF/classes/xdsp_pool.properties
+
+
+
+cp -f /lotte/lecs/webapp/lps/WEB-INF/classes/config/spring/common/spring_properties.properties.prd.fo  /lotte/lecs/webapp/lps//WEB-INF/classes/config/spring/common/spring_properties.properties
+cp -f /lotte/lecs/webapp/lps/WEB-INF/classes/config/system/lecs/config_lecs.xml.prd  /lotte/lecs/webapp/lps/WEB-INF/classes/config/system/lecs/config_lecs.xml
+cp -f /lotte/lecs/webapp/lps/WEB-INF/classes/config/system/lps/config_lps.xml.prd  /lotte/lecs/webapp/lps/WEB-INF/classes/config/system/lps/config_lps.xml
+cp -f /lotte/lecs/webapp/lps/WEB-INF/classes/config/log4j/log4j.xml.prd /lotte/lecs/webapp/lps//WEB-INF/classes/config/log4j/log4j.xml
+cp -f /lotte/lecs/webapp/lps/WEB-INF/clas ses/config/spring/bean/common.xml.prd /lotte/lecs/webapp/lps/WEB-INF/classes/config/spring/bean/common.xml
+cp -f /lotte/lecs/webapp/lps/WEB-INF/classes/interfaces.properties.prd /lotte/lecs/webapp/lps/WEB-INF/classes/interfaces.properties
+cp -f /lotte/lecs/webapp/lps/WEB-INF/classes/xdsp_pool.properties.prd /lotte/lecs/webapp/lps/WEB-INF/classes/xdsp_pool.properties
+
+cp -f /lotte/lecs/webapp/bo/WEB-INF/classes/config/spring/common/spring_properties.properties.prd.bo   /lotte/lecs/webapp/bo//WEB-INF/classes/config/spring/common/spring_properties.properties
+cp -f /lotte/lecs/webapp/bo/WEB-INF/classes/config/system/lecs/config_lecs.xml.prd  /lotte/lecs/webapp/bo/WEB-INF/classes/config/system/lecs/config_lecs.xml
+cp -f /lotte/lecs/webapp/bo/WEB-INF/classes/config/system/bo/config_bo.xml.prd  /lotte/lecs/webapp/bo/WEB-INF/classes/config/system/bo/config_bo.xml
+cp -f /lotte/lecs/webapp/bo/WEB-INF/classes/config/log4j/log4j.xml.prd /lotte/lecs/webapp/bo//WEB-INF/classes/config/log4j/log4j.xml
+cp -f /lotte/lecs/webapp/bo/WEB-INF/classes/config/spring/bean/common.xml.prd /lotte/lecs/webapp/bo/WEB-INF/classes/config/spring/bean/common.xml
+cp -f /lotte/lecs/webapp/bo/WEB-INF/classes/interfaces.properties.prd /lotte/lecs/webapp/bo/WEB-INF/classes/interfaces.properties
+cp -f /lotte/lecs/webapp/bo/WEB-INF/classes/xdsp_pool.properties.prd /lotte/lecs/webapp/bo/WEB-INF/classes/xdsp_pool.properties
+
+
+cp -f /lotte/lecs/webapp/po/WEB-INF/classes/config/spring/common/spring_properties.properties.prd.bo  /lotte/lecs/webapp/po/WEB-INF/classes/config/spring/common/spring_properties.properties
+cp -f /lotte/lecs/webapp/po/WEB-INF/classes/config/system/lecs/config_lecs.xml.prd  /lotte/lecs/webapp/po/WEB-INF/classes/config/system/lecs/config_lecs.xml
+cp -f /lotte/lecs/webapp/po/WEB-INF/classes/config/system/bo/config_po.xml.prd  /lotte/lecs/webapp/po/WEB-INF/classes/config/system/bo/config_po.xml
+cp -f /lotte/lecs/webapp/po/WEB-INF/classes/config/system/bo/config_po.xml.prd  /lotte/lecs/webapp/po/WEB-INF/classes/config/system/bo/config_bo.xml
+cp -f /lotte/lecs/webapp/po/WEB-INF/classes/config/log4j/log4j.xml.prd /lotte/lecs/webapp/po//WEB-INF/classes/config/log4j/log4j.xml
+cp -f /lotte/lecs/webapp/po/WEB-INF/classes/config/spring/bean/common.xml.prd /lotte/lecs/webapp/po/WEB-INF/classes/config/spring/bean/common.xml
+cp -f /lotte/lecs/webapp/po/WEB-INF/classes/interfaces.properties.prd /lotte/lecs/webapp/po/WEB-INF/classes/interfaces.properties
+cp -f /lotte/lecs/webapp/po/WEB-INF/classes/xdsp_pool.properties.prd /lotte/lecs/webapp/po/WEB-INF/classes/xdsp_pool.properties
+
+
+
+
+cp -f /lotte/lecs/webapp/cc/WEB-INF/classes/config/spring/common/spring_properties.properties.prd.bo    /lotte/lecs/webapp/cc/WEB-INF/classes/config/spring/common/spring_properties.properties
+cp -f /lotte/lecs/webapp/cc/WEB-INF/classes/config/system/lecs/config_lecs.xml.prd  /lotte/lecs/webapp/cc/WEB-INF/classes/config/system/lecs/config_lecs.xml
+cp -f /lotte/lecs/webapp/cc/WEB-INF/classes/config/system/bo/config_cc.xml.prd  /lotte/lecs/webapp/cc/WEB-INF/classes/config/system/bo/config_cc.xml
+cp -f /lotte/lecs/webapp/cc/WEB-INF/classes/config/system/bo/config_cc.xml.prd  /lotte/lecs/webapp/cc/WEB-INF/classes/config/system/bo/config_bo.xml
+cp -f /lotte/lecs/webapp/cc/WEB-INF/classes/config/log4j/log4j.xml.prd /lotte/lecs/webapp/cc//WEB-INF/classes/config/log4j/log4j.xml
+cp -f /lotte/lecs/webapp/cc/WEB-INF/classes/config/spring/bean/common.xml.prd /lotte/lecs/webapp/cc/WEB-INF/classes/config/spring/bean/common.xml
+cp -f /lotte/lecs/webapp/cc/WEB-INF/classes/interfaces.properties.prd /lotte/lecs/webapp/cc/WEB-INF/classes/interfaces.properties
+cp -f /lotte/lecs/webapp/cc/WEB-INF/classes/xdsp_pool.properties.prd /lotte/lecs/webapp/cc/WEB-INF/classes/xdsp_pool.properties
+
+
+
+cp -f /lotte/lecs/webapp/wms/WEB-INF/classes/config/spring/common/spring_properties.properties.prd.bo    /lotte/lecs/webapp/wms//WEB-INF/classes/config/spring/common/spring_properties.properties
+cp -f /lotte/lecs/webapp/wms/WEB-INF/classes/config/system/lecs/config_lecs.xml.prd  /lotte/lecs/webapp/wms/WEB-INF/classes/config/system/lecs/config_lecs.xml
+cp -f /lotte/lecs/webapp/wms/WEB-INF/classes/config/system/lps/config_lps.xml.prd  /lotte/lecs/webapp/wms/WEB-INF/classes/config/system/lps/config_lps.xml
+cp -f /lotte/lecs/webapp/wms/WEB-INF/classes/config/log4j/log4j.xml.prd /lotte/lecs/webapp/wms//WEB-INF/classes/config/log4j/log4j.xml
+cp -f /lotte/lecs/webapp/wms/WEB-INF/classes/config/spring/bean/common.xml.prd /lotte/lecs/webapp/wms/WEB-INF/classes/config/spring/bean/common.xml
+cp -f /lotte/lecs/webapp/wms/WEB-INF/classes/interfaces.properties.xml.prd /lotte/lecs/webapp/wms/WEB-INF/classes/interfaces.properties
+cp -f /lotte/lecs/webapp/wms/WEB-INF/classes/interfaces.properties.prd /lotte/lecs/webapp/wms/WEB-INF/classes/xdsp_pool.properties
+
+cp -f /lotte/lecs/webapp/wms/WEB-INF/web.xml.wms /lotte/lecs/webapp/wms/WEB-INF/web.xml
+
+ps -ef | grep /bin/java | grep jeus | grep -v grep  | wc -l | awk '{print $1}'
+jdown 
+rm -fR /usr3/jeus-log/TM/*
+jboot
+ps -ef | grep /bin/java | grep jeus | grep -v grep  | wc -l | awk '{print $1}'
+
+

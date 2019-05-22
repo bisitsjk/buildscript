@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottewebmo">
+	<import file="./lotteweb.xml"/>
+    <!-- **************************************************************** -->
+	<!-- PROPERTY -->
+	<!-- **************************************************************** -->	
+	<property name="deploy.id.prefix" value="MO"/>
+	<property name="init.cmd"     value="moinit"/>
+	<property name="copy.cmd"     value="modeploy"/>
+	<property name="backup.cmd"   value="mobackup"/>
+	<property name="rollback.cmd" value="morollback"/>
+
+	
+	<!-- **************************************************************** -->
+	<!-- CHECK -->
+	<!-- **************************************************************** -->	
+	<target name="check_common">
+		<echo>♠ 공통 배포ID가 있는지 확인합니다. : ${comm.deploy.id}</echo>
+		<substring property="deploy.id.suffix" string="${deploy.id}" start="2" end="16"/>
+		<condition property="existCommon">
+			<and>
+				<contains string="${comm.deploy.id}" substring="CM_" casesensitive="true" />
+				<length   string="${comm.deploy.id}" when="greater" length="15"/>
+				<contains string="${comm.deploy.id}" substring="${deploy.id.suffix}"/>
+			</and>
+		</condition>
+	</target>
+		
+	<target name="check_exist">
+		<condition property="isExistWebapp">
+			<resourcecount when="greater" count="0">
+				<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/mo" casesensitive="yes">
+					<include name="webapp/**"/>
+					<exclude name="webapp/WEB-INF/classes/**"/>
+					<exclude name="webapp/WEB-INF/lib/**"/>
+					<exclude name="webapp/WEB-INF/spring/**"/>
+					<exclude name="webapp/WEB-INF/config/**"/>
+					<exclude name="webapp/WEB-INF/mapping/**"/>
+					<exclude name="webapp/WEB-INF/*.xml"/>
+				</fileset>
+			</resourcecount>
+			<!--
+			<or>
+				<resourceexists>
+					<file file="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/mo/webapp"/>
+				</resourceexists>
+				<resourceexists>
+					<file file="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/mo/webapp/WEB-INF/view"/>
+				</resourceexists>
+			</or>
+			-->
+		</condition>
+		<condition property="isExistWebinf">
+			<resourcecount when="greater" count="0">
+				<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/mo" casesensitive="yes">
+					<include name="webapp/WEB-INF/classes/**"/>
+					<include name="webapp/WEB-INF/lib/**"/>
+					<include name="webapp/WEB-INF/spring/**"/>
+					<include name="webapp/WEB-INF/config/**"/>
+					<include name="webapp/WEB-INF/mapping/**"/>
+					<include name="webapp/WEB-INF/*.xml"/>
+				</fileset>
+			</resourcecount>			
+			<!--
+			<or>
+				<resourceexists><file file="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/mo/webapp/WEB-INF/classes"/></resourceexists>
+				<resourceexists><file file="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/mo/webapp/WEB-INF/lib"/></resourceexists>
+				<resourceexists><file file="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/mo/webapp/WEB-INF/spring"/></resourceexists>
+				<resourceexists><file file="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/mo/webapp/WEB-INF/mapping"/></resourceexists>
+				<resourceexists><file file="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/mo/webapp/WEB-INF/web.xml"/></resourceexists>
+				<resourceexists><file file="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/mo/webapp/WEB-INF/jeus-web-dd.xml"/></resourceexists>
+				<resourceexists><file file="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/mo/webapp/WEB-INF/mlotte-servlet.xml"/></resourceexists>
+				<resourceexists><file file="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/mo/webapp/WEB-INF/urlrewrite.xml"/></resourceexists>
+			</or>
+			-->
+		</condition>		
+		<condition property="isJspAndClass">
+			<and>
+				<istrue value="${isExistWebapp}"/>
+				<istrue value="${isExistWebinf}"/>
+			</and>
+		</condition>
+		<condition property="isJsp">
+			<and>
+				<istrue value="${isExistWebapp}"/>
+				<isfalse value="${isExistWebinf}"/>
+			</and>
+		</condition>
+		<condition property="isClass">
+			<and>
+				<isfalse value="${isExistWebapp}"/>
+				<istrue value="${isExistWebinf}"/>
+			</and>
+		</condition>
+		<condition property="isWeb">
+			<resourceexists>
+				<file file="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/mo/webroot"/>
+			</resourceexists>
+		</condition>
+		<condition property="isWas">
+			<or>
+				<istrue value="${isExistWebapp}"/>
+				<istrue value="${isExistWebinf}"/>
+			</or>
+		</condition>
+		<condition property="isExist">
+			<or>
+				<istrue value="${isWeb}"/>
+				<istrue value="${isWas}"/>
+			</or>
+		</condition>
+	</target>	
+	
+	<target name="check_host">
+		<condition property="isEcfowstst"> <!-- 사용하는 곳 없음 -->
+			<equals arg1="10.149.193.44" arg2="${host.ip}"/>
+		</condition>
+		<condition property="isEcmows1">
+			<equals arg1="10.149.144.38" arg2="${host.ip}"/>
+		</condition>
+	</target>	
+	
+	<target name="check_alive" depends="check_host">
+		<echo>check alive ${host.ip}</echo>
+		<waitfor maxwait="120000" checkevery="10000" timeoutproperty="isTimeout">
+			<or>
+				<socket server="${host.ip}" port="8095"/> <!-- mo test1 -->
+				<socket server="${host.ip}" port="8082"/> <!-- mo test2 -->
+			</or>
+		</waitfor>
+	</target>
+	
+	
+<!-- **************************************************************** -->
+<!-- MAIN -->
+<!-- **************************************************************** -->
+	<target name="phase2.1">
+		<echo>================================================================================</echo>
+		<antcall target="accept"/>
+		<antcall target="merge"/>
+		<antcall target="clean"/>
+		<antcall target="build"/>
+		<antcall target="pack"/>
+		<echo>================================================================================</echo>
+	</target>
+	
+	<target name="phase2.2">
+		<echo>================================================================================</echo>
+		<echo>${MESSAGES}</echo>
+		<property name="deploy.id" value="${main.deploy.id}"/>
+		<property name="user.id"   value="jeus"/>
+		<propertyvalue property="user.pwd" value="${user.id}"/>
+		<antcall target="deploy_web"/>
+		<echo>================================================================================</echo>
+	</target>
+	
+	<target name="phase2.3">
+		<echo>================================================================================</echo>
+		<property name="deploy.id" value="${main.deploy.id}"/>
+		<property name="user.id"   value="jeus"/>
+		<propertyvalue property="user.pwd" value="${user.id}"/>
+		<antcall target="deploy_tomcat"/>
+		<echo>================================================================================</echo>
+	</target>
+	
+	<target name="phase2.4">
+		<echo>================================================================================</echo>
+		<property name="deploy.id" value="${main.deploy.id}"/>
+		<antcall target="notice_success"/>
+		<antcall target="record"/>
+		<echo>================================================================================</echo>
+	</target>
+	
+	<target name="phase3.1">
+		<echo>================================================================================</echo>
+		<antcall target="accept_real"/>
+		<antcall target="merge"/>
+		<antcall target="clean"/>
+		<antcall target="build"/>
+		<antcall target="pack"/>
+		<echo>================================================================================</echo>
+	</target>	
+	
+	<target name="phase3.2">
+		<echo>================================================================================</echo>
+		<property name="deploy.id" value="${main.deploy.id}"/>
+		<property name="user.id"   value="jeus"/>
+		<propertyvalue property="user.pwd" value="${user.id}"/>
+		<antcall target="deploy"/>
+		<echo>================================================================================</echo>
+	</target>
+	
+	<target name="phase3.3">
+		<echo>================================================================================</echo>
+		<property name="deploy.id" value="${main.deploy.id}"/>
+		<antcall target="record"/>
+		<echo>================================================================================</echo>
+	</target>	
+	
+		
+	<!-- **************************************************************** -->
+	<!-- BUILD -->
+	<!-- build -->
+	<!-- javac 전에 <record name="${log.path}/${deploy.id}_BUILD.log" action="start"/> 구문 삽입         -->
+	<!-- javac 안에 failonerror="false" errorProperty="isBuildError" 구문 삽입 -->
+	<!-- javac 후에 <record name="${log.path}/${deploy.id}_BUILD.log" action="stop"/> 구문 삽입           -->
+	<!-- fail task 앞에 <antcall target="notice_fail"/> 구문 삽입 -->
+	<!-- 마지막에 <fail if="${isBuildError}" message="컴파일 오류가 발생했습니다." /> 구문 삽입 -->
+	<!-- errorProerty 이름과 fail task의 if attribute에 사용되는 property 이름은 동일해야 함 -->
+	<!-- **************************************************************** -->
+	<target name="clean">
+	    <mkdir dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}" />
+		
+		<delete includeemptydirs="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}" includes="**/*"/>
+    	</delete>
+	</target>
+	
+	<target name="build" depends="set_id">
+		<path id="classpath">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcLibPath}">
+				<include name="*.jar" />
+			</fileset>
+			<fileset dir="${java17.home.dir}/jre/lib">
+				<include name="rt.jar" />
+			</fileset>
+			<fileset dir="${jeus.home.dir}/lib/system">
+				<include name="*.jar" />
+			</fileset>
+		</path>
+		<record name="${log.path}/${deploy.id}_BUILD.log" action="start"/>
+		<javac  
+			srcdir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcJavaPath}"
+			classpathref="classpath"
+			destdir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}"
+			failonerror="false" errorProperty="isBuildError"
+			debug="on"
+			encoding="utf-8"
+			nowarn="on"
+			source="1.7"
+			target="1.7" />		
+		<record name="${log.path}/${deploy.id}_BUILD.log" action="stop"/>
+		<antcall target="notice_fail"/>
+		<fail if="${isBuildError}" message="컴파일 오류가 발생했습니다." />
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcJavaPath}">
+				<include name="*.properties"/>
+		    </fileset>
+		</copy>		
+	</target>			
+	
+	
+	<!-- **************************************************************** -->
+	<!-- PACK -->
+	<!-- **************************************************************** -->
+		
+	
+	<!-- **************************************************************** -->
+	<!-- BACKUP -->
+	<!-- **************************************************************** -->
+	
+
+	<!-- **************************************************************** -->
+	<!-- SEND  -->
+	<!-- **************************************************************** -->	
+	<target name="send_web">
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${stopover.dir}/${deploy.id}" trust="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}">
+				<include name="mo/webroot/**/*"></include>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</scp>
+	</target>
+						
+	<target name="send_was">
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${stopover.dir}/${deploy.id}" trust="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}">
+				<include name="mo/webapp/**/*"></include>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</scp>
+	</target>	
+	
+	<target name="send" depends="check_host"> <!--  if="${isEcmows1}" -->
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${stopover.dir}/${deploy.id}" trust="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}">
+				<include name="mo/webapp/**/*"></include>
+				<include name="mo/webroot/**/*"></include>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</scp>
+	</target>	
+	
+	
+	<!-- **************************************************************** -->
+	<!-- DEPLOY -->
+	<!-- **************************************************************** -->	
+	
+		
+	<!-- **************************************************************** -->
+	<!-- ROLLBACK -->
+	<!-- **************************************************************** -->
+
+</project>

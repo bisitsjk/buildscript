@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="sync lotte mo" basedir=".">
+	<!-- ================================================== -->
+	<!-- properties -->
+	<!-- ================================================== -->
+	<property name="srv" value="${TARGET_SERVER}"/>
+	
+	<!-- set property -->
+	<property file="com_lotte_mo_${srv}.properties" />
+	
+	<!-- real server info -->
+	<property name="her13.ip"  value="10.149.144.36" />
+	<property name="www8.ip"  value="211.233.44.28" />
+	<property name="user.id"  value="jeus"/>
+	<!-- <property name="user.pwd" value="8Yqi4q(1=Z"/> -->
+	
+	<!-- deploy id -->
+	<property name="prefix.dep.id" value="MO_" />
+	<tstamp><format property="infix.dep.id" pattern="yyyyMMdd"/></tstamp>
+	<property name="suffix.dep.id" value="_SYNC" />
+	<property name="dep.id" value="${prefix.dep.id}${infix.dep.id}${suffix.dep.id}" />
+	
+	<!-- log file -->
+	<property name="backup.was.log" value="../logs/${dep.id}_BACKUP_WAS.log" />
+	<property name="backup.web.log" value="../logs/${dep.id}_BACKUP_WEB.log" />
+	<property name="sync.was.log"   value="../logs/${dep.id}_SYNC_WAS.log" />
+	<property name="sync.web.log"   value="../logs/${dep.id}_SYNC_WEB.log" />
+	
+	<!-- remote command -->
+	<property name="backup.cmd" value="mobackup" />
+	<property name="sync.cmd" value="mosync" />
+	
+	<!-- container name -->
+	<property name="inst.dir" value="/usr2/apache-tomcat/instance/" />
+	<property name="instance1" value="${tname1}" />
+	<property name="instance2" value="${tname2}" />
+	<property name="instance3" value="${tname3}" />
+	<property name="instance4" value="${tname4}" />
+	
+	
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->	
+	<target name="check_remote_work" unless="isSuccess">
+		<fail message="원격지 작업이 실패하였습니다..." />
+	</target>
+	
+	<target name="check_test2">
+		<condition property="isTest2">
+			<equals arg1="${srv}" arg2="tst2"/>
+		</condition>
+	</target>
+	
+	<!-- ================================================== -->
+	<!-- backup(source) -->
+	<!-- ================================================== -->
+	<target name="backup_was">
+		<echo>=================================================================================== WAS backup 시작 ==========</echo>
+		<antcall target="zip_was"/>
+		<echo>=================================================================================== WAS backup 종료 ==========</echo>
+	</target>
+	
+	<target name="backup_web">
+		<echo>=================================================================================== 웹서버 backup 시작 ==========</echo>
+		<antcall target="zip_web"/>
+		<echo>=================================================================================== 웹서버 backup 종료 ==========</echo>
+	</target>
+	
+	<target name="zip_was">
+		<sshexec host="${her13.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${backup.was.log}"
+			command="cd deploy;./${backup.cmd} ${dep.id}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${backup.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<!--
+		<tstamp>
+			<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>WAS 백업을 진행합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+		<echo>${her13.ip} 접속을 시작합니다... [${conn_time}]</echo>
+		<record name="${backup.was.log}" action="start"/>
+		<telnet server="${her13.ip}" userid="${user.id}" password="${user.pwd}">
+			<read>/jeus]%</read>
+			<write>cd deploy</write>
+			<read>/jeus/deploy]%</read>
+			<write>./${backup.cmd} ${dep.id}</write>
+			<read>/jeus/deploy]%</read>
+			<write>exit</write>
+		</telnet>
+		<record name="${backup.was.log}" action="stop"/>
+		<tstamp>
+			<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${her13.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<resourcecontains resource="${backup.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>WAS 백업이 완료되었습니다...</echo>
+		-->
+	</target>
+	
+	<target name="zip_web">
+		<sshexec host="${www8.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${backup.web.log}"
+			command="cd deploy;./${backup.cmd} ${dep.id}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${backup.web.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<!--
+		<tstamp>
+			<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>웹서버 백업을 진행합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+		<echo>${www8.ip} 접속을 시작합니다... [${conn_time}]</echo>
+		<record name="${backup.web.log}" action="start" />
+		<telnet server="${www8.ip}" userid="${user.id}" password="${user.pwd}">
+			<read>/jeus]#</read>
+			<write>cd deploy</write>
+			<read>/jeus/deploy]#</read>
+			<write>./${backup.cmd} ${dep.id}</write>
+			<read>/jeus/deploy]#</read>
+			<write>exit</write>
+		</telnet>
+		<record name="${backup.web.log}" action="stop" />
+		<tstamp>
+			<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${www8.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<resourcecontains resource="${backup.web.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>웹서버 백업이 완료되었습니다...</echo>
+		-->
+	</target>
+	
+
+	<!-- ================================================== -->
+	<!-- get zip file and unzip at docroot(target) -->
+	<!-- ================================================== -->
+	<target name="sync">
+		<echo>=================================================================================== WEB/WAS sync sources 시작 ==========</echo>
+		<antcall target="get_and_unzip_was"/>
+		<echo>=================================================================================== WEB/WAS sync sources 종료 ==========</echo>
+	</target>
+		
+	<target name="sync_was">
+		<echo>=================================================================================== WAS sync sources 시작 ==========</echo>
+		<antcall target="get_and_unzip_was"/>
+		<antcall target="shutdown_tomcat"/>
+		<antcall target="was_status_check"/>
+		<antcall target="start_tomcat"/>
+		<antcall target="was_status_check"/>
+		<echo>=================================================================================== WAS sync sources 종료 ==========</echo>
+	</target>
+
+	<target name="sync_web">
+		<echo>=================================================================================== 웹서버 sync sources 시작 ==========</echo>
+		<antcall target="get_and_unzip_web"/>
+		<echo>=================================================================================== 웹서버 sync sources 종료 ==========</echo>
+	</target>
+			
+	<target name="get_and_unzip_was"> <!-- test server only -->
+				<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+					trust="true" verbose="false" output="${sync.was.log}"
+					command="cd deploy;./${sync.cmd} ${dep.id}" />	
+	</target>
+	<target name="shutdown_tomcat"> 
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${was.work.log}"
+			command="${inst.dir}${instance2}/bin/shutdown.sh" />
+		<sleep seconds="3" />
+	</target>
+
+	<target name="start_tomcat"> 
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${was.work.log}"
+			command="${inst.dir}${instance2}/bin/start.sh" />
+	</target>
+				
+	<target name="was_status_check"> 
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${was.work.log}"
+				command="${tomcat.check}" />
+	</target>
+	
+	<target name="get_and_unzip_web" depends="check_test2" unless="${isTest2}">
+		<sshexec host="${web.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${sync.web.log}"
+			command="cd deploy;./${sync.cmd} ${dep.id}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${sync.web.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+	</target>
+
+	
+</project>

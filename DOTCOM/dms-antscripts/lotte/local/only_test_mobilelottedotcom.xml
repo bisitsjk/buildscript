@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lotte mobile(test zone)" basedir=".">
+	<!-- ================================================== -->
+	<!-- properties -->
+	<!-- ================================================== -->
+	<property name="dep.id" value="${DEPLOY_ID}"/>
+	
+	<!-- SET PROPERTY -->
+	<property file="test_lotte.properties" />
+	
+	<!-- test server info -->
+	<property name="tst.web.ip" value="10.149.193.34"/>
+	<property name="tst.was.ip" value="10.149.193.44"/>
+	<property name="tst.user.id" value="jeus"/>
+	<!-- <property name="tst.user.pwd" value="8Yqi4q(1=Z"/> -->
+	
+	<property name="request.fo.dir" value="G:/hudson/jobs/ONLY_TEST_MOBILELOTTEDOTCOM/workspace/request/mobile"/>
+	<property name="nas.fo.dir" value="/h2010/ncontents/src"/>
+	
+	<property name="init.was.log" value="../log/${dep.id}_INIT_WAS.log" />
+	<property name="init.web.log" value="../log/${dep.id}_INIT_WEB.log" />
+	<property name="dep.was.log" value="../log/${dep.id}_DEP_WAS.log" />
+	<property name="dep.web.log" value="../log/${dep.id}_DEP_WEB.log" />
+	
+	<property name="init.cmd" value="moinit" />
+	<property name="dep.cmd" value="modeploy" />
+
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->	
+	<target name="param_check">
+		<condition property="isValid">
+		  <and>
+			<length string="${dep.id}" when="greater" length="10"/>
+			<contains string="${dep.id}" substring="MO_" casesensitive="true"/>
+			<contains string="${dep.id}" substring="_TEST_" casesensitive="true"/>
+		  </and>
+		</condition>
+		<echo>배포ID ${dep.id} / 적합성 ${isValid}</echo>
+	</target>
+	
+	<target name="check_exist">
+		<condition property="isExistWebapp"><or>
+			<resourceexists><file file="${request.fo.dir}/${dep.id}/mo/webapp/common"/></resourceexists>
+			<resourceexists><file file="${request.fo.dir}/${dep.id}/mo/webapp/common3"/></resourceexists>
+			<resourceexists><file file="${request.fo.dir}/${dep.id}/mo/webapp/dacom"/></resourceexists>
+			<resourceexists><file file="${request.fo.dir}/${dep.id}/mo/webapp/exevent"/></resourceexists>
+			<resourceexists><file file="${request.fo.dir}/${dep.id}/mo/webapp/ilkmpi"/></resourceexists>
+			<resourceexists><file file="${request.fo.dir}/${dep.id}/mo/webapp/lottepoint"/></resourceexists>
+			<resourceexists><file file="${request.fo.dir}/${dep.id}/mo/webapp/misp"/></resourceexists>
+			<resourceexists><file file="${request.fo.dir}/${dep.id}/mo/webapp/mobilians"/></resourceexists>
+			<resourceexists><file file="${request.fo.dir}/${dep.id}/mo/webapp/namecheck"/></resourceexists>
+			<resourceexists><file file="${request.fo.dir}/${dep.id}/mo/webapp/pmpi"/></resourceexists>
+			<resourceexists><file file="${request.fo.dir}/${dep.id}/mo/webapp/push"/></resourceexists>
+			<resourceexists><file file="${request.fo.dir}/${dep.id}/mo/webapp/sci"/></resourceexists>
+			<resourceexists><file file="${request.fo.dir}/${dep.id}/mo/webapp/smpi"/></resourceexists>
+			<resourceexists><file file="${request.fo.dir}/${dep.id}/mo/webapp/spay"/></resourceexists>
+			<resourceexists><file file="${request.fo.dir}/${dep.id}/mo/webapp/WEB-INF/view"/></resourceexists>
+			<resourceexists><file file="${request.fo.dir}/${dep.id}/mo/webapp/popup"/></resourceexists>
+			<resourceexists><file file="${request.fo.dir}/${dep.id}/mo/webapp/vpay"/></resourceexists>
+		</or></condition>
+		<condition property="isExistWebinf"><or>
+			<resourceexists><file file="${request.fo.dir}/${dep.id}/mo/webapp/WEB-INF/classes"/></resourceexists>
+			<resourceexists><file file="${request.fo.dir}/${dep.id}/mo/webapp/WEB-INF/lib"/></resourceexists>
+			<resourceexists><file file="${request.fo.dir}/${dep.id}/mo/webapp/WEB-INF/spring"/></resourceexists>
+			<resourceexists><file file="${request.fo.dir}/${dep.id}/mo/webapp/WEB-INF/mapping"/></resourceexists>
+			<resourceexists><file file="${request.fo.dir}/${dep.id}/mo/webapp/WEB-INF/web.xml"/></resourceexists>
+			<resourceexists><file file="${request.fo.dir}/${dep.id}/mo/webapp/WEB-INF/jeus-web-dd.xml"/></resourceexists>
+			<resourceexists><file file="${request.fo.dir}/${dep.id}/mo/webapp/WEB-INF/mlotte-servlet.xml"/></resourceexists>
+		</or></condition>
+		<condition property="isJspAndClass">
+			<and>
+				<istrue value="${isExistWebapp}"/>
+				<istrue value="${isExistWebinf}"/>
+			</and>
+		</condition>
+		<condition property="isJsp">
+			<and>
+				<istrue value="${isExistWebapp}"/>
+				<isfalse value="${isExistWebinf}"/>
+			</and>
+		</condition>
+		<condition property="isClass">
+			<and>
+				<isfalse value="${isExistWebapp}"/>
+				<istrue value="${isExistWebinf}"/>
+			</and>
+		</condition>
+		<condition property="isWas">
+			<or>
+				<istrue value="${isJspAndClass}" />
+				<istrue value="${isClass}" />
+				<istrue value="${isJsp}" />
+			</or>
+		</condition>
+		<condition property="isWeb">
+			<resourceexists>
+				<file file="${request.fo.dir}/${dep.id}/mo/webroot"/>
+			</resourceexists>
+		</condition>
+		
+		<echo>WAS : ${isWas} </echo>
+		<echo>Web : ${isWeb} </echo>
+	</target>
+	
+	<target name="fail_param_check" unless="isValid">
+		<fail message="DEPLOY_ID가 유효하지 않습니다."/>
+	</target>
+	
+	<target name="check_remote_work" unless="isSuccess">
+		<fail message="원격지 작업이 실패하였습니다..." />
+	</target>
+	
+	<!-- ================================================== -->
+	<!-- transfer -->
+	<!-- ================================================== -->	
+	<target name="copy_to_testwas" depends="param_check, check_exist">
+		<antcall target="fail_param_check"/>
+		<antcall target="init_was"/>
+		<antcall target="send_was"/>
+	</target>
+	
+	<target name="copy_to_testweb" depends="param_check, check_exist">
+		<antcall target="fail_param_check"/>
+		<antcall target="init_web"/>
+		<antcall target="send_web"/>
+	</target>	
+	
+	<target name="init_was" if="isWas"><!-- isWas or isWeb -->
+		<tstamp>
+			<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>초기화 작업을 진행합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+		<echo>${tst.was.ip} 접속을 시작합니다... [${conn_time}]</echo>
+		<record name="${init.was.log}" action="start"/>
+		<telnet server="${tst.was.ip}" userid="${tst.user.id}" password="${tst.user.pwd}">
+			<read>/jeus]%</read>
+			<write>cd deploy</write>
+			<read>/jeus/deploy]%</read>
+			<write>./${init.cmd} ${dep.id}</write>
+			<read>/jeus/deploy]%</read>
+			<write>exit</write>
+		</telnet>
+		<record name="${init.was.log}" action="stop"/>
+		<tstamp>
+			<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${tst.was.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<resourcecontains resource="${init.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>초기화 작업이 완료되었습니다...</echo>
+	</target>		
+
+	<target name="init_web" if="isWeb"><!-- isWas or isWeb -->
+		<tstamp>
+			<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>초기화 작업을 진행합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+		<echo>${tst.web.ip} 접속을 시작합니다... [${conn_time}]</echo>
+		<record name="${init.web.log}" action="start"/>
+		<telnet server="${tst.web.ip}" userid="${tst.user.id}" password="${tst.user.pwd}">
+			<read>/jeus]%</read>
+			<write>cd deploy</write>
+			<read>/jeus/deploy]%</read>
+			<write>./${init.cmd} ${dep.id}</write>
+			<read>/jeus/deploy]%</read>
+			<write>exit</write>
+		</telnet>
+		<record name="${init.web.log}" action="stop"/>
+		<tstamp>
+			<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${tst.web.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<resourcecontains resource="${init.web.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>초기화 작업이 완료되었습니다...</echo>
+	</target>	
+	
+	<target name="send_was" if="isWas">
+		<echo>WAS</echo>
+		<ftp server="${tst.was.ip}" userid="${tst.user.id}" password="${tst.user.pwd}" passive="yes"
+		     remotedir="${nas.fo.dir}/${dep.id}"
+		     action="put">
+			<fileset dir="${request.fo.dir}/${dep.id}">
+				<include name="mo/webapp/**/*"></include>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</ftp>
+	</target>
+	
+	<target name="send_web" if="isWeb">
+		<echo>WEB</echo>
+		<ftp server="${tst.web.ip}" userid="${tst.user.id}" password="${tst.user.pwd}" passive="yes"
+		     remotedir="${nas.fo.dir}/${dep.id}"
+		     action="put">
+			<fileset dir="${request.fo.dir}/${dep.id}">
+				<include name="mo/webroot/**/*.*"></include>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</ftp>
+	</target>
+	
+	<!-- ================================================== -->
+	<!-- deploy -->
+	<!-- ================================================== -->	
+	<target name="copy_jsp" if="isJsp">
+		<tstamp>
+			<format property="start_copy_jsp_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${start_copy_jsp_time}</echo>
+		<telnet server="${tst.was.ip}" userid="${tst.user.id}" password="${tst.user.pwd}">
+			<read>/jeus]%</read>
+			<write>cd deploy</write>
+			<read>/deploy]%</read>
+			<write>./get mjsp ${dep.id}</write>
+			<read>/deploy]%</read>
+			<write>exit</write>
+		</telnet>
+		<tstamp>
+			<format property="end_copy_jsp_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${end_copy_jsp_time}</echo>
+	</target>
+	
+	<target name="copy_class" if="isClass">
+		<tstamp>
+			<format property="start_copy_class_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${start_copy_class_time}</echo>
+		<telnet server="${tst.was.ip}" userid="${tst.user.id}" password="${tst.user.pwd}">
+			<read>/jeus]%</read>
+			<write>cd deploy</write>
+			<read>/deploy]%</read>
+			<write>./get mclass ${dep.id}</write>
+			<read>/deploy]%</read>
+			<write>ja downcon `hostname`_MO</write>
+			<read>/deploy]%</read>
+			<write>ja startcon `hostname`_MO</write>
+			<read>/deploy]%</read>
+			<write>exit</write>
+		</telnet>
+		<tstamp>
+			<format property="end_copy_class_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${end_copy_class_time}</echo>
+	</target>
+		
+	<target name="copy_was" if="isJspAndClass">
+		<tstamp>
+			<format property="start_copy_was_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${start_copy_was_time}</echo>
+		<telnet server="${tst.was.ip}" userid="${tst.user.id}" password="${tst.user.pwd}">
+			<read>/jeus]%</read>
+			<write>cd deploy</write>
+			<read>/deploy]%</read>
+			<write>./get mwas ${dep.id}</write>
+			<read>/deploy]%</read>
+			<write>ja downcon `hostname`_MO</write>
+			<read>/deploy]%</read>
+			<write>ja startcon `hostname`_MO</write>
+			<read>/deploy]%</read>
+			<write>exit</write>
+		</telnet>
+		<tstamp>
+			<format property="end_copy_was_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${end_copy_was_time}</echo>
+	</target>
+	
+	<target name="copy_web" if="isWeb">
+		<tstamp>
+			<format property="start_copy_web_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${start_copy_web_time}</echo>
+		<telnet server="${tst.web.ip}" userid="${tst.user.id}" password="${tst.user.pwd}" timeout="30">
+			<read>/jeus]%</read>
+			<write>cd deploy</write>
+			<read>/deploy]%</read>
+			<write>./get mweb ${dep.id}</write>
+			<read>/deploy]%</read>
+			<write>exit</write>
+		</telnet>
+		<tstamp>
+			<format property="end_copy_web_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${end_copy_web_time}</echo>
+	</target>
+	
+	<target name="deploy_was" depends="param_check, check_exist">
+		<antcall target="fail_param_check"/>
+		<antcall target="copy_was"/>
+		<antcall target="copy_class"/>
+		<antcall target="copy_jsp"/>
+	</target>
+	
+	<target name="deploy_web" depends="param_check, check_exist">
+		<antcall target="fail_param_check"/>
+		<antcall target="copy_web"/>
+	</target>
+</project>

@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="mo was test deploy" default="help">
+	<!-- ================================================== -->
+	<!-- properties -->
+	<!-- ================================================== -->
+	<property name="dep.id" value="${DEPLOY_ID}" />
+	
+	<property name="source.dir" value="/usr1/home/jeus/deploy/src/${dep.id}" />
+	<property name="java.home"  value="/usr/java1.6" />
+	<property name="ant.home"   value="/usr1/home/jeus/deploy/apache-ant-1.8.2" />
+	<property name="docroot"    value="/h2010" />
+	<property name="docroot.fo"    value="/h2010/fo" />
+	<property name="docroot.mo"    value="/h2010/mo" />
+	<property name="docroot.bo"    value="/h2010/bo" />
+	<property name="docroot.cc"    value="/h2010/cc" />
+	<property name="docroot.oa"    value="/h2010/oa" />
+	<property name="docroot.po"    value="/h2010/po" />
+	<property name="docroot.mcgl"    value="/h2010/mcgl" />
+	
+	<!-- real server inmo -->
+	<property name="user.id"  value="jeus" />
+	<property name="user.pwd" value="w&uch6raDa*r" />
+	
+	
+	
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->
+		
+	
+	
+	<!-- ================================================== -->
+	<!-- default target -->
+	<!-- ================================================== -->
+	<target name="help">
+		<echo>command1 : moinit [deploy id]</echo>
+		<echo>command2 : modeploy [deploy id]</echo>
+		<echo>command2 : mosync [deploy id]</echo>
+	</target>
+	
+	
+	
+	<!-- ================================================== -->
+	<!-- all deploy -->
+	<!-- ================================================== -->	
+	<target name="deployfortest_mo">
+		<antcall target="clean_mo"/>
+		<antcall target="untar_mo"/>
+	</target>
+	<target name="deployfortest_fo">
+		<antcall target="clean_fo"/>
+		<antcall target="untar_fo"/>
+	</target>
+	<target name="deployfortest_bo">
+		<antcall target="clean_bo"/>
+		<antcall target="untar_bo"/>
+	</target>
+	<target name="deployfortest_mcgl">
+		<antcall target="clean_mcgl"/>
+		<antcall target="untar_mcgl"/>
+	</target>
+	
+	
+	<!-- ================================================== -->
+	<!-- init -->
+	<!-- ================================================== -->
+	<!-- old tar delete -->
+	<target name="del_mo_tar">
+		<delete file="${docroot.mo}/${dep.id}_WAS.tar"/>
+		<delete file="${docroot.mo}/${dep.id}_WEB.tar"/>
+	</target>
+	<target name="del_fo_tar">
+		<delete file="${docroot.fo}/${dep.id}_WAS.tar"/>
+		<delete file="${docroot.fo}/${dep.id}_WEB.tar"/>
+	</target>
+	<target name="del_bo_tar">
+		<delete file="${docroot.bo}/${dep.id}_WAS.tar"/>
+		<delete file="${docroot.bo}/${dep.id}_WEB.tar"/>
+	</target>
+	<target name="del_mcgl_tar">
+		<delete file="${docroot.mcgl}/${dep.id}_WAS.tar"/>
+		<delete file="${docroot.mcgl}/${dep.id}_WEB.tar"/>
+	</target>
+	<!-- old docroot move [backup]-->
+	<target name="clean_fo">
+		<antcall target="clean_fo_was" />
+		<antcall target="clean_fo_web" />
+	</target>
+	<target name="clean_mo">
+		<antcall target="clean_mo_was" />
+		<antcall target="clean_mo_web" />
+	</target>
+	<target name="clean_mcgl">
+		<antcall target="clean_mcgl_was" />
+		<antcall target="clean_mcgl_web" />
+	</target>
+	<target name="clean_bo">
+		<antcall target="clean_pro_was" />
+		<antcall target="clean_pro_web" />
+		<antcall target="clean_cc_was" />
+		<antcall target="clean_cc_web" />
+		<!--<antcall target="clean_po_was" />
+		<antcall target="clean_po_web" />-->
+	</target>
+	
+	<target name="clean_fo_was">
+		<delete verbose="true">
+			<dirset dir="${docroot.fo}">
+				<include name="z_APP-INF"/>
+				<include name="z_webapp"/>
+			</dirset>
+		</delete>
+		<move file="${docroot.fo}/webapp"  tofile="${docroot.fo}/z_webapp" failonerror="false"/>
+		<move file="${docroot.fo}/APP-INF" tofile="${docroot.fo}/z_APP-INF" failonerror="false"/>
+	</target>	
+	<target name="clean_fo_web">
+		<delete verbose="true">
+			<dirset dir="${docroot.fo}">
+				<include name="z_webroot"/>
+			</dirset>
+		</delete>
+		<move file="${docroot.fo}/webroot"  tofile="${docroot.fo}/z_webroot" failonerror="false"/>
+	</target>
+	
+	<target name="clean_mo_was">
+		<delete verbose="true">
+			<dirset dir="${docroot.mo}">
+				<include name="z_webapp"/>
+			</dirset>
+		</delete>
+		<move file="${docroot.mo}/webapp"  tofile="${docroot.mo}/z_webapp" failonerror="false"/>
+	</target>
+	<target name="clean_mo_web">
+		<delete verbose="true">
+			<dirset dir="${docroot.mo}">
+				<include name="z_webroot"/>
+			</dirset>
+		</delete>
+		<move file="${docroot.mo}/webroot"  tofile="${docroot.mo}/z_webroot" failonerror="false"/>
+	</target>	
+	<target name="clean_mcgl_was">
+		<delete verbose="true">
+			<dirset dir="${docroot.mcgl}">
+				<include name="z_webapp"/>
+			</dirset>
+		</delete>
+		<move file="${docroot.mcgl}/webapp"  tofile="${docroot.mcgl}/z_webapp" failonerror="false"/>
+	</target>
+	<target name="clean_mcgl_web">
+		<delete verbose="true">
+			<dirset dir="${docroot.mcgl}">
+				<include name="z_webroot"/>
+			</dirset>
+		</delete>
+		<move file="${docroot.mcgl}/webroot"  tofile="${docroot.mcgl}/z_webroot" failonerror="false"/>
+	</target>	
+
+	<target name="clean_pro_was">
+		<delete verbose="true">
+			<dirset dir="${docroot.bo}">
+				<include name="z_APP-INF"/>
+				<include name="z_webapp"/>
+			</dirset>
+		</delete>
+		<move file="${docroot.bo}/webapp"  tofile="${docroot.bo}/z_webapp" failonerror="false"/>
+		<move file="${docroot.bo}/APP-INF" tofile="${docroot.bo}/z_APP-INF" failonerror="false"/>
+	</target>
+	<target name="clean_pro_web">
+		<delete verbose="true">
+			<dirset dir="${docroot.bo}">
+				<include name="z_webroot"/>
+			</dirset>
+		</delete>
+		<move file="${docroot.bo}/webroot"  tofile="${docroot.bo}/z_webroot" failonerror="false"/>
+	</target>	
+	<target name="clean_po_was">
+		<delete verbose="true">
+			<dirset dir="${docroot.po}">
+				<include name="z_APP-INF"/>
+				<include name="z_webapp"/>
+			</dirset>
+		</delete>
+		<move file="${docroot.po}/webapp"  tofile="${docroot.po}/z_webapp" failonerror="false"/>
+		<move file="${docroot.po}/APP-INF" tofile="${docroot.po}/z_APP-INF" failonerror="false"/>
+	</target>
+	<target name="clean_po_web">
+		<delete verbose="true">
+			<dirset dir="${docroot.po}">
+				<include name="z_webroot"/>
+			</dirset>
+		</delete>
+		<move file="${docroot.po}/webroot"  tofile="${docroot.po}/z_webroot" failonerror="false"/>
+	</target>	
+	<target name="clean_cc_was">
+		<delete verbose="true">
+			<dirset dir="${docroot.cc}">
+				<include name="z_APP-INF"/>
+				<include name="z_webapp"/>
+			</dirset>
+		</delete>
+		<move file="${docroot.cc}/webapp"  tofile="${docroot.cc}/z_webapp" failonerror="false"/>
+		<move file="${docroot.cc}/APP-INF" tofile="${docroot.cc}/z_APP-INF" failonerror="false"/>
+	</target>
+	<target name="clean_cc_web">
+		<delete verbose="true">
+			<dirset dir="${docroot.cc}">
+				<include name="z_webroot"/>
+			</dirset>
+		</delete>
+		<move file="${docroot.cc}/webroot"  tofile="${docroot.cc}/z_webroot" failonerror="false"/>
+	</target>	
+	
+	
+	
+	<!-- ================================================== -->
+	<!-- untar -->
+	<!-- ================================================== -->
+	<target name="untar_fo">
+		<antcall target="untar_fo_was" />
+		<antcall target="untar_fo_web" />
+	</target>
+	<target name="untar_mo">
+		<antcall target="untar_mo_was" />
+		<antcall target="untar_mo_web" />
+	</target>
+	<target name="untar_mcgl">
+		<antcall target="untar_mcgl_was" />
+		<antcall target="untar_mcgl_web" />
+	</target>
+	<target name="untar_bo">
+		<antcall target="untar_pro_was" />
+		<antcall target="untar_pro_web" />
+		<!--<antcall target="untar_po_was" />
+		<antcall target="untar_po_web" />-->
+		<antcall target="untar_cc_was" />
+		<antcall target="untar_cc_web" />
+	</target>
+	
+	<!-- untar fo -->
+	<target name="untar_fo_was">
+		<untar src="${docroot.fo}/${dep.id}_WAS.tar" dest="${docroot.fo}" overwrite="yes"/>
+	</target>
+	<target name="untar_fo_web">
+		<untar src="${docroot.fo}/${dep.id}_WEB.tar" dest="${docroot.fo}" overwrite="yes"/>
+	</target>
+	<!-- untar mo -->
+	<target name="untar_mo_was">
+		<untar src="${docroot.mo}/${dep.id}_WAS.tar" dest="${docroot.mo}" overwrite="yes"/>
+	</target>
+	<target name="untar_mo_web">
+		<untar src="${docroot.mo}/${dep.id}_WEB.tar" dest="${docroot.mo}" overwrite="yes"/>
+	</target>
+	<!-- untar mcgl -->
+	<target name="untar_mcgl_was">
+		<untar src="${docroot.mcgl}/${dep.id}_WAS.tar" dest="${docroot.mcgl}" overwrite="yes"/>
+	</target>
+	<target name="untar_mcgl_web">
+		<untar src="${docroot.mcgl}/${dep.id}_WEB.tar" dest="${docroot.mcgl}" overwrite="yes"/>
+	</target>
+	<!-- untar bo -->
+	<target name="untar_pro_was">
+		<untar src="${docroot.bo}/${dep.id}_WAS.tar" dest="${docroot.bo}" overwrite="yes"/>
+	</target>
+	<target name="untar_pro_web">
+		<untar src="${docroot.bo}/${dep.id}_WEB.tar" dest="${docroot.bo}" overwrite="yes"/>
+	</target>
+	<target name="untar_po_was">
+		<untar src="${docroot.bo}/${dep.id}_WAS.tar" dest="${docroot.po}" overwrite="yes"/>
+	</target>
+	<target name="untar_po_web">
+		<untar src="${docroot.bo}/${dep.id}_WEB.tar" dest="${docroot.po}" overwrite="yes"/>
+	</target>
+	<target name="untar_cc_was">
+		<untar src="${docroot.bo}/${dep.id}_WAS.tar" dest="${docroot.cc}" overwrite="yes"/>
+	</target>
+	<target name="untar_cc_web">
+		<untar src="${docroot.bo}/${dep.id}_WEB.tar" dest="${docroot.cc}" overwrite="yes"/>
+	</target>
+</project>

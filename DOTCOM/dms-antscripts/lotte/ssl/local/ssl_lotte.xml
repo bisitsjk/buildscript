@@ -1,0 +1,80 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<project name="ssl_lotte" basedir=".">
+	<!-- ================================================== -->
+	<!-- properties -->
+	<!-- ================================================== -->
+	<property name="srv" value="${TARGET_SSL}"/>
+	
+	<!-- set property -->
+	<property file="ssl_${srv}_lotte.properties" />
+	
+	<!-- real server info -->
+	<property name="user.id"  value="jeus"/>
+	<!-- <property name="user.pwd" value="8Yqi4q(1=Z"/> -->
+	
+	<property name="dep.id" value="${DEPLOY_ID}"/>
+		
+	<!-- log file -->
+	<property name="backup.was.log" value="../../logs/${dep.id}_BACKUP_SSL.log" />
+	<property name="backup.web.log" value="../../logs/${dep.id}_BACKUP_SSL.log" />
+	<property name="deploy.was.log"   value="../../logs/${dep.id}_DEPLOY_SSL.log" />
+	<property name="deploy.web.log"   value="../../logs/${dep.id}_DEPLOY_SSL.log" />
+	
+	
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->	
+	<target name="check_deploy_id">
+		<condition property="isValid">
+		  <and>
+			<length string="${dep.id}" when="greater" length="10"/>
+			<contains string="${dep.id}" substring="SSL_${targetSsl}_" casesensitive="true"/>
+		  </and>
+		</condition>
+		<echo>배포ID ${dep.id} / 적합성 ${isValid}</echo>
+	</target>
+	
+	<target name="check_valid" unless="isValid">
+		<fail message="DEPLOY_ID가 유효하지 않습니다."/>
+	</target>
+			
+	<target name="check_remote_work" unless="isSuccess">
+		<fail message="원격지 작업이 실패하였습니다..." />
+	</target>
+		
+			
+	<!-- **************************************************************** -->
+	<!-- ssl_send (nas로 ssl인증서 전송) -->
+	<!-- **************************************************************** -->	
+	<target name="send_ssl" depends="check_deploy_id">
+		<echo>=================================================================================== SSL 배포ID폴더 생성 ==========</echo>
+		<sshexec host="${web.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${backup.web.log}" failonerror="false"
+			command="mkdir /ncontents/src/${dep.id}" />
+		<echo>=================================================================================== SSL NAS 전송 시작 ==========</echo>
+		<scp todir="${user.id}:${user.pwd}@${web.ip}:${nasSrcPath}/${dep.id}" trust="true" verbose="true">
+			<fileset dir="${hdsnWrkSpPath}/${hdsnTrunkPath}/${dep.id}">
+				<include name="ssl/${certificateFile}"></include>
+				<include name="ssl/${cacertificateFile}"></include>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</scp>
+		<echo>=================================================================================== SSL NAS 전송 완료 ==========</echo>
+	</target>
+		
+		
+	<!-- ================================================== -->
+	<!-- backup(ssl) 기존 ssl인증서 cp 명령어 사용으로 nas에 backup-->
+	<!-- ================================================== -->
+	<target name="backup_ssl">
+		<echo>=================================================================================== SSL backup 시작 ==========</echo>
+		<sshexec host="${web.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${backup.web.log}"
+			command="cd deploy;./${backup.cmd} ${dep.id}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${backup.web.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>=================================================================================== SSL backup 종료 ==========</echo>
+	</target>
+</project>

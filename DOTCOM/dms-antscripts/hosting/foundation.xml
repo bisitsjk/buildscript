@@ -1,0 +1,176 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<project name="foundation">
+	<!-- param -->
+	<property name="deploy.id" value="${DEPLOY_ID}"/>
+	<!-- properties -->
+	<property name="java16.home"     value="C:/Program Files (x86)/Java/jdk1.6.0_25"/>
+	<property name="java15.home"     value="C:/Program Files (x86)/Java/jdk1.5.0_22"/>
+	<property name="deployer.home"   value="D:/deployer"/>
+	
+	<property file="${deployer.home}/scripts/foundation.properties"/>
+	
+	<property name="user.id"   value="xclass"/>
+	<property name="user.pwd"  value="aLPd%BgT1)Pl"/>
+	
+	<property name="prj.nm"			 value="foundation"/>
+	
+	<property name="req.dir"         value="${workspace}${requestPath}/${deploy.id}"/>
+	
+	<property name="src.home"        value="${workspace}${releasePath}"/>
+	<property name="java.src.dir"    value="${src.home}${srcPath}"/>
+	<property name="java.lib.dir"    value="${src.home}${libPath}"/>
+	<property name="pack.dir"        value="${src.home}${packPath}/${deploy.id}"/>
+	
+	<property name="dst.class.dir"   value="${src.home}/${prj.nm}${svrClassPath}"/>
+	<property name="dst.lib.dir"     value="${src.home}/${prj.nm}${svrLibPath}"/>
+	
+	<property name="remote.home.dir" value="${docRoot}"/>
+	
+	<!-- validation -->
+	<target name="param_check">
+		<condition property="isValid">
+			<and>
+				<length string="${deploy.id}" when="greater" length="12"/>
+				<resourceexists>
+					<file file="${req.dir}"/>
+				</resourceexists>
+			</and>
+		</condition>
+	</target>
+	<target name="param_check_fail" unless="isValid">
+		<echo>${req.dir}</echo>
+		<fail message="DEPLOY_ID가 유효하지 않습니다."/>
+	</target>
+	
+	<!-- merge -->
+	<path id="deployerclasspath">
+		<fileset dir="${deployer.home}/lib">
+			<include name="*.jar" />
+		</fileset>
+	</path>	
+	
+	<target name="merge" depends="param_check">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="param_check_fail"/>
+		<antcall target="exec_merge"/>
+	</target>
+	<target name="exec_merge" if="isValid">
+		<java jar="${deployer.home}/bin/deployer1.1.3.jar"
+		      fork="true" failonerror="true" >
+			<arg value="${prj.nm}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="merge"/>			
+		</java> 
+	</target>
+	
+	<!-- build -->
+	<path id="classpath">
+		<fileset dir="${java.lib.dir}">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="${java16.home}/jre/lib">
+			<include name="rt.jar" />
+		</fileset>
+		<fileset dir="${src.home}/foundation/foundation/WEB-INF/lib">
+			<include name="*.jar" />
+		</fileset>
+	</path>
+	<target name="build">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="compile"/>
+	</target>
+	<target name="compile">
+		<javac srcdir="${java.src.dir}"
+		       destdir="${dst.class.dir}"
+		       fork="yes"
+		       classpathref="classpath" 
+		       nowarn="yes"
+		       source="1.5"
+		       target="1.5"
+		       compiler="javac1.5"
+		/>
+	</target>
+	
+	<!-- pack -->
+	<target name="pack" depends="param_check">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="param_check_fail"/>
+		<antcall target="exec_pack"/>
+	</target>
+	<target name="exec_pack" if="isValid">
+		<delete dir="${pack.dir}" />
+		<java jar="${deployer.home}/bin/deployer1.1.3.jar"
+		      fork="true" failonerror="true" >
+			<arg value="${prj.nm}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="pack"/>
+		</java>
+		<copy todir="${workspace}${packPath}/${deploy.id}/${prj.nm}${svrJspPath}">
+			<fileset dir="${workspace}${packPath}/${deploy.id}/${prj.nm}${svrDynaClassPath}">
+				<include name="**/*"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<!-- backup -->
+	<target name="backup" depends="param_check">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="param_check_fail"/>
+		<antcall target="exec_backup"/>
+	</target>
+	<target name="exec_backup" if="isValid">
+		<java jar="${deployer.home}/bin/deployer1.1.3.jar"
+		      fork="true" failonerror="true" >
+			<arg value="${prj.nm}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="backup"/>
+			<arg value="${host.ip}"/>
+			<arg value="${user.id}"/>
+			<arg value="${user.pwd}"/>
+		</java>
+	</target>
+
+	<!-- deploy -->
+	<target name="deploy" depends="param_check">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="param_check_fail"/>
+		<antcall target="exec_scp"/>
+	</target>
+	<target name="exec_scp" if="isValid">
+		<!--<ftp server="${host.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${remote.home.dir}/doc" verbose="yes"
+		     action="put">
+			<fileset dir="${workspace}${packPath}/${deploy.id}/${prj.nm}${svrJspPath}" 
+			         includes="**/*"/>
+		</ftp>-->
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${remote.home.dir}/doc" trust="true">
+			<fileset dir="${workspace}${packPath}/${deploy.id}/${prj.nm}${svrJspPath}" 
+		         includes="**/*"/>
+		</scp>
+	</target>
+	
+	<!-- rollback -->
+	<target name="rollback" depends="param_check">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="param_check_fail"/>
+		<antcall target="exec_rollback"/>
+	</target>
+	<target name="exec_rollback" if="isValid">
+		<!--<ftp server="${host.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${remote.home.dir}/doc" verbose="yes"
+		     action="put">
+			<fileset dir="${workspace}${packPath}/${deploy.id}_backup/${prj.nm}${svrJspPath}" 
+			         includes="**/*"/>
+		</ftp>-->
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${remote.home.dir}/doc" trust="true">
+			<fileset dir="${workspace}${packPath}/${deploy.id}_backup/${prj.nm}${svrJspPath}" 
+		         includes="**/*"/>
+		</scp>
+	</target>
+</project>

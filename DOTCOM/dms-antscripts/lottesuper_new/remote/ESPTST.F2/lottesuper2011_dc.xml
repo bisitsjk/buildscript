@@ -1,0 +1,665 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottesuper2011fo_dm">
+	<property name="deploy.id" value="${DEPLOY_ID}"/>
+	<property name="deploy.dir" value="/usr1/home/jeus/deploy"/>
+	<property name="app.dir" value="project/front"/>
+	<property name="base.dir" value="/esuper/project/front"/>
+
+	<!-- /usr1/home/jeus/deploy/FO_20161216_1330 -->
+	<property name="source.dir" value="${deploy.dir}/${deploy.id}"/>
+	
+	<property name="fo.dir" value="/esuper/project/front"/>
+	
+	<!-- deploy id ( for test only ) -->
+	<property name="prefix.dep.id" value="FO_" />
+	<property name="infix.dep.id" value="_TEST_" />
+	<property name="fozipbackup.dir" value="${deploy.dir}/fozipbackup"/><!-- 테스트용도로만 쓰임 -->
+	
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->		
+	<target name="check_test_deploy_id">
+		<condition property="isTestOnly">
+		  <and>
+			<length string="${deploy.id}" when="greater" length="10"/>
+			<contains string="${deploy.id}" substring="${prefix.dep.id}" casesensitive="true"/>
+			<contains string="${deploy.id}" substring="${infix.dep.id}" casesensitive="true"/>
+		  </and>
+		</condition>
+		<echo>TEST DEPLOY ID ${deploy.id} / Valid ${isTestOnly}</echo>
+	</target>
+
+	<target name="check_host">
+		<condition property="isHost">
+			<contains string="${hostname}" substring="esptstf"/>
+		</condition>
+		<echo>hostname is `${hostname}`</echo>
+	</target>
+			
+	<target name="check_valid" depends="check_host" unless="isHost">
+		<fail message="배포 대상 서버가 아닙니다."/>
+	</target>
+	
+	
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->
+	<target name="check_exist">
+		<condition property="isExistFO">
+			<resourceexists>
+				<!-- /usr1/home/xclass/deploy/src/FO_20161215_1330 -->
+				<file file="${source.dir}"/>
+			</resourceexists>
+		   <!-- <echo message="체크함"/> -->
+		</condition>
+		<!--<echo message="체크함"/>-->
+		<echo>isExistFO / Valid ${isExistFO}</echo>
+	</target>
+
+			
+	<!-- ================================================== -->
+	<!-- only test deploy -->
+	<!-- ================================================== -->	
+	<target name="test_deploy_was" depends="check_test_deploy_id">
+		<antcall target="rename_was" />
+		<antcall target="copy_was" />
+	</target>
+
+	<!-- ================================================== -->
+		<!-- only test deploy -->
+		<!-- ================================================== -->	
+		<target name="ssh_test_deploy_was" depends="check_test_deploy_id">
+			<antcall target="ssh_rename_was" />
+			<antcall target="ssh_backup_was" />
+			<antcall target="ssh_copy_was" />
+		</target>
+	
+	<!-- ================================================== -->
+	<!-- init -->
+	<!-- ================================================== -->
+	<target name="init">
+		<antcall target="check_valid" />
+		<antcall target="delete_sources" />
+		<antcall target="make_directory" />
+	</target>
+	
+	
+	<!-- ================================================== -->
+		<!-- ssh init -->
+		<!-- ================================================== -->
+		<target name="ssh_init">
+			<antcall target="check_valid" />
+			<antcall target="delete_sources" />
+			<antcall target="make_directory" />
+		</target>
+	
+	<!-- delete dir = /usr1/home/jeus/deploy/FO_20161216_1330/project -->
+	<target name="delete_sources">
+		<echo>Target directory `${source.dir}/project`...</echo>
+		<delete dir="${source.dir}/project" />
+	</target>
+	
+	<!-- mkdir dir = /usr1/home/jeus/deploy/FO_20161216_1330 -->
+	<target name="make_directory">
+		<echo>Target directory `${source.dir}`...</echo>
+		<mkdir dir="${source.dir}" />
+	</target>
+	
+	<!-- ================================================== -->
+	<!-- rename (for test only) -->
+	<!-- ================================================== -->	
+	<target name="rename_was" if="isTestOnly">
+		<echo>change lotte-super-front to project</echo>
+		<exec executable="mv" dir="${source.dir}">
+			<arg value="lotte-super-front" />
+			<arg value="project" />
+		</exec>
+		<echo>change WebContent to front</echo>
+		<exec executable="mv" dir="${source.dir}/project">
+			<arg line="WebContent front" />
+		</exec>
+	</target>
+
+
+	<!-- ================================================== -->
+	<!-- ssh rename (for test only) -->
+	<!-- ================================================== -->	
+	<target name="ssh_rename_was" if="isTestOnly">
+		<echo>change lotte-super-front to project</echo>
+		<exec executable="mv" dir="${source.dir}">
+			<arg value="lotte-super-front" />
+			<arg value="project" />
+		</exec>
+		<echo>change WebContent to front</echo>
+		<exec executable="mv" dir="${source.dir}/project">
+			<arg line="WebContent front" />
+		</exec>
+	</target>
+
+	<!-- ================================================== -->
+	<!-- ssh backup -->
+	<!-- ================================================== -->	
+
+	<!-- source.dir/app.dir                               =         /usr1/home/jeus/deploy/FO_20161212_1330/project/front -->
+	<!-- fo.dir                                                 =         /esuper/project/front -->
+	<!-- source.dir_backup/project/front         =         /usr1/home/jeus/deploy/FO_20161212_1330_backup/project/front -->
+
+	<target name="ssh_backup_was">
+		<echo>Backup ${source.dir}</echo>
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte.jar">
+			<arg value="${source.dir}/${app.dir}"/>
+			<arg value="${fo.dir}"/>
+			<arg value="${source.dir}_backup/project/front"/>
+		</java>
+	</target>
+
+		      	
+	<!-- ================================================== -->
+	<!-- copy -->
+	<!-- ================================================== -->	
+	<target name="copy_was">
+		<copy todir="${base.dir}" overwrite="true" verbose="true">
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="**/*"/>
+		    </fileset>
+		</copy>
+	</target>	
+
+	
+	<!-- ================================================== -->
+	<!-- ssh copy -->
+	<!-- ================================================== -->
+	<!-- base.dir                =  /esuper/project/front -->
+	<!-- source.dir/app.dir  =  /usr1/home/jeus/deploy/FO_20161212_1330/project/front -->
+	<target name="ssh_copy_was">
+		<copy todir="${base.dir}" overwrite="true" verbose="true">
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="**/*"/>
+		    </fileset>
+		</copy>
+	</target>	
+
+	
+	<target name="ssh_rollback" depends="check_exist">
+		<antcall target="check_valid"/>
+		<echo message="Rollback FO Java Applications"/>
+		<antcall target="rollbackfo"/>
+	</target>	
+
+	<!-- SSH Rollback -->
+	<!-- source.dir = /usr1/home/jeus/deploy/FO_20161215_1330 -->
+	<!-- 경로가 front  밑에 있는 파일들 전체 롤백 -->
+	<target name="rollbackfo" if="isExistFO">        
+        <copy todir="/esuper/project/front" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/project/front"
+                     includes="**/*"/>
+        </copy>
+    
+    </target>		
+
+
+	<target name="ssh_fosync_was">
+		<move todir="/usr1/home/jeus/deploy/docroot_backup/front/${deploy.id}/WEB-INF">
+		    <fileset dir="/esuper/project/movetest/front/WEB-INF">
+		      <include name="jsp/**/"/>
+		      <include name="dynamic_classes/**"/>
+		      <include name="classes/**"/>
+		     <include name="x2scenario/**"/>
+		    </fileset>
+		 </move>
+		<antcall target="zipdelete" />
+		<antcall target="ftp_get" />
+		<antcall target="unzip" />
+	</target>	
+
+<!--
+	<target name="copy_test">
+		<copy todir="/usr1/home/jeus/deploy/docroot_backup" includeemptydirs="false">
+		    <fileset dir="/esuper/project/back/WEB-INF">
+		      <exclude name="x2log/**/*"/>
+		      <exclude name="*.xml"/>
+		    </fileset>
+		</copy>
+	</target>
+-->
+	
+	<!--
+	<target name="zipdelete">
+		<delete includeemptydirs="true">
+	    		<fileset dir="/usr1/home/jeus/deploy/real_zipreceive" includes="*.zip"/>
+	  </delete>
+	</target>
+	-->
+	
+	<target name="zipdelete">
+		<delete>
+	    		<fileset dir="/usr1/home/jeus/deploy/real_zipreceive" includes="*.zip"/>
+	  </delete>
+	</target>
+
+	
+	<!-- ##### 참고용 ##### -->
+	<!--
+	<condition property="tobemoved">
+	 <and>
+	  <available file="/path/to/DWH-PQ-HQ-0837_Lieferung.tar.gz"/>
+	  <available file="/path/to/DWH-PQ-HQ-0837/>"
+	 </and>
+	</condition>
+	-->
+
+	
+	<!-- WEB-INF 가 있으면 True, 없으면 False -->
+	<!-- 마지막을 모든것(*) 을 지정해줄수 없고, 반드시 폴더명 혹은 파일명을 기재하여야하는것인가? -->
+	<target name="folder_exist_and_test">
+		<condition property="isExistFDand">
+			<and>
+				<resourceexists>
+					<file file="/esuper/project/movetest/front/WEB-INF"/>
+				</resourceexists>
+				<resourceexists>
+				<file file="/esuper/project/movetest/mobile/WEB-INF"/>
+				</resourceexists>
+				<resourceexists>
+					<file file="/esuper/project/movetest/company/WEB-INF"/>
+				</resourceexists>
+				<resourceexists>
+					<file file="/esuper/project/movetest/winwin/WEB-INF"/>
+				</resourceexists>
+			</and>
+		</condition>
+		<echo>폴더 존재 유무 / Valid ${isExistFDand}</echo>
+	</target>
+
+	
+	<!-- "*" 를 폴더로 인식하는것으로 보임 -->
+	<!---
+	<target name="folder_exist_or_test">
+		<condition property="isExistFDor">
+			<or>
+				<resourceexists>
+					<file file="/esuper/project/movetest/front/WEB-INF/*"/>
+				</resourceexists>
+				<resourceexists>
+				<file file="/esuper/project/movetest/mobile/WEB-INF/*"/>
+				</resourceexists>
+				<resourceexists>
+					<file file="/esuper/project/movetest/company/WEB-INF/*"/>
+				</resourceexists>
+				<resourceexists>
+					<file file="/esuper/project/movetest/winwin/WEB-INF/*"/>
+				</resourceexists>
+			</or>
+		</condition>
+		<echo>폴더 존재 유무 / Valid ${isExistFDor}</echo>
+	</target>
+	-->
+	
+	<!-- WEB-INF 밑에 특정폴더 1개를 명시하여 나머지 폴더들도 있는지 없는지를 확인하지 않고 확인하는 방법은 없는가? -->
+	<target name="folder_exist">
+		<condition property="isExistFD">
+			<and>
+				<resourceexists>
+					<file file="/esuper/project/movetest/front/WEB-INF/jsp"/>
+				</resourceexists>
+				<resourceexists>
+				<file file="/esuper/project/movetest/mobile/WEB-INF/jsp"/>
+				</resourceexists>
+				<resourceexists>
+					<file file="/esuper/project/movetest/company/WEB-INF/jsp"/>
+				</resourceexists>
+				<resourceexists>
+					<file file="/esuper/project/movetest/winwin/WEB-INF/jsp"/>
+				</resourceexists>
+			</and>
+		</condition>
+		<echo>폴더 존재 유무 / Valid ${isExistFD}</echo>
+	</target>
+	
+	<target name="folder_exist_or">
+		<condition property="isExistFDor">
+			<or>
+				<resourceexists>
+					<file file="/esuper/project/movetest/front/WEB-INF/jsp"/>
+				</resourceexists>
+				<resourceexists>
+				<file file="/esuper/project/movetest/mobile/WEB-INF/jsp"/>
+				</resourceexists>
+				<resourceexists>
+					<file file="/esuper/project/movetest/company/WEB-INF/jsp"/>
+				</resourceexists>
+				<resourceexists>
+					<file file="/esuper/project/movetest/winwin/WEB-INF/jsp"/>
+				</resourceexists>
+			</or>
+		</condition>
+		<echo>폴더 존재 유무 / Valid ${isExistFDor}</echo>
+	
+	</target>
+
+	
+	<target name="doc_del_copy_total">
+		<antcall target="doc_del_copy"/>
+	    <antcall target="doc_copy"/>
+	</target>
+	
+	
+	<!-- Delete 관련 코드는 "only_del_emp"  Target 참조 -->
+	<!-- WEB-INF 밑에 jsp 폴더를 체크하여 폴더가 있다면 삭제, jsp 폴더만 체크하는것이 아니라 전체적으로 하위폴더가 있다는것을 체크할수 없을까? -->
+	<target name="doc_del_copy" depends="folder_exist" if="isExistFD">
+		<delete includeemptydirs="true" >
+	    		<fileset dir="/esuper/project/movetest/front/WEB-INF" includes="**/*"/>
+				<fileset dir="/esuper/project/movetest/mobile/WEB-INF" includes="**/*"/>
+				<fileset dir="/esuper/project/movetest/winwin/WEB-INF" includes="**/*"/>
+				<fileset dir="/esuper/project/movetest/company/WEB-INF" includes="**/*"/>
+	    		<fileset dir="/esuper/project/movetest/front/static-root" includes="**/*"/>
+				<fileset dir="/esuper/project/movetest/mobile/static-root" includes="**/*"/>
+				<fileset dir="/esuper/project/movetest/winwin/static-root" includes="**/*"/>
+				<fileset dir="/esuper/project/movetest/company/static-root" includes="**/*"/>
+					
+	  </delete>
+	
+  	  <copy todir="/esuper/project/movetest/front/WEB-INF">
+		    <fileset dir="/esuper/project/front/WEB-INF">
+			    <exclude name="x2log/**"/>
+			    <exclude name="*.xml"/>
+		    </fileset>
+	  </copy>
+	  <copy todir="/esuper/project/movetest/mobile/WEB-INF">
+		    <fileset dir="/esuper/project/mobile/WEB-INF">
+			     <exclude name="x2log/**"/>
+	    		 <exclude name="*.xml"/>
+		    </fileset>
+	  </copy>
+	  <copy todir="/esuper/project/movetest/company/WEB-INF">
+		    <fileset dir="/esuper/project/company/WEB-INF">
+	    		<exclude name="x2log/**"/>
+	    		<exclude name="*.xml"/>
+		    </fileset>
+	  </copy>
+	  <copy todir="/esuper/project/movetest/winwin/WEB-INF">
+		    <fileset dir="/esuper/project/winwin/WEB-INF">
+	    		<exclude name="x2log/**"/>
+	    		<exclude name="*.xml"/>
+		    </fileset>
+	  </copy>
+	<antcall target="doc_copy"/>
+	</target>
+
+	
+	
+	<target name="doc_copy" depends="folder_exist_or" if="isExistFDor">
+  	  <copy todir="/esuper/project/movetest/front/WEB-INF">
+		    <fileset dir="/esuper/project/front/WEB-INF">
+			    <exclude name="x2log/**"/>
+			    <exclude name="*.xml"/>
+		    </fileset>
+	  </copy>
+	  <copy todir="/esuper/project/movetest/mobile/WEB-INF">
+		    <fileset dir="/esuper/project/mobile/WEB-INF">
+			     <exclude name="x2log/**"/>
+	    		 <exclude name="*.xml"/>
+		    </fileset>
+	  </copy>
+	  <copy todir="/esuper/project/movetest/company/WEB-INF">
+		    <fileset dir="/esuper/project/company/WEB-INF">
+	    		<exclude name="x2log/**"/>
+	    		<exclude name="*.xml"/>
+		    </fileset>
+	  </copy>
+	  <copy todir="/esuper/project/movetest/winwin/WEB-INF">
+		    <fileset dir="/esuper/project/winwin/WEB-INF">
+	    		<exclude name="x2log/**"/>
+	    		<exclude name="*.xml"/>
+		    </fileset>
+	  </copy>
+	</target>
+
+
+	
+	<target name="only_copy">
+  	  <copy todir="/esuper/project/movetest/front/WEB-INF">
+		    <fileset dir="/esuper/project/front/WEB-INF">
+			    <exclude name="x2log/**"/>
+			    <exclude name="*.xml"/>
+		    </fileset>
+	  </copy>
+	  <copy todir="/esuper/project/movetest/mobile/WEB-INF">
+		    <fileset dir="/esuper/project/mobile/WEB-INF">
+			     <exclude name="x2log/**"/>
+	    		 <exclude name="*.xml"/>
+		    </fileset>
+	  </copy>
+	  <copy todir="/esuper/project/movetest/company/WEB-INF">
+		    <fileset dir="/esuper/project/company/WEB-INF">
+	    		<exclude name="x2log/**"/>
+	    		<exclude name="*.xml"/>
+		    </fileset>
+	  </copy>
+	  <copy todir="/esuper/project/movetest/winwin/WEB-INF">
+		    <fileset dir="/esuper/project/winwin/WEB-INF">
+	    		<exclude name="x2log/**"/>
+	    		<exclude name="*.xml"/>
+		    </fileset>
+	  </copy>
+	</target>
+
+	
+	
+	<!-- WEB-INF 포함하여 하위 폴더들은 모두 남아있음 -->
+	<!--
+	<target name="only_del">
+				<delete>
+	    		<fileset dir="/esuper/project/movetest/front/WEB-INF" includes="**/**"/>
+				<fileset dir="/esuper/project/movetest/mobile/WEB-INF" includes="**/**"/>
+				<fileset dir="/esuper/project/movetest/winwin/WEB-INF" includes="**/**"/>
+				<fileset dir="/esuper/project/movetest/company/WEB-INF" includes="**/**"/>
+	  </delete>
+	</target>
+	-->
+
+	
+	<!-- WEB-INF 도 지워짐 : 원하는 결과가 아님 -->
+	<!--
+	<target name="only_del_emp">
+		<delete includeemptydirs="true" >
+	    		<fileset dir="/esuper/project/movetest/front/WEB-INF" includes="**/**"/>
+				<fileset dir="/esuper/project/movetest/mobile/WEB-INF" includes="**/**"/>
+				<fileset dir="/esuper/project/movetest/winwin/WEB-INF" includes="**/**"/>
+				<fileset dir="/esuper/project/movetest/company/WEB-INF" includes="**/**"/>
+	  </delete>
+	</target>
+	-->
+
+	<!-- WEB-INF 도 지워짐 : 원하는 결과가 아님 -->
+	<!--
+		<target name="only_del_emp">
+			<delete includeemptydirs="true" >
+		    		<fileset dir="/esuper/project/movetest/front/WEB-INF" includes="**"/>
+					<fileset dir="/esuper/project/movetest/mobile/WEB-INF" includes="**"/>
+					<fileset dir="/esuper/project/movetest/winwin/WEB-INF" includes="**"/>
+					<fileset dir="/esuper/project/movetest/company/WEB-INF" includes="**"/>
+		  </delete>
+		</target>
+	-->		
+	
+	<!-- WEB-INF 가 지워지지 않음 : 원하는 결과-->
+	<target name="only_del_emp">
+		<delete includeemptydirs="true" >
+	    		<fileset dir="/esuper/project/movetest/front/WEB-INF" includes="**/*"/>
+				<fileset dir="/esuper/project/movetest/mobile/WEB-INF" includes="**/*"/>
+				<fileset dir="/esuper/project/movetest/winwin/WEB-INF" includes="**/*"/>
+				<fileset dir="/esuper/project/movetest/company/WEB-INF" includes="**/*"/>
+	  </delete>
+	</target>
+
+
+	<!-- "**" 자체가 폴더로 인식하는것으로 보임 -->
+	<!--
+	<target name="only_del_emp">
+		<delete includeemptydirs="true" >
+	    		<fileset dir="/esuper/project/movetest/front/WEB-INF/**"/>
+				<fileset dir="/esuper/project/movetest/mobile/WEB-INF/**"/>
+				<fileset dir="/esuper/project/movetest/winwin/WEB-INF/**"/>
+				<fileset dir="/esuper/project/movetest/company/WEB-INF/**"/>
+	  </delete>
+	</target>
+	-->
+
+	<!-- WEB-INF 밑에 jsp 폴더가 있는것만 체크 js(WEB) ,  jsp(WAS) 만 있으면 나머지 폴더들도 있기때문이라고 봄 -->
+  	<target name="isExistFolder">
+			<condition property="isExistmovetest">
+				<and>
+						<resourceexists>
+								   <file file="/esuper/project/movetest/front/WEB-INF/jsp"/>
+						</resourceexists>
+						<resourceexists>
+							      <file file="/esuper/project/movetest/mobile/WEB-INF/jsp"/>
+						</resourceexists>
+						<resourceexists>
+							     <file file="/esuper/project/movetest/winwin/WEB-INF/jsp"/>
+						</resourceexists>
+						<resourceexists>
+								 <file file="/esuper/project/movetest/company/WEB-INF/jsp"/>
+						</resourceexists>
+						<resourceexists>
+								<file file="/esuper/project/movetest/front/static-root/js"/>
+						</resourceexists>
+						<resourceexists>
+								<file file="/esuper/project/movetest/mobile/static-root/js"/>
+						</resourceexists>
+						<resourceexists>
+								<file file="/esuper/project/movetest/winwin/static-root/jsp"/>
+						</resourceexists>
+						<resourceexists>
+								<file file="/esuper/project/movetest/company/static-root/jsp"/>
+						</resourceexists>
+
+				</and>
+	    </condition>
+	<echo>jsp 폴더 존재유무 / Valid ${isExistmovetest}</echo>
+  		<antcall target="notexist"/>
+  		<antcall target="isexist"/>
+	</target>
+
+	
+	<target name="notexist" unless="isExistmovetest">
+		<echo message="jsp 폴더가 없습니다."/> 
+	</target>
+
+	<target name="isexist" if="isExistmovetest">
+		<echo message="jsp 폴더가 있습니다."/> 
+	</target>
+	
+	
+	<!-- movetest 폴더밑의 front, mobile, winwin, company 하위 폴더 강제 삭제 -->
+  	<target name="doc_forcedel_forcecopy">
+ 		<antcall target="doc_forcedel"/> 		
+ 		<antcall target="isExistFolder"/>
+  		<antcall target="doc_forcecopy"/>
+  	</target>
+	
+    <!--  includes="**/*" 로 해야 WEB-INF 가 지워지지 않음 -->
+  	<target name="doc_forcedel">
+			<delete includeemptydirs="true" >
+  		    		<fileset dir="/esuper/project/movetest/front/WEB-INF" includes="**/*"/>
+  					<fileset dir="/esuper/project/movetest/mobile/WEB-INF" includes="**/*"/>
+  					<fileset dir="/esuper/project/movetest/winwin/WEB-INF" includes="**/*"/>
+  					<fileset dir="/esuper/project/movetest/company/WEB-INF" includes="**/*"/>
+		    		<fileset dir="/esuper/project/movetest/front/static-root" includes="**/*"/>
+					<fileset dir="/esuper/project/movetest/mobile/static-root" includes="**/*"/>
+					<fileset dir="/esuper/project/movetest/winwin/static-root" includes="**/*"/>
+					<fileset dir="/esuper/project/movetest/company/static-root" includes="**/*"/>
+  		  </delete>
+  	</target>
+
+	<!-- Copy 명령어는 폴더가 있으면 복사를 하지 않네? -->
+	<!-- ##### WEB-INF ##### -->
+	<target name="doc_forcecopy">
+  	  	  <copy todir="/esuper/project/movetest/front/WEB-INF">
+	  			    <fileset dir="/esuper/project/front/WEB-INF">
+	  				    <exclude name="x2log/**"/>
+	  				    <exclude name="*.xml"/>
+	  			    </fileset>
+  		  </copy>
+  		  <copy todir="/esuper/project/movetest/mobile/WEB-INF">
+	  			    <fileset dir="/esuper/project/mobile/WEB-INF">
+	  				     <exclude name="x2log/**"/>
+	  		    		 <exclude name="*.xml"/>
+	  			    </fileset>
+		 </copy>
+	  	 <copy todir="/esuper/project/movetest/company/WEB-INF">
+	  			    <fileset dir="/esuper/project/company/WEB-INF">
+	  		    		<exclude name="x2log/**"/>
+	  		    		<exclude name="*.xml"/>
+	  			    </fileset>
+	  	 </copy>
+	  	 <copy todir="/esuper/project/movetest/winwin/WEB-INF">
+	  			    <fileset dir="/esuper/project/winwin/WEB-INF">
+	  		    		<exclude name="x2log/**"/>
+	  		    		<exclude name="*.xml"/>
+	  			    </fileset>
+	  	 </copy>
+		
+		<!-- ##### static-root ##### -->
+	  	  <copy todir="/esuper/project/movetest/front/static-root">
+  			    <fileset dir="/esuper/project/front/static-root">
+	  			      <include name="ark/**" />
+  			    	  <include name="css/**" />
+  			    	  <include name="css_jsp/**" />
+  			    	  <include name="css_ssl/**" />
+  			    	  <include name="js_ssl/**" />
+  			    	  <include name="event/**" />
+  			    	  <include name="font/**" />
+  			    	  <!--<include name="image/**" />--><!-- 사이즈가 너무 커서 제외 -->
+  			    	  <include name="longdesc/**" />
+	  				  <include name="v3/**" />
+	  				  <include name="js/**" />
+	  		  </fileset>
+		  </copy>
+		  <copy todir="/esuper/project/movetest/mobile/static-root">
+  			    <fileset dir="/esuper/project/mobile/static-root">
+  			      	  <include name="ark/**" />
+  			    	  <include name="css/**" />
+  			    	  <include name="css_jsp/**" />
+  			    	  <include name="css_ssl/**" />
+  			    	  <include name="css_mobile/**" />
+				      <include name="js/**" />
+					  <include name="js_jsp/**" />
+  			    	  <include name="js_ssl/**" />
+					  <include name="js_mobile/**" />
+			   </fileset>
+		 </copy>
+	  	 <copy todir="/esuper/project/movetest/company/static-root">
+  			    <fileset dir="/esuper/project/company/static-root">
+	  			      <include name="cab/**" />
+  				      <include name="css/**" />
+  			    	  <include name="css_bo/**" />
+	  				  <include name="css_bos/**" />
+  			    	  <include name="image/**" />
+			    	  <include name="image_bos/**" />
+  			    	  <include name="images/**" />
+  			    	  <include name="img/**" />
+	  				  <include name="file/**" />
+	  				  <include name="js/**" />
+  			    	  <include name="js_bo/**" />
+  			    	  <include name="js_bos/**" />
+	  				  <include name="v3/**" />
+	  				  
+  			    </fileset>
+	  	 </copy>
+	  	 <copy todir="/esuper/project/movetest/winwin/static-root">
+	  			    <fileset dir="/esuper/project/winwin/static-root">
+	  		    		<include name="css/**"/>
+	  			    	<include name="js/**"/>
+	  			    	<include name="img/**"/>
+	  			    	<include name="v3/**"/>
+	  			    </fileset>
+	  	 </copy>
+
+</target>
+	  	
+
+</project>

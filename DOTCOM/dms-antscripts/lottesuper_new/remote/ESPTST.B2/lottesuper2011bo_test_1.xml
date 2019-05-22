@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottesuper2011mo_test">
+	<property name="ant.home" value="/usr1/home/xclass/downloads/apache-ant-1.8.3" />
+	<!-- source.dir/app.dir                               =         /usr1/home/jeus/deploy/MO_20161212_1330/project/Mobile -->
+	<!-- mo.dir                                                =        /esuper/project/mobile -->
+	<!-- source.dir_backup/project/mobile       =        /usr1/home/jeus/deploy/MO_20161212_1330_backup/project/mobile -->
+
+	
+	<target name="Ant_Java_Path_Test">
+		<echo>ant.home : ${ant.home}/bin/lotte.jar</echo>
+		<echo>java.home : ${java.home}/bin/java</echo>
+	</target>
+</project>

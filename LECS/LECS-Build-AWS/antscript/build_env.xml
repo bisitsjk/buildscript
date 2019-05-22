@@ -1,0 +1,103 @@
+<project name="LECS_Build_Env">
+	<property file="project.properties"  taskname="프로퍼티를 읽어옵니다.(prject.properties)"/>
+	
+		<tstamp>
+			<format property="current.year" pattern="yyyy" />
+			<format property="DSTAMP" pattern="yyyy-MM-dd" />
+			<format property="TSTAMP" pattern="HH.mm.ss" />
+			<format property="DATETIME" pattern="yyyy-MM-dd HH.mm.ss" />
+		</tstamp>
+	
+		<taskdef name="groovy" classname="org.codehaus.groovy.ant.Groovy"/>
+	
+		<taskdef name="javancss" classname="javancss.JavancssAntTask" />
+		<typedef resource="org/tigris/subversion/svnant/svnantlib.xml"
+			classpath="svnant.jar" />
+		<taskdef name="pmd" classname="net.sourceforge.pmd.ant.PMDTask" />
+		
+		
+	
+		<property name="build.dir" value="${basedir}/build" />
+		<mkdir dir="${build.dir}"/>
+		<property name="checkout.dir" value="${user.home}/.lecs" />
+		<property name="build.classes" value="${basedir}/build/classes" />
+		<property name="build.product.dir" value="${basedir}/build/product" />
+		<property name="build.test.dir" value="${basedir}/build/test" />
+		<property name="dist.dir" value="${basedir}/dist" />
+		<property name="lib.dir" value="${basedir}/lib" />
+		<property name="doc.dir" value="${build.dir}/doc" />
+		<property name="test.fixture.dir" value="${basedir}/fixtures" />
+		<property name="test.report.dir" value="${doc.dir}/test-result" />
+		<property name="test.output.dir" value="${doc.dir}/test-report" />
+	
+		<property name="javadoc.dir" value="${doc.dir}/api" />
+		<groovy>
+			<arg value="${TAG}" />
+			<arg value="${DEPLOY}" />
+<![CDATA[
+		println "Checkout path: ${properties['checkout.dir']}"
+		if ( new File(properties["checkout.dir"]).exists() == false) {
+			new File(properties["checkout.dir"]).mkdirs();
+		}
+		
+		tag = args[0];
+		deploy = args[1];
+
+		if ('${DEPLOY}' == deploy) {
+			properties["DEPLOY_TARGET"] = "tst"
+		}
+		else {
+			properties["DEPLOY_TARGET"] = deploy;
+		}
+
+
+		println "DEPLOY Target : "+properties["DEPLOY_TARGET"];
+
+
+		//properties["REPO_BRANCH"] = "branches/R20110205"
+
+		println "TAG:"+tag
+
+		if (tag.indexOf("branches") != -1) {
+			properties["REPO_BRANCH"] = tag
+		}
+		else if (System.getProperty("TAG") == null ||	"".equals(System.getProperty("TAG"))) {
+			properties["REPO_BRANCH"] =	"trunk"
+		}
+		else {
+			properties["REPO_BRANCH"] = "tags/"+System.getProperty("TAG")
+		}
+		println "REPO_BRANCH: "+ properties["REPO_BRANCH"]
+
+		basedir = properties["basedir"];
+		classpath = ant.path(id:"project.classpath") {
+			if (new java.io.File(properties["lib.dir"]).exists()) {
+				fileset(dir: properties["lib.dir"]){
+				include(name: "*.jar")
+			}
+		}
+
+		if (new java.io.File(properties["lib.dir"]).exists()) {
+			fileset(dir: properties["lib.dir"]){
+				include(name: "*.jar")
+			}
+		}
+		if (new java.io.File(properties["basedir"]	+"/WebContent/WEB-INF/lib").exists()) {
+			fileset(dir: properties["basedir"] +"/WebContent/WEB-INF/lib"){
+				include(name: "*.jar")
+			}
+		}
+		if (new java.io.File(properties["basedir"]+"/WebContent/WEB-INF/classes").exists())	{
+			pathelement(path: properties["basedir"] +"/WebContent/WEB-INF/classes")
+		}
+		}
+]]>
+		</groovy>
+	
+	
+	
+		<property file="~/accounts.properties" />
+	
+	<target name="dry">
+	</target>
+</project>

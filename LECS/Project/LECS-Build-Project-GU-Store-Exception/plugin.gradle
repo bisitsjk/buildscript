@@ -1,0 +1,146 @@
+// "플러그인 설정" 
+buildscript {
+    repositories { mavenCentral() }
+    dependencies {
+        classpath group:'com.jcraft', name:'jsch', version:'0.1.45'
+    }
+}
+
+
+import com.jcraft.jsch.*;
+import java.util.*;
+
+class HardcodedUserInfo implements UserInfo {
+ 
+	private final String password;
+ 
+	private HardcodedUserInfo(String password) {
+		this.password = password;
+	}
+ 
+	public String getPassphrase() {
+		return null;
+	}
+ 
+	public String getPassword() {
+		return password;
+	}
+ 
+	public boolean promptPassword(String s) {
+		return true;
+	}
+ 
+	public boolean promptPassphrase(String s) {
+		return true;
+	}
+ 
+	public boolean promptYesNo(String s) {
+		return true;
+	}
+ 
+	public void showMessage(String s) {
+		System.out.println("message = " + s);
+	}
+}
+
+
+ant.path(id: 'plugins'){
+	new File( BUILD_LIB ).eachFile { file ->
+		if (file.getName().endsWith("jar")) {
+			ant.pathelement(location: file.getAbsolutePath())
+		} 
+	}
+}
+
+ant.typedef resource:"org/tigris/subversion/svnant/svnantlib.xml",  classpathref:'plugins'
+
+ant.taskdef name: 'sshexec', classname: 'org.apache.tools.ant.taskdefs.optional.ssh.SSHExec',classpathref:'plugins'
+
+ant.svnSetting(username: SVN_ID, 	password: SVN_PASSWORD, id:'svn.settings', svnkit:'true',javahl:'false')
+
+sshExecNow = { address, id, password, cmd ->
+	println "CMD to ${address}: ${cmd}"
+	ant.sshexec (
+		host: address,
+		username: id,
+		password: password,
+		trust:"true",
+		command: cmd,
+		failonerror:"true",
+		outputproperty: cmd,
+		verbose:"true"
+	)
+}
+
+sshExecOutNow = { address, id, password, cmd , outkey->
+	println "CMD to ${address}: ${cmd}"
+	ant.sshexec (
+		host: address,
+		username: id,
+		password: password,
+		trust:"true",
+		command: cmd,
+		failonerror:"true",
+		outputproperty: outkey,
+		verbose:"false"
+	)
+}
+
+
+
+sshExec = {address, id, password ->
+	return { cmd ->
+		println "CMD to ${address}: ${cmd}"
+		ant.sshexec (
+			host: address,
+			username: id,
+			password: password,
+			trust:"true",
+			command: cmd,
+		)	
+	}
+}
+
+scp = {address, id, password, fromPath, toPath ->
+	def to = "${id}@${address}:${toPath}"
+	println "scp ${fromPath} ${to}"
+	def localfile = file(fromPath)
+	for(int i=0; i<3; i++){
+		try {
+			println ("Trial # $i")
+			JSch jsch = new JSch()
+			Session session = jsch.getSession(id, address,22)
+			session.setUserInfo(new HardcodedUserInfo(password));
+		
+			Properties config = new Properties();
+			config.setProperty("StrictHostKeyChecking", "no");
+			session.setConfig(config);
+			session.connect();
+		
+			ChannelSftp channel = (ChannelSftp)session.openChannel("sftp");
+			channel.connect();
+			channel.cd(toPath);
+			channel.put(new FileInputStream(localfile), localfile.name);
+			channel.disconnect();
+			session.disconnect();
+			return;
+		}
+		catch(IOException ex){
+			ex.printStackTrace();
+			if (ex.getMessage().contains("channel is broken") == false) {
+				throw ex;
+			}
+		}
+	}
+	
+	throw new IllegalStateException("All trial was failed")
+	
+	
+	
+}
+
+task scp_test << {
+	scp "jeus", "Hwo059dA61", "/Volumes/Mac_HDD/Users/narusas/a.html", "210.93.129.162:~/"
+}
+
+ 

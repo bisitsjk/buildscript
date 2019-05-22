@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<project name="Lotte_DFS_Front-1.0" default="deploy-all" basedir=".">
+	
+    <!-- job COMPILE -->
+	<!-- property name="jobs.chw.TEST" value="E:\hudson-lottedfs\jobs\COMPILE\china_web_deploy\TESTSERVER" / -->
+	
+	<!-- server ip -->
+	<property name="chw.test.ip" value="172.16.5.160" />
+	
+	<!-- request file -->
+	<property name="request.file" value="E:\hudson-lottedfs\jobs\COMPILE\china_web_deploy\TESTSERVER_DEPLOY\${BUILD}" />
+	
+	 <target name="deploy-all">
+	  <!-- TEST SERVER DEPLOY trust="true" 통신관련 -->
+	<echo>+=======================================================+</echo>
+	<echo>            CHINA_WEB_TESTSERVER_WORKING_DELETE          </echo>
+	<echo>+=======================================================+</echo>	
+	 <!-- sshexec host="${chw.test.ip}" username="jeus" password="N1e@FCW3!6" command="\rm -rf /usr1/home/jeus/working" trust="true"/ -->
+	 <!-- sshexec host="${chw.test.ip}" username="jeus" password="N1e@FCW3!6" command="mkdir /usr1/home/jeus/working" trust="true"/ -->
+		  
+	<echo>+=======================================================+</echo>
+	<echo>            CHINA_WEB_TESTSERVER_WORKING_DEPLOY          </echo>
+	<echo>+=======================================================+</echo>	 	
+	 <scp file="${request.file}" remoteTofile="jeus:N1e@FCW3!6@${chw.test.ip}:/usr1/home/jeus/working" trust="true"/>
+	 </target>
+
+	<!-- E:\hudson-lottedfs\jobs\COMPILE\china_web_deploy\dfs_world_cn -->	
+						
+	<target name="CHM.TESTSERVER.DEPLOY">
+		<antcall target="deploy-all" />
+	</target>
+</project>

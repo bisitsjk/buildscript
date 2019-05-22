@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottesuper2011ba_test">
+	<tstamp>
+		<!--<format property="back_time" pattern="yyyy-MM-dd_HH-mm-ss-SSS"/>-->
+		<format property="back_time" pattern="yyyyMMdd_HHmmss"/>
+		<!--<format property="back_time" pattern="yyyyMMdd"/>-->
+	</tstamp>
+	<property file="./lottesuper2011ba_test.properties"/>
+	<property name="deploy.id" value="${DEPLOY_ID}"/>
+	<property name="deploy.dir" value="/usr1/home/jeus/deploy"/>
+	<property name="app.dir" value="project/batch"/>
+	<property name="base.dir" value="/esuper/project"/>
+	<property name="batch.dir" value="${base.dir}/batch"/>
+	
+	<!-- 테스트용도 -->
+	<!--<property name="batch.test.dir" value="/esuper/project/batch/deploytest"/>-->
+	
+	<!-- /esuper/project/batch -->
+	<property name="ba.dir" value="${base.dir}/batch"/>
+	
+	<!-- source.dir = /usr1/home/jeus/deploy/BA_20170105_1330 -->
+	<!-- source.dir = /usr1/home/jeus/deploy/BA_20170105_TEST_HCCHE -->
+	<property name="source.dir" value="${deploy.dir}/${deploy.id}"/>
+	
+	<!-- deploy id ( for test only ) -->
+	<property name="prefix.dep.id" value="BA_" />
+	<property name="infix.dep.id" value="_TEST_" />
+
+	<!--
+	<property name="java.home" value="/usr/java1.6" />
+	<property name="ant.home" value="/usr1/home/xclass/downloads/apache-ant-1.8.2" />
+	-->
+	
+	<!-- ================================================== -->
+	<!-- check exist -->
+	<!-- ================================================== -->
+	<target name="check_exist">
+		<condition property="isExistBA">
+			<resourceexists>
+				<!-- /usr1/home/jeus/deploy/src/BA_20161108_1330 -->
+				<file file="${source.dir}"/>
+			</resourceexists>
+		   <!-- <echo message="체크함"/> -->
+		</condition>
+		<!--<echo message="체크함"/>-->
+	</target>
+
+
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->		
+	<target name="check_deploy_id">
+		<condition property="isValid">
+		  <and>
+			<length string="${deploy.id}" when="greater" length="10"/>
+			<contains string="${deploy.id}" substring="${prefix.dep.id}" casesensitive="true"/>
+			<contains string="${deploy.id}" substring="${infix.dep.id}" casesensitive="true"/>
+		  </and>
+		</condition>
+		<echo>DEPLOY ID ${deploy.id} / Valid ${isValid}</echo>
+	</target>
+
+	<target name="check_test_deploy_id">
+		<condition property="isTestOnly" >
+		  <and>
+			<length string="${deploy.id}" when="greater" length="10"/>
+			<contains string="${deploy.id}" substring="${prefix.dep.id}" casesensitive="true"/>
+			<contains string="${deploy.id}" substring="${infix.dep.id}" casesensitive="true"/>
+		  </and>
+		</condition>
+		<echo>TEST DEPLOY ID ${deploy.id} / Valid ${isTestOnly}</echo>
+	</target>
+
+<!--
+	<target name="check_test_deploy_id">
+		<condition property="isTestOnly">
+		  <and>
+			<length string="${deploy.id}" when="greater" length="10"/>
+			<contains string="${deploy.id}" substring="${prefix.dep.id}" casesensitive="true"/>
+			<contains string="${deploy.id}" substring="${infix.dep.id}" casesensitive="true"/>
+		  </and>
+		</condition>
+		<echo>TEST DEPLOY ID ${deploy.id} / Valid ${isTestOnly}</echo>
+	</target>
+-->
+		
+	<target name="test_deploy" depends="check_deploy_id" if="isValid">
+		<antcall target="rename_was" />
+		<antcall target="copy_was" />
+	</target>
+
+	<target name="ssh_test_deploy" depends="check_deploy_id" if="isValid">
+		<!--<antcall target="ssh_rename_was" />-->
+		<antcall target="ssh_backup_was" />
+		<antcall target="ssh_copy_was" />
+	</target>
+
+			
+	<target name="check_host">
+		<condition property="isHost">
+			<contains string="${hostname}" substring="esptstb"/>
+		</condition>
+		<echo>hostname is `${hostname}`</echo>
+	</target>
+			
+	<target name="check_valid" depends="check_host" unless="isHost">
+		<fail message="배포 대상 서버가 아닙니다."/>
+	</target>
+	
+	<!-- ================================================== -->
+	<!-- init -->
+	<!-- ================================================== -->
+	<target name="init">
+		<antcall target="check_valid" />
+		<antcall target="delete_sources" />
+		<antcall target="make_directory" />
+	</target>
+
+	<target name="ssh_init">
+		<antcall target="check_valid" />
+		<antcall target="delete_sources" />
+		<antcall target="make_directory" />
+	</target>
+
+	<!-- delete dir = /usr1/home/jeus/deploy/BA_20170105_1330 -->
+	<target name="delete_sources">
+		<!--<echo>Target directory `${source.dir}/project`...</echo>-->
+		<echo>Target directory `${source.dir}`...</echo>
+		<delete dir="${source.dir}" />
+	</target>
+
+	<!-- source.dir = /usr1/home/jeus/deploy/BA_20170105_1330 -->
+	<target name="make_directory">
+		<echo>Target directory `${source.dir}`...</echo>
+		<mkdir dir="${source.dir}" />
+	</target>
+
+	<!-- ================================================== -->
+	<!-- copy -->
+	<!-- ================================================== -->	
+	<target name="copy_was">
+		<echo>copy to docroot</echo>
+		<copy todir="${batch.dir}" failonerror="false" overwrite="true">
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="conf/**/*"/>
+				<include name="lib/**/*"/>
+				<include name="*.sh"/>
+		    </fileset>
+		</copy>
+	</target>	
+
+	
+	
+	<target name="ssh_backup_tf">
+	<echo>echo ${isTestOnly}</echo>
+	  <condition property="applied" value="regular">
+	   <not><equals arg1="${isTestOnly}" arg2="true" /></not><!-- true가 아님 :  정기테스트배포 -->
+	  </condition>
+	  <condition property="applied" value="testonly">
+	   <equals arg1="${isTestOnly}" arg2="true" /><!-- true 장단기테스트-->
+	  </condition>  
+	  <antcall target="ssh_backup_was_${applied}"/>
+		<!--<echo>ssh_backup_tf applied 는 ${applied}</echo>-->
+	</target>
+	
+	<target name="ssh_copy_was_tf">
+	<echo>echo ${isTestOnly}</echo>
+	  <condition property="applied" value="regular">
+	   <not><equals arg1="${isTestOnly}" arg2="true" /></not><!-- true가 아님 : 정기테스트배포-->
+	  </condition>
+	  <condition property="applied" value="testonly">
+	    <equals arg1="${isTestOnly}" arg2="true" /><!-- true 장단기테스트-->
+	  </condition>  
+	  <antcall target="ssh_copy_was_${applied}"/>
+		<!--<echo>ssh_copy_was_tf applied 는 ${applied}</echo>-->
+	</target>
+	
+	<!-- 테스트 용도 -->
+	<!--
+	<target name="ssh_backup_testonly">
+		<echo>ssh_backup_true 장단기 테스트</echo>
+	</target>
+	
+	<target name="ssh_copy_was_testonly">
+		<echo>ssh_copy_was_true 장단기 테스트</echo>
+	</target>
+	
+	<target name="ssh_backup_regular">
+		<echo>ssh_backup_false 정기테스트</echo>
+	</target>
+	
+	<target name="ssh_copy_was_regular">
+		<echo>ssh_copy_was_fslse 정기테스트</echo>
+	</target>
+	-->
+	
+	<!-- #### SSH 적용 #### -->
+	<target name="ssh_test_deploy_was" depends="check_test_deploy_id">
+		<!-- <antcall target="ssh_rename_was" /> -->
+		<antcall target="ssh_backup_tf" />
+		<!-- <antcall target="ssh_backup_test_only_was" />
+		     <antcall target="ssh_backup_was" /> -->
+		<antcall target="ssh_copy_was_tf" />
+		<!-- <antcall target="ssh_copy_was" /> -->
+	</target>
+
+	<!--
+	<target name="ssh_rename_was" if="isTestOnly">
+		<echo>change lotte-super-batch to project</echo>
+		<exec executable="mv" dir="${source.dir}">
+			<arg value="lotte-super-batch" />
+			<arg value="project" />
+		</exec>
+		<echo>change WebContent to back</echo>
+		<exec executable="mv" dir="${source.dir}/project">
+			<arg line="WebContent batch" />
+		</exec>
+	</target>
+	-->
+
+	<!-- ================================================== -->
+	<!-- ssh backup -->
+	<!-- ================================================== -->	
+
+	<!-- source.dir/app.dir                               =         /usr1/home/jeus/deploy/ba_20161212_1330/project/batch -->
+	<!-- ba.dir                                                 =         /esuper/project/batch -->
+	<!-- source.dir_backup/project/batch         =         /usr1/home/jeus/deploy/ba_20161212_1330_backup/project/batch -->
+
+	<!--
+	<target name="ssh_backup_was">
+		<echo>Backup ${source.dir}</echo>
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte.jar">
+			<arg value="${source.dir}/${app.dir}"/>
+			<arg value="${ba.dir}"/>
+			<arg value="${source.dir}_backup/project/batch"/>
+		</java>
+	</target>
+   -->
+	<!-- ${source.dir}/${app.dir} = /usr1/home/jeus/deploy/BA_20170105_1330/project/batch -->
+	<!-- ba.dir = /esuper/project/batch -->
+	<!-- ${source.dir}_backup = /usr1/home/jeus/deploy/BA_20170105_1330_backup -->
+
+	<!-- 정기테스트 백업 -->
+	<target name="ssh_backup_was_regular">
+		<echo>Backup ${source.dir}</echo>
+		<java jvm="/usr/java1.6/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte.jar">
+			<arg value="${source.dir}/${app.dir}"/>
+			<arg value="${ba.dir}"/>
+			<arg value="${source.dir}_backup/project/batch"/>
+		</java>
+	</target>
+
+	<!-- 장/단기 테스트 백업 -->
+	<!-- ${source.dir}/lotte-super-batch = /usr1/home/jeus/deploy/BA_20170105_1330/lotte-super-batch -->
+	<!-- ba.dir = /esuper/project/batch -->
+	<!-- ${source.dir}_backup/project/batch = /usr1/home/jeus/deploy/BA_20170105_1330_backup/project/batch -->
+	<!-- <copy file="${source.dir}/lotte-super-batch/shell/*.sh" todir="${source.dir}/lotte-super-batch"/> : 적용이 안됨 -->
+	<target name="ssh_backup_was_testonly">
+		<echo>Backup Test Only ${source.dir}</echo>
+		<copy todir="${source.dir}/lotte-super-batch" failonerror="false" overwrite="true">
+			<fileset dir="${source.dir}/lotte-super-batch/shell">
+				<include name="*.sh"/>
+		    </fileset>
+		</copy>
+		<delete includeEmptyDirs="true">
+		<fileset dir="${source.dir}/lotte-super-batch/shell"/>
+		</delete>
+		<java jvm="/usr/java1.6/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte.jar">
+			<arg value="${source.dir}/lotte-super-batch"/>
+			<arg value="${ba.dir}"/>
+			<arg value="${source.dir}_backup/project/batch"/>
+		</java>
+	</target>
+
+		
+	<!-- ================================================== -->
+	<!-- copy -->
+	<!-- ================================================== -->
+	<!-- 정기테스트 배포-->
+	<target name="ssh_copy_was_regular">
+		<echo>copy to docroot</echo>
+		<!-- batch.dir = /esuper/project/batch -->
+		<!-- ${source.dir}/${app.dir} = /usr1/home/jeus/deploy/BA_20170105_1330/project/batch -->
+		<chmod dir="${source.dir}/${app.dir}" perm="ugo+rx" 
+		       includes="*.sh"/>
+		<copy todir="${batch.dir}" failonerror="false" overwrite="true">
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="conf/**/*"/>
+				<include name="lib/**/*"/>
+				<include name="*.sh"/>
+		    </fileset>
+		</copy>
+	</target>	
+
+	<!-- 장단기 테스트 배포-->
+	<target name="ssh_copy_was_testonly">
+		<echo>copy to docroot</echo>
+		<!-- batch.dir = /esuper/project/batch -->
+		<!-- ${source.dir}/lotte-super-batch = /usr1/home/jeus/deploy/BA_20170105_TEST_HSLIM/lotte-super-batch -->
+		<copy todir="/esuper/project/batch" failonerror="false" overwrite="true">
+			<fileset dir="${source.dir}/lotte-super-batch">
+				<include name="conf/**/*"/>
+				<include name="lib/**/*"/>
+				<include name="*.sh"/>
+		    </fileset>
+		</copy>
+	</target>	
+
+	<!-- ================================================== -->
+	<!-- LotteSuper BO ssh_Rollback -->
+	<!-- ================================================== -->
+	<!-- check_exist = /usr1/home/jeus/deploy/BO_20161117_1330 -->
+	
+	<target name="ssh_rollback" depends="check_exist">
+		<antcall target="check_valid"/>
+		<echo message="Rollback Java Applications"/>
+		<antcall target="rollbackba"/>
+	</target>	
+
+	<!-- SSH Rollback -->
+	<!--	
+	<target name="rollbackba" if="isExistBA">        
+        <copy todir="/esuper/project/batch" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/project/batch"
+                     includes="**/*"/>
+        </copy>
+    </target>		
+	-->
+	
+	<!-- Rollback 테스트용 -->
+	<target name="rollbackba" if="isExistBA">        
+	        <copy todir="/esuper/project//batch/rollbacktest" overwrite="yes" verbose="true">
+	            <fileset dir="${source.dir}_backup/project/batch"
+	                     includes="**/*"/>
+	        </copy>
+   </target>
+
+</project>

@@ -1,0 +1,362 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottesuper2011lb">
+    <!-- **************************************************************** -->
+	<!-- PROPERTY -->
+	<!-- **************************************************************** -->
+	<property name="deploy.id" value="${DEPLOY_ID}"/>
+	
+	<property file="${deployer.home.dir}/scripts/${ant.project.name}.${deploy.phase}.properties"/>
+	<property name="pack.real.path" value="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/${svrWebappPath}" />
+	<property name="dist.path" value="lotte-super-lottebatch/dist" />
+	
+	<property name="init.build.log" value="../logs/${ant.project.name}/${deploy.id}_BUILD.log" />
+	
+	<property name="user.id" value="${svrUserId}"/>
+	<property name="user.pwd" value="${svrUserPassword}"/>
+	
+	<!-- 시험배포 자동화용 -->
+	<tstamp><format property="deploy.date" pattern="yyyyMMdd"/></tstamp>
+	<property name="rglr.dep.id" value="LB_${deploy.date}_1330"/>
+
+	<!-- 첫 접수시 0건이면, 다음 접수시 지각한 건 접수하지 않도록 하기위함 -->
+	<property name="lock.workspace" value="E:/hudson-lottesuper/jobs/LOTTESUPER_LOTTEBATCH_0_TEST_LOCK/workspace" />
+
+	<!-- properties -->
+	<!-- hudson setting properties
+		deployer.home.dir
+		java.home.dir
+		jeus.home.dir
+		deploy.phase
+	-->
+
+        <target name="run" depends="set_params">
+		<echo>♠ BUILD ${deploy.id}</echo>
+		<antcall target="update" />
+		<antcall target="merge" />
+		<antcall target="build" />
+		<antcall target="pack" />
+	</target>
+	
+	<target name="run_build">
+		<antcall target="merge" />
+		<antcall target="build" />
+		<antcall target="pack" />
+	</target>
+	
+	<target name="run_deploy">
+		<antcall target="backup" />
+		<antcall target="deploy" />
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- CHECK -->
+	<!-- **************************************************************** -->
+	<target name="set_params">
+		<echo>♠ 배포ID를 세팅합니다.</echo>
+		<condition property="deploy.id" value="${main.deploy.id}">
+			<and>
+				<contains string="${main.deploy.id}" substring="CM_" casesensitive="true" />
+				<length string="${main.deploy.id}" when="greater" length="15"/>
+			</and>
+		</condition>
+		<condition property="deploy.id" value="${comm.deploy.id}">
+			<and>
+				<contains string="${comm.deploy.id}" substring="CM_" casesensitive="true" />
+				<length string="${comm.deploy.id}" when="greater" length="15"/>
+			</and>
+		</condition>
+		<condition property="isValid">
+			<and>
+				<contains string="${deploy.id}" substring="CM_" casesensitive="true" />
+				<length string="${deploy.id}" when="greater" length="15"/>
+			</and>
+		</condition>
+	</target>
+	
+	<target name="check_jar">
+		<echo>♠ common jar가 있는지 확인합니다.</echo>
+		<condition property="existJar">
+			<resourceexists><file file="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${src.jar.path}/${comm.jar.nm}" /></resourceexists>
+		</condition>
+	</target>
+	
+	<target name="check_lock_prop">
+		<condition property="existLockProp">
+			<resourceexists>
+				<file file="${lock.workspace}/${rglr.dep.id}_lock.properties"/>
+			</resourceexists>
+		</condition>
+	</target>
+	
+	<!-- **************************************************************** -->	
+	<!-- UPDATE -->
+	<!-- **************************************************************** -->
+	<target name="update" if="isValid">
+		<echo>♠ trunk, branches를 update합니다.</echo>
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="update"/>
+		</java>
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- LOCK, 접수 : 정기배포, 자동접수 시에만 사용 -->
+	<!-- **************************************************************** -->
+	<target name="set_prop" unless="existLockProp">
+		<propertyfile file="${lock.workspace}/${rglr.dep.id}_lock.properties">
+			<entry key="deploy_count" type="int" value="0" />
+			<entry key="first_error" value="false" />
+		</propertyfile>
+	</target>
+		
+	<target name="exec_app">
+		<property file="${lock.workspace}/${rglr.dep.id}_lock.properties" />
+		
+		<condition property="isStop">
+			<equals arg1="${first_error}" arg2="true" trim="true" />
+		</condition>
+		<fail if="${isStop}" message="당일 접수한 배포 건이 없습니다." />		
+		
+		<java jvm="${java.home.dir}/bin/java" fork="yes"
+		      failonerror="false"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar"
+			  errorproperty="error">
+			<arg value="${ant.project.name}"/>
+			<arg value="${rglr.dep.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="accept"/>
+		</java>
+		<condition property="isError">
+			<length string="${error}" when="greater" length="0" />
+		</condition>
+		
+		<condition property="isFirstError">
+			<and>
+				<istrue value="${isError}" />
+				<equals arg1="0" arg2="${deploy_count}" trim="true" />
+			</and>
+		</condition>
+		
+		<propertyfile file="${lock.workspace}/${rglr.dep.id}_lock.properties">
+			<entry key="deploy_count" default="0" type="int" operation="+" />
+			<entry key="first_error" value="${isFirstError}" />
+		</propertyfile>
+		
+		<fail if="${isError}" message="." />
+		
+		<record name="${ant.project.name}_param.properties" emacsmode="true" action="start" />
+		<echo>DEPLOY_ID=${rglr.dep.id}</echo>
+		<record name="${ant.project.name}_param.properties" emacsmode="true" action="stop" />
+	</target>
+	
+	<target name="accept" depends="check_lock_prop">
+		<antcall target="set_prop" />
+		<antcall target="exec_app" />
+	</target>
+	
+	
+	<!-- **************************************************************** -->	
+	<!-- MERGE -->
+	<!-- **************************************************************** -->
+	<target name="merge">
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="merge"/>
+		</java> 
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- BUILD -->
+	<!-- **************************************************************** -->
+	<target name="build">
+		<record name="${init.build.log}" action="start"/>
+		<!-- 빌드에 필요한 추가정보 획득  -->
+		<!-- 파일로 저장 -->
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="build"/>
+		</java>		
+				
+		<path id="classpath">
+			<fileset dir="${java.home.dir}/jre/lib">
+				<include name="rt.jar" />
+			</fileset>
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcLibPath}">
+				<include name="*.jar" />
+			</fileset>
+		</path>
+		
+	    <!-- static -->
+		<delete dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}" />
+	    <mkdir dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}" />
+		<javac source="1.6"
+			target="1.6"
+			srcdir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcJavaPath}"
+			classpathref="classpath"
+			destdir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			fork="true" 
+			memoryMaximumSize="256m"
+			includeantruntime="false"/>	
+		
+		<record name="${init.build.log}" action="stop"/>
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- PACK -->
+	<!-- **************************************************************** -->
+	<target name="pack">
+		<delete dir="${pack.real.path}" /> <!-- 2013-01-02 추가 -->
+		<mkdir dir="${pack.real.path}" />  <!-- 2013-01-02 추가 -->
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="pack"/>
+		</java>
+		<antcall target="pack_jar" />
+	</target>
+	
+	<target name="pack_jar">		
+		<delete includeemptydirs="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${dist.path}" includes="**/*" />
+    	</delete>
+		<jar encoding="UTF-8" destfile="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${dist.path}/lottesuper-batch.jar">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}" />
+		</jar>
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/${svrLibPath}">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${dist.path}">
+				<include name="lottesuper-batch.jar"/>
+		    </fileset>
+		</copy>
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- BACKUP -->
+	<!-- **************************************************************** -->
+	<target name="backup">
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="deploy"/>
+			<arg value="${was.ip}" />
+			<arg value="21" />
+			<arg value="${user.id}" />
+			<arg value="${user.pwd}" />
+		</java> 
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- DEPLOY -->
+	<!-- **************************************************************** -->	
+	<target name="deploy">
+		<!-- 1. FTP (from local to nas) -->
+		<ftp server="${was.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${nas.dir}"
+		     action="put"
+			 passive="yes">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}">
+				<exclude name="classes/**/*"></exclude>
+			</fileset>
+		</ftp>
+	</target>
+
+        <!-- **************************************************************** -->
+	<!-- 시험배포 -->
+	<!-- **************************************************************** -->	
+	<target name="record">
+		<java jvm="${java.home.dir}/bin/java" fork="yes"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="record"/>
+		</java>
+	</target>	
+
+        <!-- **************************************************************** -->
+	<!-- NOTICE -->
+	<!-- **************************************************************** -->	
+	<target name="notice_fail">
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="notice"/>
+			<arg value="FAIL"/>
+		</java> 
+	</target>
+	
+	<target name="notice_success">
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="notice"/>
+			<arg value="SUCCESS"/>
+		</java> 
+	</target>	
+	
+	<!-- **************************************************************** -->
+	<!-- ROLLBACK FOR TEST SERVER -->
+	<!-- **************************************************************** -->
+	<target name="rollback_was">
+		<antcall target="rollback_start_time" />
+		<antcall target="rollback" />
+		<antcall target="rollback_end_time" />
+	</target>
+	
+	<target name="rollback_start_time">
+		<tstamp>
+			<format property="DSTAMP" pattern="yyyy.MM.dd"/>
+			<format property="TSTAMP" pattern="HH:mm"/>
+		</tstamp>
+		<echo message="Rollback Start ==> ${DSTAMP}-${TSTAMP}"/>
+	</target>
+	
+	<target name="rollback_end_time">
+		<tstamp>
+			<format property="DSTAMP" pattern="yyyy.MM.dd"/>
+			<format property="TSTAMP" pattern="HH:mm"/>
+		</tstamp>
+		<echo message="Rollback End ==> ${DSTAMP}-${TSTAMP}"/>
+	</target>
+	
+	<!-- 2. FTP (from local to nas) -->
+	<target name="rollback">
+		<ftp server="${was.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${svrDocRoot}"
+		     action="put"
+			 verbose="yes"
+			 passive="yes">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}_backup">
+				<include name="classes/esuper/**/*"></include>
+			</fileset>
+		</ftp>
+	</target>
+</project>

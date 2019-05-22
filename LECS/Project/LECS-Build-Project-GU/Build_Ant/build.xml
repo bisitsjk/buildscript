@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lecs20.deploy" basedir="."><!-- Global Param: ${target} -->
+	
+	<property file="pwd.properties" />
+	
+	<property name="GUFO.PACK.PATH" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/GUFO" />
+	<property name="GUFO.SRC.PATH" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/build/build/LECS-Store-GU" />
+	
+	<property name="GUNQAPI.PACK.PATH" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/GUNQAPI" />
+	<property name="GUNQAPI.SRC.PATH" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/build/build/LECS-Store-New-Uniqlo-FR-API" />
+	
+	<property name="GUBO.PACK.PATH" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/GUBO" />
+	<property name="GUBO.SRC.PATH" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/build/build/LECS-Platform-BO" />
+	
+	<property name="GULPS.PACK.PATH" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/GULPS" />
+	<property name="GULPS.SRC.PATH" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/build/build/LECS-Platform-LPS" />
+	
+	<property name="GUOA.PACK.PATH" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/GUOA" />
+	<property name="GUOA.SRC.PATH" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/build/build/Oa" />
+	
+	<property name="GUWMS.PACK.PATH" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/GUOA" />
+	<property name="GUWMS.SRC.PATH" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/build/build/Wms" />
+	
+	<property name="GUBATCH.PACK.PATH" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/GUBATCH" />
+	<property name="GUBATCH.SRC.PATH" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/build/build/LECS-Batch" />
+	
+	<property name="tom.ins.path" value="/usr2/apache-tomcat/instance" />
+	
+	<tstamp>
+		<format property="DATETIMESTAMP" pattern="yyyyMMddHHmm" />
+	</tstamp>
+
+	<taskdef resource="net/sf/antcontrib/antlib.xml" />
+	
+	<target name="CLEAN.PRJ">
+		<delete dir="/Source/lecs2/jobs/GU.UPDATE.PRJ/workspace/src/LECS-Batch"/>
+		<delete dir="/Source/lecs2/jobs/GU.UPDATE.PRJ/workspace/src/app"/>				
+	</target>
+
+	<!-- INIT.DIR -->	
+
+	<target name="init.dir.GUFO">
+		<delete dir="/Source/lecs2/jobs/${JOB_NAME}/workspace/GUFO"/>
+		<mkdir dir="/Source/lecs2/jobs/${JOB_NAME}/workspace/GUFO"/>
+	</target>
+
+	<target name="init.dir.GUNQAPI">
+		<delete dir="/Source/lecs2/jobs/${JOB_NAME}/workspace/GUNQAPI"/>
+		<mkdir dir="/Source/lecs2/jobs/${JOB_NAME}/workspace/GUNQAPI"/>
+	</target>
+
+	<target name="init.dir.GUBO">
+		<delete dir="/Source/lecs2/jobs/${JOB_NAME}/workspace/GUBO"/>
+		<mkdir dir="/Source/lecs2/jobs/${JOB_NAME}/workspace/GUBO"/>
+	</target>
+
+	<target name="init.dir.GULPS">
+		<delete dir="/Source/lecs2/jobs/${JOB_NAME}/workspace/GULPS"/>
+		<mkdir dir="/Source/lecs2/jobs/${JOB_NAME}/workspace/GULPS"/>
+	</target>
+
+	<target name="init.dir.GUOA">
+		<delete dir="/Source/lecs2/jobs/${JOB_NAME}/workspace/GUOA"/>
+		<mkdir dir="/Source/lecs2/jobs/${JOB_NAME}/workspace/GUOA"/>
+	</target>
+
+	<target name="init.dir.GUWMS">
+		<delete dir="/Source/lecs2/jobs/${JOB_NAME}/workspace/GUWMS"/>
+		<mkdir dir="/Source/lecs2/jobs/${JOB_NAME}/workspace/GUWMS"/>
+	</target>
+
+	<target name="init.dir.GUBATCH">
+		<delete dir="/Source/lecs2/jobs/${JOB_NAME}/workspace/GUBATCH"/>
+		<mkdir dir="/Source/lecs2/jobs/${JOB_NAME}/workspace/GUBATCH"/>
+	</target>
+	
+	<!-- COPY common.xml -->
+	
+    <target name="PRJ.COMMON.COPY">
+    	<copy file="/Source/lecs2/jobs/GU.UPDATE.PRJ/workspace/src/app/classes/config/spring/bean/common.xml.aws" tofile="/Source/lecs2/jobs/${JOB_NAME}/workspace/build/build/${svn.name}/app/WEB-INF/classes/config/spring/bean/common.xml" overwrite="true"/>
+    </target>
+	
+	<!-- PACK.PRJ -->
+	
+	<target name="GUFO.WAR.FILECOPY">	
+		<copy tofile="${GUFO.PACK.PATH}/ROOT.war">
+			<fileset dir="${GUFO.SRC.PATH}">
+				<include name="LECS-Store-GU-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="GUNQAPI.WAR.FILECOPY">	
+		<copy tofile="${GUNQAPI.PACK.PATH}/ROOT.war">
+			<fileset dir="${GUNQAPI.SRC.PATH}">
+				<include name="LECS-Store-New-Uniqlo-FR-API-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="GUFO.WEB.FILECOPY">
+		<copy tofile="${GUFO.PACK.PATH}/GUWEB.zip">
+			<fileset dir="${GUFO.SRC.PATH}">
+				<include name="LECS-Store-GU-CONTENT*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="GUNQAPI.WEB.FILECOPY">
+		<copy tofile="${GUNQAPI.PACK.PATH}/NQAPIWEB.zip">
+			<fileset dir="${GUNQAPI.SRC.PATH}">
+				<include name="LECS-Store-New-Uniqlo-FR-API-CONTENT*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="GUFO.IMG.FILECOPY">	
+		<copy tofile="${GUFO.PACK.PATH}/GUIMG.zip">
+			<fileset dir="${GUFO.SRC.PATH}">
+				<include name="LECS-Store-GU-IMAGE*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="GUBO.WAR.FILECOPY">	
+		<copy tofile="${GUBO.PACK.PATH}/ROOT.war">
+			<fileset dir="${GUBO.SRC.PATH}">
+				<include name="LECS-Platform-BO-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="GUBO.WEB.FILECOPY">
+		<copy tofile="${GUBO.PACK.PATH}/BOWEB.zip">
+			<fileset dir="${GUBO.SRC.PATH}">
+				<include name="LECS-Platform-BO-CONTENT*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	
+	<target name="GUBO.RULE.FILECOPY">
+		<copy tofile="${GUBO.PACK.PATH}/RULE.zip">
+			<fileset dir="${GUBO.SRC.PATH}">
+				<include name="BO-UPLOAD-RULES*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="GULPS.WAR.FILECOPY">	
+		<copy tofile="${GULPS.PACK.PATH}/ROOT.war">
+			<fileset dir="${GULPS.SRC.PATH}">
+				<include name="LECS-Platform-LPS-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="GULPS.WEB.FILECOPY">
+		<copy tofile="${GULPS.PACK.PATH}/LPSWEB.zip">
+			<fileset dir="${GULPS.SRC.PATH}">
+				<include name="LECS-Platform-LPS-CONTENT*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="GUOA.WAR.FILECOPY">	
+		<copy tofile="${GUOA.PACK.PATH}/ROOT.war">
+			<fileset dir="${GUOA.SRC.PATH}">
+				<include name="Oa-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="GUWMS.WAR.FILECOPY">	
+		<copy tofile="${GUWMS.PACK.PATH}/ROOT.war">
+			<fileset dir="${GUWMS.SRC.PATH}">
+				<include name="Wms-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="GUBATCH.FILECOPY">	
+		<copy tofile="${GUBATCH.PACK.PATH}/BATCH.zip">
+			<fileset dir="${GUBATCH.SRC.PATH}">
+				<include name="Batch*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+
+	<!-- UPLOAD.PRJ -->
+	
+	<target name="GUFO.UPLOAD.WAS">
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}" 
+			command="touch /lotte/lecs/webapp/gu/ROOT.war;cp /lotte/lecs/webapp/gu/ROOT.war /lotte/lecs/webapp/gu/ROOT.war.bak" trust="true"/>
+		<scp file="${GUFO.PACK.PATH}/ROOT.war" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/lotte/lecs/webapp/gu/ROOT.war" trust="true"/>
+	</target>
+	
+	<target name="GUNQAPI.UPLOAD.WAS">
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}" 
+			command="touch /lotte/lecs/webapp/nqoa/ROOT.war;cp /lotte/lecs/webapp/nqoa/ROOT.war /lotte/lecs/webapp/nqoa/ROOT.war.bak" trust="true"/>
+		<scp file="${GUNQAPI.PACK.PATH}/ROOT.war" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/lotte/lecs/webapp/nqoa/ROOT.war" trust="true"/>
+	</target>
+
+	<target name="GUFO.UPLOAD.WEB">
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="touch /lotte/lecsDocs/temp/GUWEB.zip;cp /lotte/lecsDocs/temp/GUWEB.zip /lotte/lecsDocs/temp/GUWEB.zip.bak" trust="true"/>
+		<scp file="${GUFO.PACK.PATH}/GUWEB.zip" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/lotte/lecsDocs/temp/GUWEB.zip" trust="true"/>
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="unzip -o -q /lotte/lecsDocs/temp/GUWEB.zip -d /lotte/lecs/GUS1/web" trust="true"/>
+	</target>
+
+	<target name="GUNQAPI.UPLOAD.WEB">
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="touch /lotte/lecsDocs/temp/NQAPIWEB.zip;cp /lotte/lecsDocs/temp/NQAPIWEB.zip /lotte/lecsDocs/temp/NQAPIWEB.zip.bak" trust="true"/>
+		<scp file="${GUNQAPI.PACK.PATH}/NQAPIWEB.zip" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/lotte/lecsDocs/temp/NQAPIWEB.zip" trust="true"/>
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}" 
+			command="unzip -o -q /lotte/lecsDocs/temp/NQAPIWEB.zip -d /lotte/lecs/nqoa/web" trust="true"/>
+	</target>
+
+	<target name="GUFO.UPLOAD.IMG">
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="touch /lotte/lecsDocs/temp/GUIMG.zip;cp /lotte/lecsDocs/temp/GUIMG.zip /lotte/lecsDocs/temp/GUIMG.zip.bak" trust="true"/>
+		<scp file="${GUFO.PACK.PATH}/GUIMG.zip" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/lotte/lecsDocs/temp/GUIMG.zip" trust="true"/>
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="unzip -o -q /lotte/lecsDocs/temp/GUIMG.zip -d /lotte/lecsDocs/images/GUS1" trust="true"/>
+	</target>
+	
+	<target name="GUBO.UPLOAD.WAS">
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}" 
+			command="touch /lotte/lecs/webapp/bo/ROOT.war;cp /lotte/lecs/webapp/bo/ROOT.war /lotte/lecs/webapp/bo/ROOT.war.bak" trust="true"/>
+		<scp file="${GUBO.PACK.PATH}/ROOT.war" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/lotte/lecs/webapp/bo/ROOT.war" trust="true"/>
+	</target>
+
+	<target name="GUBO.UPLOAD.WEB">
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="touch /lotte/lecsDocs/temp/BOWEB.zip;cp /lotte/lecsDocs/temp/BOWEB.zip /lotte/lecsDocs/temp/BOWEB.zip.bak" trust="true"/>
+		<scp file="${GUBO.PACK.PATH}/BOWEB.zip" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/lotte/lecsDocs/temp/BOWEB.zip" trust="true"/>
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="unzip -o -q /lotte/lecsDocs/temp/BOWEB.zip -d /lotte/lecs/bo/web" trust="true"/>
+	</target>
+
+	<target name="GUBO.UPLOAD.RULE">
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="touch /lotte/lecsDocs/temp/RULE.zip;cp /lotte/lecsDocs/temp/RULE.zip /lotte/lecsDocs/temp/RULE.zip.bak" trust="true"/>
+		<scp file="${GUBO.PACK.PATH}/RULE.zip" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/lotte/lecsDocs/temp/RULE.zip" trust="true"/>
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="unzip -o -q /lotte/lecsDocs/temp/RULE.zip -d /lotte/lecsDocs/excel/rule" trust="true"/>
+	</target>
+	
+	<target name="GULPS.UPLOAD.WAS">
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}" 
+			command="touch /lotte/lecs/webapp/lps/ROOT.war;cp /lotte/lecs/webapp/lps/ROOT.war /lotte/lecs/webapp/lps/ROOT.war.bak" trust="true"/>
+		<scp file="${GULPS.PACK.PATH}/ROOT.war" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/lotte/lecs/webapp/lps/ROOT.war" trust="true"/>
+	</target>
+
+	<target name="GULPS.UPLOAD.WEB">
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="touch /lotte/lecsDocs/temp/LPSWEB.zip;cp /lotte/lecsDocs/temp/LPSWEB.zip /lotte/lecsDocs/temp/LPSWEB.zip.bak" trust="true"/>
+		<scp file="${GULPS.PACK.PATH}/LPSWEB.zip" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/lotte/lecsDocs/temp/LPSWEB.zip" trust="true"/>
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="unzip -o -q /lotte/lecsDocs/temp/LPSWEB.zip -d /lotte/lecs/lps/web" trust="true"/>
+	</target>
+	
+	<target name="GUOA.UPLOAD.WAS">
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}" 
+			command="touch /lotte/lecs/webapp/oa/ROOT.war;cp /lotte/lecs/webapp/oa/ROOT.war /lotte/lecs/webapp/oa/ROOT.war.bak" trust="true"/>
+		<scp file="${GUOA.PACK.PATH}/ROOT.war" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/lotte/lecs/webapp/oa/ROOT.war" trust="true"/>
+	</target>
+	
+	<target name="GUWMS.UPLOAD.WAS">
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}" 
+			command="touch /lotte/lecs/webapp/wms/ROOT.war;cp /lotte/lecs/webapp/wms/ROOT.war /lotte/lecs/webapp/wms/ROOT.war.bak" trust="true"/>
+		<scp file="${GUWMS.PACK.PATH}/ROOT.war" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/lotte/lecs/webapp/wms/ROOT.war" trust="true"/>
+	</target>
+	
+	<target name="GUBATCH.UPLOAD">
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="touch /lotte/lecsDocs/temp/BATCH.zip;cp /lotte/lecsDocs/temp/BATCH.zip /lotte/lecsDocs/temp/BATCH.zip.bak" trust="true"/>
+		<scp file="${GUBATCH.PACK.PATH}/BATCH.zip" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/lotte/lecsDocs/temp/BATCH.zip" trust="true"/>
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="unzip -o -q /lotte/lecsDocs/temp/BATCH.zip -d /lotte/lecs/batch" trust="true"/>
+	</target>
+	
+	<!-- RESTART -->
+	
+	<target name="GUFO.PRJ.RESTART">
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}" command="${tom.ins.path}/tomcat_executor.sh stop" trust="true"/>
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}" command="rm -fr /lotte/lecs/webapp/gu/ROOT;sleep 1" trust="true"/>
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}" command="${tom.ins.path}/tomcat_executor.sh start" trust="true"/>
+	</target>
+	
+	<target name="GUBO.PRJ.RESTART">
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}" command="${tom.ins.path}/tomcat_executor.sh stop" trust="true"/>
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}" command="rm -fr /lotte/lecs/webapp/bo/ROOT;sleep 1;rm -fr /lotte/lecs/webapp/lps/ROOT;sleep 1" trust="true"/>
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}" command="${tom.ins.path}/tomcat_executor.sh start" trust="true"/>
+	</target>
+	
+	<target name="GUOA.PRJ.RESTART">
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}" command="${tom.ins.path}/tomcat_executor.sh stop" trust="true"/>
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}" command="rm -fr /lotte/lecs/webapp/oa/ROOT;sleep 1;rm -fr /lotte/lecs/webapp/nqoa/ROOT;sleep 1" trust="true"/>
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}" command="${tom.ins.path}/tomcat_executor.sh start" trust="true"/>
+	</target>
+	
+	<target name="GUWMS.PRJ.RESTART">
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}" command="${tom.ins.path}/tomcat_executor.sh stop" trust="true"/>
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}" command="rm -fr /lotte/lecs/webapp/wms/ROOT;sleep 1" trust="true"/>
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}" command="${tom.ins.path}/tomcat_executor.sh start" trust="true"/>
+	</target>
+	
+</project>

@@ -1,0 +1,18 @@
+version: 0.0
+os: linux
+files:
+- source: /FO_test_WAS.tar
+  destination: /esuper/project/front
+
+permissions:
+- object: /esuper/
+  pattern: "**"
+  owner: jeus
+  group: www
+  mode: 644
+
+hooks:
+  ApplicationStart:
+   - location: scripts/aws_fo1_Start.sh
+     timeout: 120
+     

@@ -1,0 +1,138 @@
+// "Source Repository와 연동"
+
+ant_svn_checkout = { sourceURL, destDir ->
+	println "체크아웃 $sourceURL to $destDir"
+	file(destDir).mkdirs()
+	ant.svn(refid:"svn.settings"  ) {
+		ant.checkout(
+			url: sourceURL,
+			destPath: destDir
+		)	
+	}
+}
+
+ant_svn_update = { destDir ->
+	println "업데이트 ${destDir}"
+	ant.svn(refid:"svn.settings" ) {
+		ant.update(
+			dir: destDir
+		)	
+	}
+}
+
+
+SUBVERSION_PREFIX = 'svn://vcs2.lotte.com/LECS'
+svn_move = { from, to, comment -> 
+	println "SVN Move $from to $to ($comment)"
+	ant.svn(refid:"svn.settings"  ) {
+		ant.move ( 
+			srcUrl: "$SUBVERSION_PREFIX/$from",
+			destUrl: "$SUBVERSION_PREFIX/$to",
+			message: comment
+		)
+	}
+}
+
+svn_copy = { from, to, comment ->
+	println "SVN Copy $from to $to ($comment)"
+	ant.svn(refid:"svn.settings"  ) {
+		ant.copy ( 
+			srcUrl: "$SUBVERSION_PREFIX/$from",
+			destUrl: "$SUBVERSION_PREFIX/$to",
+			message: comment
+		)
+	}
+}
+
+소스체크아웃 = { projectName ->
+	ant_svn_checkout  소스URL(projectName), 소스위치 (projectName)
+}
+
+소스업데이트 = { projectName ->
+ 	ant_svn_update  소스위치 (projectName)	
+}
+
+
+소스가져오기 = { projectName ->
+	file(소스위치(projectName)).exists() ? 소스업데이트(projectName) : 소스체크아웃( projectName )
+} 
+
+task checkout_library << {
+	소스가져오기 Library
+}
+
+task checkout_batch << {
+	소스가져오기 Batch
+}
+
+task checkout_bo << {
+	소스가져오기 Bo
+}
+
+
+task checkout_lps << {
+	소스가져오기 Lps
+}
+
+task checkout_muji << {
+	소스가져오기 Muji
+}
+
+task checkout_nike << {
+	소스가져오기 Nike
+}
+
+
+task checkout_puma << {
+	소스가져오기 Puma
+}
+
+task tag_release << {
+	svn_move ( 'tags/R20110317-Release-LSB', "tags/R20110317-Release-LSB-before-$TIMESTAMP", 'LSB를 백업합니다')
+	svn_copy ('branches/R20110317-Release', 'tags/R20110317-Release-LSB', '새로운 LSB를 생성합니다.')
+}
+
+task remake_branche_tst << {
+	svn_move ( 'branches/R20110317', "tags/R20110317-before-$TIMESTAMP", '개발서버 작업용 브랜치를 백업합니다.')
+	svn_copy ('tags/R20110317-Release-LSB', 'branches/R20110317', '개발 서버 작업용 브랜치를 생성합니다.')
+}
+
+
+task remake_branche_tst_from_fsb << {
+	svn_move ( 'branches/R20110317', "tags/R20110317-before-$TIMESTAMP", '개발서버 작업용 브랜치를 백업합니다.')
+	svn_copy ('tags/FSB_20120710_1905', 'branches/R20110317', '개발 서버 작업용 브랜치를 생성합니다.')
+}
+
+task remake_branche_stg << {
+	svn_move ( 'branches/R20110317-stg', "tags/R20110317-stg-before-$TIMESTAMP", '스테이징 작업용 브랜치를 백업합니다.')
+	svn_copy ('tags/R20110317-Release-LSB', 'branches/R20110317-stg', '스테이징 서버 작업용 브랜치를 생성합니다.')
+}
+
+task remake_branche_stg_from_fsb << {
+	svn_move ( 'branches/R20110317-stg', "tags/R20110317-stg-before-$TIMESTAMP", '스테이징 작업용 브랜치를 백업합니다.')
+	svn_copy ('tags/FSB_20120710_1905', 'branches/R20110317-stg', '스테이징 서버 작업용 브랜치를 생성합니다.')
+}
+
+task remake_branche_prd << {
+	svn_move ( 'branches/R20110317-Release', "tags/R20110317-Release-before-$TIMESTAMP", '운영 작업용 브랜치를 백업합니다.')
+	svn_copy ('tags/R20110317-Release-LSB', 'branches/R20110317-Release', '운영 서버 작업용 브랜치를 생성합니다.')
+}
+
+
+task post_release << {
+	tag_release.execute()
+	remake_branche_tst.execute()
+	remake_branche_stg.execute()
+}
+task checkout_all(
+	dependsOn: [
+		checkout_library, 
+		checkout_batch,
+		checkout_bo, 
+		checkout_lps, 
+		checkout_muji,
+		checkout_nike])<< {
+			println "전체 프로젝트를 가져왔습니다."
+}
+
+

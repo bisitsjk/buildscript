@@ -1,0 +1,23 @@
+version: 0.0
+os: linux
+files:
+- source: /mo_EllotteAI_20171020_PROJECT_WAS.tar
+  destination: /h2010/mo
+- source: /mo_EllotteAI_20171020_PROJECT_WEB.tar
+  destination: /h2010/mo
+
+permissions:
+- object: /h2010/mo
+  pattern: "**"
+  owner: jeus
+  group: www
+  mode: 644
+
+hooks:
+  ApplicationStop:
+   - location: scripts/vfoprj_mo1_Stop.sh
+     timeout: 60
+  ApplicationStart:
+   - location: scripts/vfoprj_mo1_Start.sh
+     timeout: 120
+     

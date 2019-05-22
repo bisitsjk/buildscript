@@ -1,0 +1,54 @@
+<project name="LECS_Build_Build_STG">
+	<target name="build-project-all-stg">
+		<antcall target="build-library" />
+		<antcall target="build-bo" />
+		<antcall target="build-lps" />
+		<antcall target="build-muji-stg" />
+		<antcall target="build-nike-stg" />
+		<antcall target="build-batch" />
+		<antcall target="build-wms" />
+	</target>
+
+	<target name="build-bo-stg">
+		<antcall target="build-bo-project" />
+		<antcall target="collect-project-bo" />
+		<antcall target="pack-project-bo" />
+	</target>
+
+
+	<target name="build-muji-stg">
+		<antcall target="build-muji-project" />
+		<antcall target="collect-project-muji" />
+		<antcall target="switch-css-muji">
+			<param name="prefix" value="http://image.mujikorea.net/" />
+		</antcall>
+		<antcall target="pack-project-muji" />
+
+	</target>
+
+	<target name="build-nike-stg">
+		<antcall target="build-nike-project" />
+		<antcall target="collect-project-nike" />
+		<antcall target="switch-css-nike">
+			<param name="prefix" value="http://image.nikestore.co.kr/" />
+		</antcall>
+		<antcall target="pack-project-nike" />
+	</target>
+
+	<target name="build-lps-stg">
+		<antcall target="build-lps-project" />
+		<antcall target="collect-project-lps" />
+		<antcall target="switch-css-lps" />
+		<antcall target="pack-project-lps" />
+	</target>
+	
+	<target name="build-wms-stg">
+		<antcall target="build-lps-project" />
+		<antcall target="collect-project-lps" />
+		<antcall target="callback-wms-over-stg" />
+		<antcall target="pack-project-lps" />
+	</target>
+
+
+
+</project>

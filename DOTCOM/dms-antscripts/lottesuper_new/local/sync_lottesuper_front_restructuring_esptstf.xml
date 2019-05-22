@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="sync_lottesuper_front_restructuring_esptstf" basedir=".">
+	<!-- ================================================== -->
+	<!-- properties -->
+	<!-- ================================================== -->
+	<!-- test and real server info -->
+<!--<property name="tst.web.ip" value="110.45.204.91"/>
+	<property name="tst.was.ip" value="110.45.204.91"/>-->
+	<property name="tst.web.ip" value="10.149.199.31"/>
+	<property name="tst.was.ip" value="10.149.199.31"/>
+	<property name="real.was.ip" value="110.45.204.158"/>
+	<property name="tst.user.id" value="jeus"/>
+	<property name="tst.user.pwd" value="w&uch6raDa*r"/>
+	<property name="real.user.id" value="jeus"/>
+	<property name="real.user.pwd" value="w&uch6raDa*r"/>
+	
+	
+	
+	<!-- ================================================== -->
+	<!-- 테스트 서버 프로젝트 백업(복사) : 유닉스 cp명령어 사용 --> 
+	<!-- ================================================== -->
+	<target name="backup_was">
+			<tstamp>
+				<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+			</tstamp>
+			<tstamp>
+				<format property="backup_day" pattern="yyyyMMdd"/>
+			</tstamp>
+			<echo>테스트서버 소스를 백업(복사)합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+			<echo>${tst.was.ip} 접속을 시작합니다... [${conn_time}]</echo>
+			<telnet server="${tst.was.ip}" userid="${tst.user.id}" password="${tst.user.pwd}">
+				<read>/jeus]%</read>
+				<write>cd /esuper/project/front</write>	<!-- 경로이동 -->
+				<read>/front]%</read>
+				<write>cp WEB-INF ${backup_day}_front_20160212</write> <!-- 파일백업(복사) -->
+				<read>/front]%</read>
+				<write>exit</write>
+			</telnet>
+			<tstamp>
+				<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+			</tstamp>
+			<echo>${tst.was.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+	</target>
+	
+	<!-- ================================================== -->
+	<!-- 운영서버 프로젝트 백업 : 유닉스 tar명령어 사용 --> 
+	<!-- ================================================== -->
+	<target name="tar_was">
+			<tstamp>
+				<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+			</tstamp>
+			<tstamp>
+				<format property="backup_day" pattern="yyyyMMdd"/>
+			</tstamp>
+			<echo>운영 서버 소스를 백업(tar묶기)합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+			<echo>${real.was.ip} 접속을 시작합니다... [${conn_time}]</echo>
+				<telnet server="${real.was.ip}" userid="${real.user.id}" password="${real.user.pwd}">
+					<read>/jeus]%</read>
+					<write>cd /esuper/project/front</write> <!-- 경로이동 -->
+					<read>/front]%</read>
+					<write>tar cf FO_SYNC_20160212.tar WEB-INF</write> <!-- tar 묶기 -->
+					<read>/front]%</read>
+					<write>ftp ${tst.was.ip}</write> <!-- ftp 접속 -->
+					<read>:jeus):</read>
+					<write>${tst.user.id}</write>	<!-- ID -->
+					<read>Password:</read>
+					<write>${tst.user.pwd}</write>	<!-- PASSWORD -->
+					<read>ftp></read>
+					<write>cd /esuper/project/front</write> <!-- 경로이동 -->
+					<read>ftp></read>
+					<write>pwd</write>	<!-- 경로확인 -->
+					<read>ftp></read>
+					<write>put FO_SYNC_20160212.tar</write> <!-- tar 파일 전송 -->
+					<read>ftp></read>	
+					<write>bye</write> 	<!-- ftp 접속해지 -->
+					<read>/front]%</read>
+					<write>exit</write>
+				</telnet>
+			<tstamp>
+				<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+			</tstamp>
+			<echo>${tst.was.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+	</target>
+	
+	
+</project>

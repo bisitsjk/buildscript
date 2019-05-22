@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="only_test_spp_web_bo_jenkins_sppbotst(SSH)" basedir=".">
+	<!-- ================================================== -->
+	<!-- properties -->
+	<!-- ================================================== -->
+	<property file="D:/deployer/scripts/only_test_spp_web_bo_jenkins_sppbotst(SSH).properties" />
+	<property name="dep.id" value="${DEPLOY_ID}"/>
+	
+	<!-- test server info -->
+	<!--
+	<property name="tst.web.ip" value="10.149.199.31"/>
+	<property name="tst.was.ip" value="10.149.199.31"/>
+	-->
+	<!-- TEST2로 설정 변경 -->
+	<!--	
+	<property name="tst.web.ip" value="10.149.199.46"/>
+	<property name="tst.was.ip" value="10.149.199.46"/>
+	-->
+	<property name="tst.web.ip" value="${tst.web.ip}"/>
+	<property name="tst.was.ip" value="${tst.was.ip}"/>
+
+	<!--
+	<property name="tst.user.id" value="jeus"/>
+	<property name="tst.user.pwd" value="ALcHefghi|&amp;l"/>
+	-->
+	
+	<!-- path -->
+	<property name="request.dir" value="E:/jenkins-smartpick/jobs/ONLY_TEST_SPP_WEB_BO_SPPBOTST(SSH)/workspace/spp2014/branches/ONLY_TEST/back"/>
+	<property name="dep.dir" value="/usr1/home/jeus/deploy/src"/>
+	
+	<property name="prefix.dep.id" value="BO_" />
+	<property name="infix.dep.id" value="_TEST_" />
+
+	<property name="init.was.log" value="../logs/${dep.id}_INIT_WAS.log" />
+	<property name="init.web.log" value="../logs/${dep.id}_INIT_WEB.log" />
+	<property name="dep.was.log"  value="../logs/${dep.id}_DEP_WAS.log" />
+	<property name="dep.web.log"  value="../logs/${dep.id}_DEP_WEB.log" />
+	<property name="ssh.init.cmd" value="sppinit" />
+	<property name="ssh.dep.cmd"  value="sppdeploy" />
+	<property name="ssh.con.name" value="sppbotst_spp" />
+	<property name="ssh.rollback.cmd"  value="ssh_borollback" />
+
+	
+	<!--<property name="con_front"     value="esptstf_dev" />-->
+	<property name="con_sppbo"     value="sppbotst_spp" />
+	
+	<patternset id="jsp.src.set">
+		<include name="spp-web-bo/src/main/webapp/WEB-INF/jsp/**/*"></include>
+		<include name="spp-web-bo/src/main/webapp/*.jsp"></include>
+		<include name="spp-web-bo/src/main/webapp/*.html"></include>
+		<exclude name="**/.svn/**"></exclude>
+	</patternset>
+	
+	<!-- static-root 를 전송하기 위하여 주석처리함 - 2017-04-05 -->
+	<!--
+	<patternset id="etc.src.set">
+		<include name="lotte-super-front/WebContent/ksnet/**/*"></include>
+		<include name="lotte-super-front/WebContent/lgdacom/**/*"></include>
+		<include name="lotte-super-front/WebContent/lotteansim/**/*"></include>
+		<include name="lotte-super-front/WebContent/merch/**/*"></include>
+		<include name="lotte-super-front/WebContent/static-root/**/*"></include>
+		<include name="lotte-super-front/WebContent/*.html"></include>
+		<exclude name="**/.svn/**"></exclude>
+	</patternset>
+	-->
+	<patternset id="etc.src.set">
+		<include name="spp-web-bo/src/main/webapp/css/**/*"></include>
+		<include name="spp-web-bo/src/main/webapp/js/**/*"></include>
+		<include name="spp-web-bo/src/main/webapp/WiseGrid/**/*"></include>
+		<exclude name="**/.svn/**"></exclude>
+	</patternset>
+	
+	<patternset id="class.src.set">
+		<include name="spp-web-bo/src/main/webapp/WEB-INF/classes/**/*"></include>
+		<include name="spp-web-bo/src/main/webapp/WEB-INF/lib/**/*"></include>
+		<include name="spp-web-bo/src/main/webapp/WEB-INF/*.xml"></include>
+		<exclude name="**/.svn/**"></exclude>
+	</patternset>
+	
+	<patternset id="web.src.set">
+		<exclude name="**/.svn/**"></exclude>
+	</patternset>
+		
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->
+	<target name="check_deploy_id">
+		<condition property="isValid">
+		  <and>
+			<length string="${dep.id}" when="greater" length="10"/>
+			<contains string="${dep.id}" substring="${prefix.dep.id}" casesensitive="true"/>
+			<contains string="${dep.id}" substring="${infix.dep.id}" casesensitive="true"/>
+		  </and>
+		</condition>
+		<echo>배포ID ${dep.id} / 적합성 ${isValid}</echo>
+	</target>
+	
+	
+	
+	<!-- request.dir = E:/jenkins-smartpick/jobs/ONLY_TEST_SPP_WEB_BO_SPPBOTST(SSH)/workspace/spp2014/branches/ONLY_TEST/back -->
+	<target name="check_exist">
+		<condition property="isExistWebapp">
+		  <or>
+			<resourceexists><file file="${request.dir}/${dep.id}/spp-web-bo/src/main/webapp/WEB-INF/jsp"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/${dep.id}/spp-web-bo/src/main/webapp/static-root"/></resourceexists>
+		  </or>
+		</condition>
+		<condition property="isExistAppinf">
+		  <or>
+			<resourceexists><file file="${request.dir}/${dep.id}/spp-web-bo/src/main/webapp/WEB-INF/classes"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/${dep.id}/spp-web-bo/src/main/webapp/WEB-INF/lib"/></resourceexists>
+		  </or>
+		</condition>
+		<condition property="isJsp">
+			<and>
+				<istrue value="${isExistWebapp}"/>
+				<isfalse value="${isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="isClass">
+			<and>
+				<isfalse value="${isExistWebapp}"/>
+				<istrue value="${isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="isWeb">
+			<resourceexists>
+				<file file="${request.dir}/${dep.id}/lotte-super-front/WebContent/static-root"/>
+			</resourceexists>
+		</condition>
+		<condition property="isWas">
+			<or>
+				<istrue value="${isExistWebapp}"/>
+				<istrue value="${isExistAppinf}"/>
+			</or>
+		</condition>
+		
+		<echo>WAS에 배포할 소스 존재여부 : ${isWas}</echo>
+		<echo>WEB 서버에 배포할 소스 존재여부 : ${isWeb}</echo>
+	</target>
+	
+	<target name="check_remote_work" unless="isSuccess">
+		<fail message="원격지 작업이 실패하였습니다..." />
+	</target>
+	
+	<target name="check_was_sources" unless="isWas">
+		<echo message="WAS 배포 대상 소스가 없습니다..."/>
+	</target>
+
+	<target name="ssh_check_was_sources" unless="isWas">
+		<echo message="WAS 배포 대상 소스가 없습니다..."/>
+	</target>
+
+		
+	<target name="check_web_sources" unless="isWeb">
+		<echo message="WEB 서버 배포 대상 소스가 없습니다..."/>
+	</target>
+	
+	<target name="check_valid" unless="isValid">
+		<fail message="DEPLOY_ID가 유효하지 않습니다."/>
+	</target>
+
+	<target name="ssh_check_valid" unless="isValid">
+		<fail message="DEPLOY_ID가 유효하지 않습니다."/>
+	</target>
+
+	<target name="ip_check">
+	<echo>echo ${tst.was.ip}</echo>
+	  <condition property="con_front" value="esptstf_dev">
+	   		<equals arg1="${tst.was.ip}" arg2="10.149.199.31" />
+	  </condition>
+	  <condition property="con_front" value="esptstf2_dev">
+		   <equals arg1="${tst.was.ip}" arg2="10.149.199.46" />
+	  </condition>  
+	</target>
+
+	
+	
+	<!-- ================================================== -->
+	<!-- ssh transfer -->
+	<!-- ================================================== -->
+	<target name="ssh_transfer_was" depends="check_deploy_id, check_exist">
+		<echo>=================================================================================== WAS transfer sources 시작 ==========</echo>
+		<antcall target="ssh_check_valid"/>
+		<antcall target="ssh_init_was"/>
+		<antcall target="ssh_send_was"/>
+		<echo>=================================================================================== WAS transfer sources 종료 ==========</echo>
+	</target>
+
+		
+		
+
+	
+	<!-- ##### SSH INIT ##### -->
+	<target name="ssh_init_was" if="isWas">
+		<sshexec host="${tst.was.ip}" username="${tst.user.id}" password="${tst.user.pwd}" 
+			trust="true" verbose="false" output="${init.was.log}"
+			command="cd deploy;./${ssh.init.cmd} ${dep.id}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${init.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />			
+	</target>
+
+		
+		
+	
+	<!-- WEB STATICROOT 추가함 - 2017-04-05 -->
+	<target name="ssh_send_was"  if="isWas">
+		<scp todir="${tst.user.id}:${tst.user.pwd}@${tst.was.ip}:${dep.dir}/${dep.id}" trust="true">
+			<fileset dir="${request.dir}/${dep.id}">
+				<patternset refid="jsp.src.set"/>
+			</fileset>
+		</scp>
+		<echo></echo>
+		<echo>WAS - CLASS/XML (jeus restarting required)</echo>
+		<scp todir="${tst.user.id}:${tst.user.pwd}@${tst.was.ip}:${dep.dir}/${dep.id}" trust="true">
+			<fileset dir="${request.dir}/${dep.id}">
+				<patternset refid="class.src.set"/>
+				<!--<patternset refid="dynamic_class.src.set"/>-->
+			</fileset>
+		</scp>
+		<echo>WEB - STATICROOT</echo>
+		<scp todir="${tst.user.id}:${tst.user.pwd}@${tst.was.ip}:${dep.dir}/${dep.id}" trust="true">
+			<fileset dir="${request.dir}/${dep.id}">
+				<patternset refid="etc.src.set"/>
+			</fileset>
+		</scp>
+	</target>	
+
+	
+	<!-- ================================================== -->
+	<!--ssh deploy -->
+	<!-- ================================================== -->
+	<target name="ssh_deploy_was" depends="check_deploy_id, check_exist,ip_check">
+		<echo>=================================================================================== deploy was 시작 ==========</echo>
+		<antcall target="ssh_check_valid"/>
+		<antcall target="ssh_check_was_sources"/>		
+		<antcall target="ssh_copy_was"/>
+		<echo>=================================================================================== deploy was 종료 ==========</echo>
+	</target>
+
+	
+	<!-- ##### SSH COPY ##### -->
+	<target name="ssh_copy_was"  if="isWas">
+		<sshexec host="${tst.was.ip}" username="${tst.user.id}" password="${tst.user.pwd}"
+			trust="true" verbose="false" output="${dep.was.log}"
+			command="cd deploy;./${ssh.dep.cmd} ${dep.id};ja downcon ${con_sppbo};ja startcon ${con_sppbo}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${dep.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />		
+	</target>
+
+	
+	
+    <target name="ssh_rollback_was">
+		<sshexec host="${tst.was.ip}" username="${tst.user.id}" password="${tst.user.pwd}"
+			trust="true" verbose="false" output="${rollback.was.log}"
+			command="cd deploy;./${ssh.rollback.cmd} ${dep.id}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${rollback.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />		
+	</target>
+
+
+</project>

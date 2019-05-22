@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottesuper2014mo_renew" basedir=".">
+
+	<!-- **************************************************************** -->
+	<!-- PROPERTY -->
+	<!-- **************************************************************** -->
+	<!-- **************************************************************** -->
+	
+	<!-- test server info -->
+	<property name="tst.web.ip" value="110.45.204.91"/>
+	<property name="tst.was.ip" value="110.45.204.91"/>
+	<property name="tst.user.id" value="jeus"/>
+	<property name="tst.user.pwd" value="6sUvCHdV$!"/>
+
+	
+	<!--  system path -->
+	<property name="java.home.dir"     value="C:/Program Files (x86)/Java/jdk1.6.0_25"  />
+	<property name="jeus.home.dir"     value="C:/TmaxSoft/JEUS6.0"  />
+	<property name="hudson.home.dir"   value="E:/hudson-lottesuper"  />
+	<property name="deployer.home.dir" value="D:/deployer"  />	
+
+	<!-- path -->
+	<!--property name="request.dir" value="E:/hudson-lottesuper/jobs/ONLY_TEST_LOTTESUPER_MOBILE2_renewer/workspace/PROJECT/newPrj"/ -->
+	<property name="request.dir" value="E:/hudson-lottesuper/jobs/ONLY_TEST_LOTTESUPER_MOBILE2_renewer/workspace"/>
+	<property name="dep.dir" value="/usr1/home/jeus/deploy/nmobile"/>
+	<property name="src.static.dir" value="${request.dir}/src" />
+	<property name="src.dynamic.dir" value="${request.dir}/src_dynamic" />
+	<property name="build.static.dir" value="${request.dir}/WebContent/WEB-INF/classes" />
+	<property name="build.dynamic.dir" value="${request.dir}/WebContent/WEB-INF/dynamic_classes" />
+	<property name="comm.wrksp.path" value="E:/hudson-lottesuper/jobs/LOTTESUPER_COMMONS_1_TEST_BUILD/workspace" />
+	<property name="comm.lib.path" value="lotte-super-commons/lib" />
+	<property name="comm.jar.path" value="lotte-super-commons/dist" />
+	
+	<property name="lib.dir" value="${request.dir}/WebContent/WEB-INF/lib"  />
+	<property name="pack.dir" value="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/project/mobile"  />
+	<property name="build.static.dir" value="${pack.dir}/WEB-INF/classes"  />
+	<property name="build.dynamic.dir" value="${pack.dir}/WEB-INF/dynamic_classes"  />
+
+	<property name="init.cmd" value="moinit" />
+	<property name="dep.cmd"  value="modeploy" />
+	
+	<property name="con_mobile" value="esptstf_mobiledev" />
+
+	<property name="ojdbc.jar.file" value="${jeus.home.dir}/lib/datasource" />
+	<property name="jeus.system.lib.dir" value="${jeus.home.dir}/lib/system" />
+	<property name="srcStaticClassesPath" value="${request.dir}/WebContent/WEB-INF/classes"  />
+	<property name="srcDynamicClassesPath" value="${request.dir}/WebContent/WEB-INF/dynamic_classes" />
+	
+	<property name="imsi1" value="E:/hudson-lottesuper/jobs/ONLY_TEST_LOTTESUPER_MOBILE2_renewer/workspace" />
+	
+
+	<path id="classpath">
+		<fileset dir="${java.home.dir}/jre/lib">
+			<include name="rt.jar" />
+		</fileset>
+		<fileset dir="${jeus.home.dir}/lib/datasource">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="${jeus.home.dir}/lib/system">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="${comm.wrksp.path}/lottesuper2011/branches/TEST/${comm.lib.path}">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="${comm.wrksp.path}/lottesuper2011/branches/TEST/${comm.jar.path}">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="${lib.dir}">
+			<include name="*.jar" />
+		</fileset>
+		<dirset dir="${srcStaticClassesPath}" />
+		<dirset dir="${srcDynamicClassesPath}" />
+	</path>
+
+	<patternset id="jsp.src.set">
+		<include name="lotte-super-mobile/WebContent/WEB-INF/jsp/**/*"></include>
+		<include name="lotte-super-mobile/WebContent/*.jsp"></include>
+		<exclude name="**/.svn/**"></exclude>
+	</patternset>	
+
+	<patternset id="etc.src.set">
+		<include name="lotte-super-mobile/WebContent/static-root/**/*"></include>
+		<include name="lotte-super-mobile/WebContent/xansim/**/*"></include>
+		<include name="lotte-super-mobile/WebContent/ksnet/**/*"></include>
+		<include name="lotte-super-mobile/WebContent/lgdacom/**/*"></include>
+		<include name="lotte-super-mobile/WebContent/lotteansim/**/*"></include>
+		<include name="lotte-super-mobile/WebContent/merch/**/*"></include>
+		<include name="lotte-super-mobile/WebContent/*.html"></include>
+		<exclude name="**/.svn/**"></exclude>
+	</patternset>
+	
+	<patternset id="class.src.set">
+		<include name="lotte-super-mobile/WebContent/WEB-INF/classes/**/*"></include>
+		<include name="lotte-super-mobile/WebContent/WEB-INF/lib/**/*"></include>
+		<include name="lotte-super-mobile/WebContent/WEB-INF/*.xml"></include>
+		<exclude name="**/.svn/**"></exclude>
+	</patternset>
+	
+	<patternset id="dynamic_class.src.set">
+		<include name="lotte-super-mobile/WebContent/WEB-INF/dynamic_classes/**/*"></include>
+		<include name="lotte-super-mobile/WebContent/WEB-INF/x2config/**/*"></include>
+		<include name="lotte-super-mobile/WebContent/WEB-INF/x2scenario/**/*"></include>
+		<exclude name="**/.svn/**"></exclude>
+	</patternset>
+	
+	<patternset id="web.src.set">
+		<exclude name="**/.svn/**"></exclude>
+	</patternset>
+	
+	<target name="clean" if="isWas">
+		<delete dir="${build.static.dir}" />
+		<delete dir="${build.dynamic.dir}" />
+	</target>	
+
+	<target name="delete">
+		<delete dir="${imsi1}" />
+	</target>	
+	
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->
+	<target name="check_deploy_id">
+		<condition property="isValid">
+		  <and>
+			<length string="${dep.id}" when="greater" length="10"/>
+			<contains string="${dep.id}" substring="${prefix.dep.id}" casesensitive="true"/>
+			<contains string="${dep.id}" substring="${infix.dep.id}" casesensitive="true"/>
+		  </and>
+		</condition>
+		<echo>배포ID ${dep.id} / 적합성 ${isValid}</echo>
+	</target>
+	
+	<target name="compile" depends="clean">
+	
+		<mkdir dir="${build.static.dir}" />
+		<mkdir dir="${build.dynamic.dir}" />
+
+		<javac source="1.6" 
+			target="1.6" 
+			srcdir="${src.static.dir}"
+			classpathref="classpath"
+			destdir="${build.static.dir}" 
+			failonerror="on" 
+			debug="on" 
+			verbose="on" 
+			encoding="utf-8" 
+			compiler="modern" 
+			fork="true" 
+			memoryMaximumSize="256m" />
+
+		<javac source="1.6" 
+			target="1.6" 
+			srcdir="${src.dynamic.dir}"
+			classpathref="classpath"
+			destdir="${build.dynamic.dir}" 
+			failonerror="on" 
+			debug="on" 
+			verbose="on" 
+			encoding="utf-8" 
+			compiler="modern" 
+			fork="true" 
+			memoryMaximumSize="256m" />
+		
+	</target>
+
+	<target name="check_exist">
+		<condition property="isExistWebapp">
+		  <or>
+			<resourceexists><file file="${request.dir}/lotte-super-mobile/WebContent/WEB-INF/jsp"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/lotte-super-mobile/WebContent/static-root"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/lotte-super-mobile/WebContent/Patrol"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/lotte-super-mobile/WebContent/merch"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/lotte-super-mobile/WebContent/lotteansim"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/lotte-super-mobile/WebContent/lgdacom"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/lotte-super-mobile/WebContent/ksnet"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/lotte-super-mobile/WebContent/index.html"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/lotte-super-mobile/WebContent/404.html"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/lotte-super-mobile/WebContent/503.html"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/lotte-super-mobile/WebContent/info.html"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/lotte-super-mobile/WebContent/xdbhelper_org.jsp"/></resourceexists>
+		  </or>
+		</condition>
+		<condition property="isExistAppinf">
+		  <or>
+			<resourceexists><file file="${request.dir}/lotte-super-mobile/WebContent/WEB-INF/classes"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/lotte-super-mobile/WebContent/WEB-INF/dynamic_classes"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/lotte-super-mobile/WebContent/WEB-INF/lib"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/lotte-super-mobile/WebContent/WEB-INF/x2config"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/lotte-super-mobile/WebContent/WEB-INF/x2scenario"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/lotte-super-mobile/WebContent/WEB-INF/web.xml"/></resourceexists>
+		  	<resourceexists><file file="${request.dir}/lotte-super-mobile/WebContent/WEB-INF/jeus-web-dd.xml"/></resourceexists>
+		  </or>
+		</condition>
+		<condition property="isJsp">
+			<and>
+				<istrue value="${isExistWebapp}"/>
+				<isfalse value="${isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="isClass">
+			<and>
+				<isfalse value="${isExistWebapp}"/>
+				<istrue value="${isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="isWeb">
+			<resourceexists>
+				<file file="${request.dir}/lotte-super-mobile/WebContent/static-root"/>
+			</resourceexists>
+		</condition>
+		<condition property="isWas">
+			<or>
+				<istrue value="${isExistWebapp}"/>
+				<istrue value="${isExistAppinf}"/>
+			</or>
+		</condition>
+
+		<echo>WAS에 배포할 소스 존재여부 : ${isWas}</echo>
+		<echo>WEB 서버에 배포할 소스 존재여부 : ${isWeb}</echo>
+	</target>
+	
+	<!--target name="send_was" if="isWas"-->
+	<target name="send_was" >
+		<echo>WAS - CLASS/XML (jeus restarting required)</echo>
+		<ftp server="${tst.was.ip}" userid="${tst.user.id}" password="${tst.user.pwd}"
+		     remotedir="${dep.dir}"
+		     action="put"
+			 passive="yes">
+			<fileset dir="${request.dir}">
+				<patternset refid="class.src.set"/>
+				<patternset refid="dynamic_class.src.set"/>
+			</fileset>
+		</ftp>
+	</target>
+
+	<!-- ================================================== -->
+	<!-- 테스트 서버 프로젝트 백업(이동) : 유닉스 mv 명령어 사용 --> 
+	<!-- ================================================== -->
+	<target name="backup_was">
+		<tstamp>
+			<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<tstamp>
+			<format property="backup_day" pattern="yyyyMMdd"/>
+		</tstamp>
+		<echo>테스트서버 소스를 백업(이동)합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+		<echo>${tst.was.ip} 접속을 시작합니다... [${conn_time}]</echo>
+		<telnet server="${tst.was.ip}" userid="${tst.user.id}" password="${tst.user.pwd}">
+			<read>/jeus]%</read>
+			<write>cd /esuper/project/mobile</write>	<!-- 경로이동 -->
+			<read>/mobile]%</read>
+			<write>mv WEB-INF ${backup_day}_mobile</write> <!-- 파일백업(이동) -->
+			<read>/mobile]%</read>
+			<write>tar xpf MO_SYNC.tar</write> <!-- 운영파일 tar풀기 -->
+			<read>/mobile]%</read>
+			<write>exit</write>
+		</telnet>
+		<tstamp>
+			<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${tst.was.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+		
+	</target>
+</project>
+

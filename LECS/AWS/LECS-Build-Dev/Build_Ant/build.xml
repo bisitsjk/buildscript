@@ -1,0 +1,448 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lecs20.deploy" basedir="."><!-- Global Param: ${target} -->
+
+<!-- properties -->
+	
+	<property file="pwd.properties" />
+	
+	<property name="bo.war.path" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/AWSWAR" />
+	<property name="bo.web.path" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/AWSWEB" />
+	<property name="bo.rule.path" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/AWSRULE" />
+	<property name="bo.src.path" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/build/build/LECS-Platform-BO" />
+	
+	<property name="lps.war.path" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/LPSWAR" />
+	<property name="lps.web.path" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/LPSWEB" />
+	<property name="lps.src.path" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/build/build/LECS-Platform-LPS" />
+
+	<property name="oa.war.path" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/OAWAR" />
+	<property name="oa.src.path" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/build/build/Oa" />
+
+	<property name="wms.war.path" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/WMSWAR" />
+	<property name="wms.src.path" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/build/build/Wms" />
+	
+	<property name="mj.war.path" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/MJWAR" />
+	<property name="mj.web.path" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/MJWEB" />
+	<property name="mj.img.path" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/MJIMG" />
+	<property name="mj.src.path" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/build/build/LECS-Store-Muji" />
+	
+	<property name="uq.war.path" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/UQWAR" />
+	<property name="uq.web.path" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/UQWEB" />
+	<property name="uq.img.path" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/UQIMG" />
+	<property name="uq.src.path" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/build/build/LECS-Store-New-Uniqlo" />
+	
+	<property name="uqoa.war.path" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/UQOAWAR" />
+	<property name="uqoa.web.path" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/UQOAWEB" />
+	<property name="uqoa.src.path" value="/Source/lecs2/jobs/${JOB_NAME}/workspace/build/build/LECS-Store-New-Uniqlo-FR-API" />
+
+	<property name="tom.ins.path" value="/usr2/apache-tomcat/instance" />
+
+<!-- INIT -->
+	
+	<target name="DEV.INIT.BO">
+		<delete dir="${bo.war.path}"/>
+		<mkdir dir="${bo.war.path}"/>
+		<delete dir="${bo.web.path}"/>
+		<mkdir dir="${bo.web.path}"/>
+		<delete dir="${bo.rule.path}"/>
+		<mkdir dir="${bo.rule.path}"/>
+	</target>
+	
+	<target name="DEV.INIT.LPS">
+		<delete dir="${lps.war.path}"/>
+		<mkdir dir="${lps.war.path}"/>
+		<delete dir="${lps.web.path}"/>
+		<mkdir dir="${lps.web.path}"/>
+	</target>
+	
+	<target name="DEV.INIT.WMS">
+		<delete dir="${wms.war.path}"/>
+		<mkdir dir="${wms.war.path}"/>
+	</target>
+	
+	<target name="DEV.INIT.MJ">
+		<delete dir="${mj.war.path}"/>
+		<mkdir dir="${mj.war.path}"/>
+		<delete dir="${mj.web.path}"/>
+		<mkdir dir="${mj.web.path}"/>
+		<delete dir="${mj.img.path}"/>
+		<mkdir dir="${mj.img.path}"/>
+	</target>
+	
+	<target name="DEV.INIT.UQ">
+		<delete dir="${uq.war.path}"/>
+		<mkdir dir="${uq.war.path}"/>
+		<delete dir="${uq.web.path}"/>
+		<mkdir dir="${uq.web.path}"/>
+		<delete dir="${uq.img.path}"/>
+		<mkdir dir="${uq.img.path}"/>
+	</target>
+	
+	<target name="DEV.INIT.OA.UQOA">
+		<delete dir="${oa.war.path}"/>
+		<mkdir dir="${oa.war.path}"/>
+		<delete dir="${uqoa.war.path}"/>
+		<mkdir dir="${uqoa.war.path}"/>
+		<delete dir="${uqoa.web.path}"/>
+		<mkdir dir="${uqoa.web.path}"/>
+	</target>
+
+	<target name="SVN3.CLEAN_DEV">
+		<delete dir="/Source/lecs2/jobs/02.AWS.UPDATE_DEV/workspace/src/LECS-Batch"/>
+		<delete dir="/Source/lecs2/jobs/02.AWS.UPDATE_DEV/workspace/src/app"/>				
+	</target>
+	
+	<target name="RESTART.SERVERS.FO">
+		<telnet server="${fo.server.ip}" userid="jeus" password="${jeuspwd}" port="23">
+			<write>jdown</write>
+			<read>jeusexit successful</read>
+			<write>jboot</write>
+			<read>virtual host name of this manager : </read>
+		</telnet>
+	</target>
+	
+	<target name="DR.SSH.RESTART.SERVERS">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jdown" trust="true" verbose="false"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jboot;\n" trust="true" verbose="false"/>
+	</target>
+	
+	<target name="DR.SSH.RESTART">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jdown;sleep 10;jboot;sleep 10" trust="true" verbose="false"/>
+	</target>
+	
+	<target name="DR.SSH.START.SERVERS">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="cd /usr2/jeus6/bin;./jboot;sleep 5" trust="true" verbose="false" timeout="20000" failonerror="false"/>
+	</target>
+	
+	<target name="SSH.START.WEBTOB">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="wsboot" trust="true" verbose="false" timeout="20000" failonerror="false"/>
+	</target>
+	
+	<target name="TELNET.TAIL">
+		<telnet userid="jeus" password="${jeuspwd}" server="${fo.server.ip}" timeout="10000">
+			<write>cd /usr2/jeus-log/`hostname`</write>
+			<read>/usr2/jeus-log/`hostname`</read>
+		</telnet>
+	</target>
+	
+	<target name="SSH.RESTART.CONS">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin downcon" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin startcon" trust="true"/>
+	</target>
+	
+	<target name="SSH.DOWNCON">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="sh ~/scripts/downcon.sh" trust="true" verbose="false"/>
+	</target>
+	
+	<target name="DISK_CLEAN">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="sh ~/scripts/diskclean.sh" trust="true"/>
+	</target>
+	
+	<target name="TMP.DELETE.SVN3">
+		<delete dir="/usr3/mergeTool/merge"/>
+	</target>
+	
+	<target name="TST2.SSH.DOWNCON">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin downcon lecs20stg2_yo" trust="true"/>
+	</target>
+	
+	<target name="TEST.SSH">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="ls" trust="true"/>
+	</target>
+	
+<!-- FILECOPY -->
+	
+	<target name="DEV.BO.WAR.FILECOPY">	
+		<copy tofile="${bo.war.path}/ROOT.war">
+			<fileset dir="${bo.src.path}">
+				<include name="LECS-Platform-BO-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="DEV.BO.WEB.FILECOPY">	
+		<copy tofile="${bo.web.path}/BOWEB.zip">
+			<fileset dir="${bo.src.path}">
+				<include name="LECS-Platform-BO-CONTENT*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="DEV.BO.RULE.FILECOPY">	
+		<copy tofile="${bo.rule.path}/RULE.zip">
+			<fileset dir="${bo.src.path}">
+				<include name="BO-UPLOAD-RULES*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="DEV.LPS.WAR.FILECOPY">	
+		<copy tofile="${lps.war.path}/ROOT.war">
+			<fileset dir="${lps.src.path}">
+				<include name="LECS-Platform-LPS-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="DEV.LPS.WEB.FILECOPY">	
+		<copy tofile="${lps.web.path}/LPSWEB.zip">
+			<fileset dir="${lps.src.path}">
+				<include name="LECS-Platform-LPS-CONTENT*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="DEV.OA.WAR.FILECOPY">	
+		<copy tofile="${oa.war.path}/ROOT.war">
+			<fileset dir="${oa.src.path}">
+				<include name="Oa-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="DEV.WMS.WAR.FILECOPY">	
+		<copy tofile="${wms.war.path}/ROOT.war">
+			<fileset dir="${wms.src.path}">
+				<include name="Wms-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="DEV.MJ.WAR.FILECOPY">	
+		<copy tofile="${mj.war.path}/ROOT.war">
+			<fileset dir="${mj.src.path}">
+				<include name="LECS-Store-Muji-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="DEV.MJ.WEB.FILECOPY">	
+		<copy tofile="${mj.web.path}/MJWEB.zip">
+			<fileset dir="${mj.src.path}">
+				<include name="LECS-Store-Muji-CONTENT*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="DEV.MJ.IMG.FILECOPY">	
+		<copy tofile="${mj.img.path}/MJIMG.zip">
+			<fileset dir="${mj.src.path}">
+				<include name="LECS-Store-Muji-IMAGE*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="DEV.UQ.WAR.FILECOPY">	
+		<copy tofile="${uq.war.path}/ROOT.war">
+			<fileset dir="${uq.src.path}">
+				<include name="LECS-Store-New-Uniqlo-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="DEV.UQ.WEB.FILECOPY">	
+		<copy tofile="${uq.web.path}/UQWEB.zip">
+			<fileset dir="${uq.src.path}">
+				<include name="LECS-Store-New-Uniqlo-CONTENT*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="DEV.UQ.IMG.FILECOPY">	
+		<copy tofile="${uq.img.path}/UQIMG.zip">
+			<fileset dir="${uq.src.path}">
+				<include name="LECS-Store-New-Uniqlo-IMAGE*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="DEV.UQOA.WAR.FILECOPY">	
+		<copy tofile="${uqoa.war.path}/ROOT.war">
+			<fileset dir="${uqoa.src.path}">
+				<include name="LECS-Store-New-Uniqlo-FR-API-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="DEV.UQOA.WEB.FILECOPY">	
+		<copy tofile="${uqoa.web.path}/UQOAWEB.zip">
+			<fileset dir="${uqoa.src.path}">
+				<include name="LECS-Store-New-Uniqlo-FR-API-CONTENT*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+<!-- COPY.COMMON.XML -->
+	
+    <target name="DEV.COMMON.COPY">
+    	<copy file="/Source/lecs2/jobs/02.AWS.UPDATE_DEV/workspace/src/app/classes/config/spring/bean/common.xml.aws" tofile="/Source/lecs2/jobs/${JOB_NAME}/workspace/build/build/${svn.name}/app/WEB-INF/classes/config/spring/bean/common.xml" overwrite="true"/>
+    </target>
+	
+    <target name="DEV.Batch.COMMON.COPY">
+    	<copy file="/Source/lecs2/jobs/02.AWS.UPDATE_DEV/workspace/src/app/classes/config/spring/bean/common.xml.aws" tofile="/Source/lecs2/jobs/${JOB_NAME}/workspace/build/build/${svn.name}/app/classes/config/spring/bean/common.xml" overwrite="true"/>
+    </target>
+
+<!-- UPLOAD -->
+	
+	<target name="DEV.BO.UPLOAD.WAR">
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="touch /lotte/lecs/webapp/bo/ROOT.war;cp /lotte/lecs/webapp/bo/ROOT.war /lotte/lecs/webapp/bo/ROOT.war.bak" trust="true"/>
+		<scp file="${bo.war.path}/ROOT.war" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/lotte/lecs/webapp/bo/ROOT.war" trust="true"/>
+	</target>
+
+	<target name="DEV.BO.UPLOAD.WEB">
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="touch /lotte/lecsDocs/temp/BOWEB.zip;cp /lotte/lecsDocs/temp/BOWEB.zip /lotte/lecsDocs/temp/BOWEB.zip.bak" trust="true"/>
+		<scp file="${bo.web.path}/BOWEB.zip" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/lotte/lecsDocs/temp/BOWEB.zip" trust="true"/>
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="unzip -o -q /lotte/lecsDocs/temp/BOWEB.zip -d /lotte/lecs/bo/web" trust="true"/>
+	</target>
+
+	<target name="DEV.BO.UPLOAD.RULE">
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="touch /lotte/lecsDocs/temp/RULE.zip;cp /lotte/lecsDocs/temp/RULE.zip /lotte/lecsDocs/temp/RULE.zip.bak" trust="true"/>
+		<scp file="${bo.rule.path}/RULE.zip" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/lotte/lecsDocs/temp/RULE.zip" trust="true"/>
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="unzip -o -q /lotte/lecsDocs/temp/RULE.zip -d /lotte/lecsDocs/excel/rule" trust="true"/>
+	</target>
+	
+	<target name="DEV.LPS.UPLOAD.WAR">
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="touch /lotte/lecs/webapp/lps/ROOT.war;cp /lotte/lecs/webapp/lps/ROOT.war /lotte/lecs/webapp/lps/ROOT.war.bak" trust="true"/>
+		<scp file="${lps.war.path}/ROOT.war" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/lotte/lecs/webapp/lps/ROOT.war" trust="true"/>
+	</target>
+
+	<target name="DEV.LPS.UPLOAD.WEB">
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="touch /lotte/lecsDocs/temp/LPSWEB.zip;cp /lotte/lecsDocs/temp/LPSWEB.zip /lotte/lecsDocs/temp/LPSWEB.zip.bak" trust="true"/>
+		<scp file="${lps.web.path}/LPSWEB.zip" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/lotte/lecsDocs/temp/LPSWEB.zip" trust="true"/>
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="unzip -o -q /lotte/lecsDocs/temp/LPSWEB.zip -d /lotte/lecs/lps/web" trust="true"/>
+	</target>
+	
+	<target name="DEV.OA.UPLOAD.WAR">
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="touch /lotte/lecs/webapp/oa/ROOT.war;cp /lotte/lecs/webapp/oa/ROOT.war /lotte/lecs/webapp/oa/ROOT.war.bak" trust="true"/>
+		<scp file="${oa.war.path}/ROOT.war" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/lotte/lecs/webapp/oa/ROOT.war" trust="true"/>
+	</target>
+	
+	<target name="DEV.WMS.UPLOAD.WAR">
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="touch /lotte/lecs/webapp/wms/ROOT.war;cp /lotte/lecs/webapp/wms/ROOT.war /lotte/lecs/webapp/wms/ROOT.war.bak" trust="true"/>
+		<scp file="${wms.war.path}/ROOT.war" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/lotte/lecs/webapp/wms/ROOT.war" trust="true"/>
+	</target>
+	
+	<target name="DEV.MJ.UPLOAD.WAR">
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="touch /lotte/lecs/webapp/muji/ROOT.war;cp /lotte/lecs/webapp/muji/ROOT.war /lotte/lecs/webapp/muji/ROOT.war.bak" trust="true"/>
+		<scp file="${mj.war.path}/ROOT.war" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/lotte/lecs/webapp/muji/ROOT.war" trust="true"/>
+	</target>
+
+	<target name="DEV.MJ.UPLOAD.WEB">
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="touch /lotte/lecsDocs/temp/MJWEB.zip;cp /lotte/lecsDocs/temp/MJWEB.zip /lotte/lecsDocs/temp/MJWEB.zip.bak" trust="true"/>
+		<scp file="${mj.web.path}/MJWEB.zip" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/lotte/lecsDocs/temp/MJWEB.zip" trust="true"/>
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="unzip -o -q /lotte/lecsDocs/temp/MJWEB.zip -d /lotte/lecs/MJS1/web" trust="true"/>
+	</target>
+
+	<target name="DEV.MJ.UPLOAD.IMG">
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="touch /lotte/lecsDocs/temp/MJIMG.zip;cp /lotte/lecsDocs/temp/MJIMG.zip /lotte/lecsDocs/temp/MJIMG.zip.bak" trust="true"/>
+		<scp file="${mj.img.path}/MJIMG.zip" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/lotte/lecsDocs/temp/MJIMG.zip" trust="true"/>
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="unzip -o -q /lotte/lecsDocs/temp/MJIMG.zip -d /lotte/lecsDocs/images/MJS1" trust="true"/>
+	</target>
+	
+	<target name="DEV.UQ.UPLOAD.WAR">
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="touch /lotte/lecs/webapp/nuniqlo/ROOT.war;cp /lotte/lecs/webapp/nuniqlo/ROOT.war /lotte/lecs/webapp/nuniqlo/ROOT.war.bak" trust="true"/>
+		<scp file="${uq.war.path}/ROOT.war" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/lotte/lecs/webapp/nuniqlo/ROOT.war" trust="true"/>
+	</target>
+
+	<target name="DEV.UQ.UPLOAD.WEB">
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="touch /lotte/lecsDocs/temp/UQWEB.zip;cp /lotte/lecsDocs/temp/UQWEB.zip /lotte/lecsDocs/temp/UQWEB.zip.bak" trust="true"/>
+		<scp file="${uq.web.path}/UQWEB.zip" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/lotte/lecsDocs/temp/UQWEB.zip" trust="true"/>
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="unzip -o -q /lotte/lecsDocs/temp/UQWEB.zip -d /lotte/lecs/NQS1/web" trust="true"/>
+	</target>
+
+	<target name="DEV.UQ.UPLOAD.IMG">
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="touch /lotte/lecsDocs/temp/UQIMG.zip;cp /lotte/lecsDocs/temp/UQIMG.zip /lotte/lecsDocs/temp/UQIMG.zip.bak" trust="true"/>
+		<scp file="${uq.img.path}/UQIMG.zip" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/lotte/lecsDocs/temp/UQIMG.zip" trust="true"/>
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="unzip -o -q /lotte/lecsDocs/temp/UQIMG.zip -d /lotte/lecsDocs/images/NQS1" trust="true"/>
+	</target>
+	
+	<target name="DEV.UQOA.UPLOAD.WAR">
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="touch /lotte/lecs/webapp/nqoa/ROOT.war;cp /lotte/lecs/webapp/nqoa/ROOT.war /lotte/lecs/webapp/nqoa/ROOT.war.bak" trust="true"/>
+		<scp file="${uqoa.war.path}/ROOT.war" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/lotte/lecs/webapp/nqoa/ROOT.war" trust="true"/>
+	</target>
+
+	<target name="DEV.UQOA.UPLOAD.WEB">
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="touch /lotte/lecsDocs/temp/UQOAWEB.zip;cp /lotte/lecsDocs/temp/UQOAWEB.zip /lotte/lecsDocs/temp/UQOAWEB.zip.bak" trust="true"/>
+		<scp file="${uqoa.web.path}/UQOAWEB.zip" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/lotte/lecsDocs/temp/UQOAWEB.zip" trust="true"/>
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}"
+			command="unzip -o -q /lotte/lecsDocs/temp/UQOAWEB.zip -d /lotte/lecs/uqoa/web" trust="true"/>
+	</target>
+
+	<!-- RESTART -->
+	
+	<target name="RESTART.DEV.lecs20dev1">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="${tom.ins.path}/tomcat_executor.sh stop" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="rm -fr /lotte/lecs/webapp/bo/ROOT;sleep 5" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="${tom.ins.path}/tomcat_executor.sh start" trust="true"/>
+	</target>
+	
+	<target name="RESTART.DEV.lecsAPIdev">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="${tom.ins.path}/tomcat_executor.sh stop" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="rm -fr /lotte/lecs/webapp/oa/ROOT;sleep 5;rm -fr /lotte/lecs/webapp/nqoa/ROOT;sleep 5" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="${tom.ins.path}/tomcat_executor.sh start" trust="true"/>
+	</target>
+	
+	<target name="RESTART.DEV.lecs20dev2">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="${tom.ins.path}/tomcat_executor.sh stop;sleep 5" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="rm -fr /lotte/lecs/webapp/gu/ROOT_before*;sleep 1;rm -fr /lotte/lecs/webapp/muji/ROOT;sleep 1;rm -fr /lotte/lecs/webapp/nuniqlo/ROOT;sleep 1;rm -fr /lotte/lecs/webapp/wms/ROOT;sleep 20" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="${tom.ins.path}/tomcat_executor.sh start;sleep 5" trust="true"/>
+	</target>
+	
+	<target name="RESTART.DEV.L20LPS">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="${tom.ins.path}/tomcat_executor.sh stop" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="rm -fr /lotte/lecs/webapp/lps/ROOT;sleep 5" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="${tom.ins.path}/tomcat_executor.sh start" trust="true"/>
+	</target>
+	
+	
+	<!-- PRECOMPILE -->
+	
+	<target name="DEV.PRECOMPILE.UQ">
+		<scp file="precompile/uq.xml" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/usr1/home/jeus/scripts" trust="true"/>
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}" command="/usr2/apache-ant-1.9.10/bin/ant -buildfile /usr1/home/jeus/scripts/uq.xml" trust="true"/>
+	</target>
+	
+	<target name="DEV.PRECOMPILE.GU">
+		<scp file="precompile/gu.xml" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/usr1/home/jeus/scripts" trust="true"/>
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}" command="/usr2/apache-ant-1.9.10/bin/ant -buildfile /usr1/home/jeus/scripts/gu.xml" trust="true"/>
+	</target>
+	
+	<target name="DEV.PRECOMPILE.MJ">
+		<scp file="precompile/mj.xml" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/usr1/home/jeus/scripts" trust="true"/>
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}" command="/usr2/apache-ant-1.9.10/bin/ant -buildfile /usr1/home/jeus/scripts/mj.xml" trust="true"/>
+	</target>
+	
+	<target name="DEV.PRECOMPILE.BO">
+		<scp file="precompile/bo.xml" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/usr1/home/jeus/scripts" trust="true"/>
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}" command="/usr2/ant/bin/ant -buildfile /usr1/home/jeus/scripts/bo.xml" trust="true"/>
+	</target>
+
+	<target name="DEV.PRECOMPILE.LPS">
+		<scp file="precompile/lps.xml" remoteTofile="jeus:${jeuspwd}@${param.server.ip}:/usr1/home/jeus/scripts" trust="true"/>
+		<sshexec host="${param.server.ip}" username="jeus" password="${jeuspwd}" command="/usr2/apache-ant-1.9.10/bin/ant -buildfile /usr1/home/jeus/scripts/lps.xml" trust="true"/>
+	</target>
+	
+	
+	
+	
+</project>

@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottesuper2018ba_aws_prj_jenkins">
+    <!-- **************************************************************** -->
+	<!-- PROPERTY -->
+	<!-- **************************************************************** -->
+	<!-- parameters -->
+	<property name="deploy.id" value="lotte-super-batch"/>
+	<property name="comm.deploy.id" value="lotte-super-commons"/>
+	<!-- 공통 -->
+	<property name="comm.wrksp.path" value="E:/jenkins-lottesuper/jobs/${JOB_NAME}/workspace" />
+	<property name="comm.lib.path" value="lotte-super-commons/lib" />
+	<property name="comm.jar.path" value="lotte-super-commons/dist" />
+	<property name="comm.pack.lib.path" value="project/batch/WEB-INF/lib" />
+
+	<!-- D:/deployer/scripts/lottesuper2011ba_renewal_jenkins.prj.properties -->
+	<property file="${deployer.home.dir}/scripts/AWS_script/${ant.project.name}.${deploy.phase}.properties"/>
+	<!-- 기타 -->
+	<property name="batch.jar.path" value="lotte-super-batch/dist" />
+
+	<property name="user.id" value="${svrUserId}"/>
+	<property name="user.pwd" value="${svrUserPassword}"/>
+
+	
+	<target name="run_build">
+		<antcall target="build" />
+		<antcall target="pack" />
+		<!-- <antcall target="ssh_send_source" />  -->
+	</target>
+	
+	<target name="aws_build">
+		<antcall target="tar.was" />   
+		<antcall target="s3.copy" />
+	</target>
+	
+	
+	<target name="check_remote_work" unless="isSuccess">
+		<fail message="원격지 작업이 실패하였습니다..." />
+	</target>
+	
+
+	<!-- **************************************************************** -->
+	<!-- BUILD -->
+	<!-- **************************************************************** -->
+	<target name="build">
+		<path id="classpath">
+			<fileset dir="${java.home.dir}/jre/lib">
+				<include name="rt.jar" />
+			</fileset><!--
+			<fileset dir="${jeus.home.dir}/lib/datasource">
+				<include name="*.jar" />
+			</fileset>
+			<fileset dir="${jeus.home.dir}/lib/system">
+				<include name="*.jar" />
+			</fileset> -->
+			
+			<fileset dir="${tomcat.home.dir}/lib">
+				<include name="*.jar" />
+			</fileset>
+		
+			<!-- E:/jenkins-lottesuper/jobs/BATCH_2018_AWS_TEST/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-commons/lib -->
+			<fileset dir="${comm.wrksp.path}/${svnReposNm}/${hdsnBranchPath}/${prj.name}/${comm.lib.path}">
+				<include name="*.jar" />
+			</fileset>
+
+			<!-- E:/jenkins-lottesuper/jobs/BATCH_2018_AWS_TEST/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-commons/dist -->
+			<fileset dir="${comm.wrksp.path}/${svnReposNm}/${hdsnBranchPath}/${prj.name}/${comm.jar.path}">
+				<include name="*.jar" />
+			</fileset>
+
+			<!-- E:/jenkins-lottesuper/jobs/BATCH_2018_AWS_TEST/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-batch/lib -->
+			<fileset dir="${hdsnWrkSpPath}/${JOB_NAME}/workspace/${svnReposNm}/${hdsnBranchPath}/${prj.name}/${srcLibPath}">
+				<include name="*.jar" />
+			</fileset>
+			
+			
+		</path>
+		
+	    <!-- static -->
+		<!-- class 폴더 삭제 -->
+		<!-- E:/jenkins-lottesuper/jobs/BATCH_2018_AWS_TEST/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-batch/build -->
+		<delete dir="${hdsnWrkSpPath}/${JOB_NAME}/workspace/${svnReposNm}/${hdsnBranchPath}/${prj.name}/${srcClassesPath}" />
+
+
+		<!-- class 폴더 생성 -->
+		<!-- E:/jenkins-lottesuper/jobs/BATCH_2018_AWS_TEST/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-batch/build -->
+	    <mkdir dir="${hdsnWrkSpPath}/${JOB_NAME}/workspace/${svnReposNm}/${hdsnBranchPath}/${prj.name}/${srcClassesPath}" />
+
+
+		<!-- srcdir = E:/jenkins-lottesuper/jobs/BATCH_2018_AWS_TEST/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-batch/src -->
+		<!-- destdir = E:/jenkins-lottesuper/jobs/BATCH_2018_AWS_TEST/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-batch/build -->
+		<!-- G마켓 관련으로 컴파일러 1.7 > 1.6 변경 -->
+		<javac source="1.6"
+			target="1.6"
+			srcdir="${hdsnWrkSpPath}/${JOB_NAME}/workspace/${svnReposNm}/${hdsnBranchPath}/${prj.name}/${srcJavaPath}"
+			classpathref="classpath"
+			destdir="${hdsnWrkSpPath}/${JOB_NAME}/workspace/${svnReposNm}/${hdsnBranchPath}/${prj.name}/${srcClassesPath}"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			fork="true" 
+			memoryMaximumSize="256m"
+			includeantruntime="false"/>
+		<!-- 20180620 G마켓 용으로 백업
+		srcdir="${hdsnWrkSpPath}/${JOB_NAME}/workspace/${svnReposNm}/${hdsnBranchPath}/${prj.name}/${srcJavaPath}" -->
+		
+
+		<!-- XML 복사 -->
+		<!-- E:/jenkins-lottesuper/jobs/BATCH_2018_AWS_TEST/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-batch/build -->
+		<copy todir="${hdsnWrkSpPath}/${JOB_NAME}/workspace/${svnReposNm}/${hdsnBranchPath}/${prj.name}/${srcClassesPath}">
+			<!-- E:/jenkins-lottesuper/jobs/BATCH_2018_AWS_TEST/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-batch/src -->
+			<!-- 20180620 G마켓 용으로 백업 <fileset dir="${hdsnWrkSpPath}/${JOB_NAME}/workspace/${svnReposNm}/${hdsnBranchPath}/${prj.name}/${srcJavaPath}"> -->
+			<fileset dir="${hdsnWrkSpPath}/${JOB_NAME}/workspace/${svnReposNm}/${hdsnBranchPath}/${prj.name}/${srcJavaPath}">	
+			<include name="**/*.xml/**"/>
+		    </fileset>
+		</copy>
+		
+		
+		
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- PACK -->
+	<!-- **************************************************************** -->
+	<target name="pack">
+
+		<!-- 해당 배포아이디의 pack 폴더 삭제 -->
+		<!-- E:/jenkins-lottesuper/jobs/BATCH_2018_AWS_TEST/workspace/lottesuper2011/pack/PROJECT/lotte-super-batch/project -->
+		<delete dir="${hdsnWrkSpPath}/${JOB_NAME}/workspace/${svnReposNm}/${hdsnPackPath}/${prj.name}/${deploy.id}/project" />
+		<delete dir="${hdsnWrkSpPath}/${JOB_NAME}/workspace/${svnReposNm}/${hdsnPackPath}/${prj.name}/${comm.deploy.id}/project" />
+		
+		<!-- etc 복사 -->
+				<copy todir="${hdsnWrkSpPath}/${JOB_NAME}/workspace/${svnReposNm}/pack/PROJECT/${prj.name}/lotte-super-batch/project/batch">
+					<fileset dir="${hdsnWrkSpPath}/${JOB_NAME}/workspace/${svnReposNm}/${hdsnBranchPath}/${prj.name}/lotte-super-batch">
+						<include name="**/*/**" />
+						<!-- g마켓 백업 <include name="conf/*/**"/>
+						<include name="lib/*/**"/>
+						<include name="shell/*/**"/> -->
+					</fileset>
+				</copy>
+
+
+		<!-- 해당 배포아이디의 pack 폴더 생성 -->
+		<!-- E:/jenkins-lottesuper/jobs/BATCH_2018_AWS_TEST/workspace/lottesuper2011/pack/PROJECT/lotte-super-batch/project -->
+		<mkdir dir="${hdsnWrkSpPath}/${JOB_NAME}/workspace/${svnReposNm}/${hdsnPackPath}/${prj.name}/${deploy.id}/project" />
+		<mkdir dir="${hdsnWrkSpPath}/${JOB_NAME}/workspace/${svnReposNm}/${hdsnPackPath}/${prj.name}/${comm.deploy.id}/project" />
+
+		<antcall target="pack_jar" />
+		<antcall target="copy_lottesuper_commons" />
+	</target>
+	
+	<target name="pack_jar">
+		<delete includeemptydirs="true">
+			<!-- E:/jenkins-lottesuper/jobs/BATCH_2018_AWS_TEST/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-batch/dist -->
+			<fileset dir="${hdsnWrkSpPath}/${JOB_NAME}/workspace/${svnReposNm}/${hdsnBranchPath}/${prj.name}/${batch.jar.path}" includes="**/*"/>
+    	</delete>
+		
+	<!-- ############################## Jar 파일을 pack 폴더로 보내는 절차 START ################################### -->
+		<!-- ① lotte-super-batch/build 의 class 파일들을 Jar로 묶어서 lotte-super-batch/dist 로 보낸다. -->
+		<!-- E:/jenkins-lottesuper/jobs/BATCH_2018_AWS_TEST/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-batch/dist/lotte-super-batch.jar -->
+		<jar encoding="UTF-8" destfile="${hdsnWrkSpPath}/${JOB_NAME}/workspace/${svnReposNm}/${hdsnBranchPath}/${prj.name}/${batch.jar.path}/lotte-super-batch.jar">
+			<!-- E:/jenkins-lottesuper/jobs/BATCH_2018_AWS_TEST/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-batch/build -->
+			<fileset dir="${hdsnWrkSpPath}/${JOB_NAME}/workspace/${svnReposNm}/${hdsnBranchPath}/${prj.name}/${srcClassesPath}" />
+		</jar>
+
+
+		<!-- ② Branches의 lotte-super-batch/dist/lotte-super-batch.jar 파일을 Pack 폴더의 project/batch/lib 으로 보낸다. -->
+		<!-- E:/jenkins-lottesuper/jobs/BATCH_2018_AWS_TEST/workspace/lottesuper2011/pack/PROJECT/lotte-super-batch/project/batch/lib -->
+		<copy todir="${hdsnWrkSpPath}/${JOB_NAME}/workspace/${svnReposNm}/${hdsnPackPath}/${prj.name}/${deploy.id}/${svrLibPath}">
+			<!-- E:/jenkins-lottesuper/jobs/BATCH_2018_AWS_TEST/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-batch/dist/lotte-super-batch.jar -->
+			<fileset dir="${hdsnWrkSpPath}/${JOB_NAME}/workspace/${svnReposNm}/${hdsnBranchPath}/${prj.name}/${batch.jar.path}">
+				<include name="lotte-super-batch.jar"/>
+		    </fileset>
+		</copy>
+	</target>
+	<!-- ############################## Jar 파일을 pack 폴더로 보내는 절차 END ################################### -->
+			
+
+
+	<!-- 공통 파일 폴더의 project/back/WEB-INF/lib 의 공통 Class Jar 파일이나 lib Jar 파일들을 배치 서비스 폴더의 project/batch/lib 로 보낸다 -->
+	<!-- E:/jenkins-lottesuper/jobs/BATCH_2018_AWS_TEST/workspace/lottesuper2011/pack/PROJECT/lotte-super-batch/project/batch/lib -->
+	<!-- E:/jenkins-lottesuper/jobs/BATCH_2018_AWS_TEST/workspace/lottesuper2011/branch/PROJECT/lotte-super-commons/project/batch/WEB-INF/lib -->
+
+	<target name="copy_lottesuper_commons">
+		<copy todir="${hdsnWrkSpPath}/${JOB_NAME}/workspace/${svnReposNm}/${hdsnPackPath}/${prj.name}/${deploy.id}/${svrLibPath}">
+			<fileset dir="${comm.wrksp.path}/${svnReposNm}/${hdsnBranchPath}/${prj.name}/${comm.deploy.id}/dist">
+				<include name="*.*"/>
+		    </fileset>
+		</copy>
+	</target>
+
+	<!-- ##### SSH SEND ##### -->
+	<!-- E:/jenkins-lottesuper/jobs/BATCH_2018_AWS_TEST/workspace/lottesuper2011/pack/PROJECT/lotte-super-batch/project/batch/lib -->
+	<!-- 1. SCP (from local to Server) -->
+	<target name="ssh_send_source">
+		<scp todir="${user.id}:${user.pwd}@${was.ip}:/esuper/project/batch/lib" trust="true">
+			<fileset dir="${hdsnWrkSpPath}/${JOB_NAME}/workspace/${svnReposNm}/${hdsnPackPath}/${prj.name}/${deploy.id}/${svrLibPath}">
+				<include name="*.jar"></include>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</scp>
+	</target>	
+	<!-- ##### SSH  ##### -->
+		<target name="ssh_was">
+			<echo message="SSH_SEND_WAS 입니다."/>
+			<echo message="user.id 는 ${user.id} , user.pwd 는 ${user.pwd} 입니다."/>
+			<echo message="접속 IP 는 ${was.ip} 입니다"/>
+			<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+				trust="true" verbose="false" output="${init.was.log}"
+				command="ls -lrt;" />
+			<condition property="isSuccess">
+				<resourcecontains resource="${init.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+			</condition>
+						
+	</target>
+	
+	<target name="tar.was">
+		<!-- 2019.01.29 shell 경로 변경 -->
+		<move todir="${hdsnWrkSpPath}\${JOB_NAME}\workspace\lottesuper2011\pack\PROJECT\${prj.name}\lotte-super-batch\project\batch">
+				<fileset dir="${hdsnWrkSpPath}\${JOB_NAME}\workspace\lottesuper2011\pack\PROJECT\${prj.name}\lotte-super-batch\project\batch\shell">
+						<include name="*.sh" />
+				</fileset>
+		</move>
+		
+		<tar destfile="${hdsnWrkSpPath}/${JOB_NAME}/workspace/awsdeploy/BA_prj_WAS.tar" longfile="gnu">
+			<!-- <tarfileset dir="E:\jenkins-lottesuper\jobs\AWS_LOTTESUPER_FRONT_PROJECT\workspace\lottesuper2011\pack\PROJECT\2018AWStest\lotte-super-company">  -->
+			<!-- <tarfileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/project/front">  -->
+			<tarfileset dir="${hdsnWrkSpPath}\${JOB_NAME}\workspace\lottesuper2011\pack\PROJECT\${prj.name}\lotte-super-batch\project\batch">
+				<include name="**/*/**"/>
+		</tarfileset>		
+		</tar>	
+	</target>
+	
+	<target name="s3.copy">
+		<copy todir="${hdsnWrkSpPath}/${JOB_NAME}/workspace/awsdeploy">
+			<fileset dir="${hdsnWrkSpPath}/${JOB_NAME}/workspace/S3">
+				<exclude name="**/.svn/**" />
+			</fileset>
+		</copy>
+	</target>
+	
+
+
+</project>

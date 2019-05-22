@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottewebproject">
+	<!-- ================================================== -->
+	<!-- custom tasks -->
+	<!-- ================================================== -->
+	<scriptdef language="javascript" name="lower">
+		<attribute name="string"/>
+		<attribute name="property"/>
+		project.setProperty(attributes.get("property"), attributes.get("string").toLowerCase());
+	</scriptdef>
+	
+	<macrodef name="propertyvalue">
+		<attribute name="property"/>
+		<attribute name="valueproperty"/>
+		<sequential>
+			<property name="@{property}" value="${@{valueproperty}}"/>
+		</sequential>
+	</macrodef>
+
+	<!-- ================================================== -->
+	<!-- properties -->
+	<!-- ================================================== -->
+	<property name="deployer.home.dir"		value="D:/deployer" />
+	
+	<property name="hostname"			value="${HOST_NAME}"/>
+	<property name="host.ip"			value="${HOST_IP}"/>
+	<property name="service"			value="${SERVICE}"/>
+
+	<property name="docroot"			value="/h2010"/>
+	<property name="user.id"			value="jeus"/>
+	<property name="user.pwd"			value="8Yqi4q(1=Z"/>
+	<property name="stopover.dir"		value="/ncontents/src"/>
+	
+	<property name="backup.web.log"		value="${deployer.home.dir}/logs/lottewebproject.web.log"/>
+	<property name="backup.was.log"		value="${deployer.home.dir}/logs/lottewebproject.was.log"/>
+	<property name="restore.srv.log"	value="${deployer.home.dir}/logs/lottewebproject.srv.log"/>
+	<property name="delete.srv.log"		value="${deployer.home.dir}/logs/lottewebproject.del.log"/>
+	
+	<property name="fo.was.ip"			value="10.149.144.65"/>
+	<property name="fo.web.ip" 			value="211.233.44.26"/>
+	<property name="fo.dir"				value="fo"/>
+	<property name="mo.was.ip"			value="10.149.144.36"/>
+	<property name="mo.web.ip" 			value="211.233.44.28"/>
+	<property name="mo.dir"				value="mo"/>
+	
+	<!-- 배포ID 세팅 -->
+	<property name="prefix.dep.id" value="${service}_" />
+	<tstamp><format property="infix.dep.id" pattern="yyyyMMdd"/></tstamp>
+	<property name="suffix.dep.id" value="_SYNC" />
+	<property name="deploy.id" value="${prefix.dep.id}${infix.dep.id}${suffix.dep.id}" />
+
+	<!-- 원본 서버 IP 세팅 -->
+	<lower property="service.lower" string="${service}"/>	
+	<propertyvalue property="web.ip" valueproperty="${service.lower}.web.ip"/>
+	<propertyvalue property="was.ip" valueproperty="${service.lower}.was.ip"/>
+	
+	<!-- 백업 명령어 세팅 -->
+	<property name="backup.cmd" value="${service.lower}backup"/>
+	
+	<!-- ?? -->
+	<propertyvalue property="service.root.dir" valueproperty="${service.lower}.dir"/>
+	
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->
+	<target name="check_params">
+		<echo>HOST_NAME : ${hostname}</echo>
+		<echo>HOST_IP : ${host.ip}</echo>
+		<echo>SERVICE : ${service}</echo>
+	</target>
+	
+	<target name="check_remote_work" unless="${isSuccess}">
+		<tstamp><format property="f.m" pattern="yyyy-MM-dd HH:mm:ss"/></tstamp>
+		<fail message="■ [${f.m}] 작업 실패" />
+	</target>
+
+	<!-- ================================================== -->
+	<!-- backup -->
+	<!-- ================================================== -->
+	<target name="backup_web">
+		<tstamp><format property="b.w.o" pattern="yyyy-MM-dd HH:mm:ss"/></tstamp>
+		<echo>■ [${b.w.o}] 웹서버 backup 시작</echo>
+		<sshexec host="${web.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${backup.web.log}"
+			command="cd deploy;./${backup.cmd} ${deploy.id}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${backup.web.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<tstamp><format property="b.w.c" pattern="yyyy-MM-dd HH:mm:ss"/></tstamp>
+		<echo>■ [${b.w.c}] 웹서버 backup 완료</echo>
+	</target>
+		
+	<target name="backup_was">
+		<tstamp><format property="b.w.o" pattern="yyyy-MM-dd HH:mm:ss"/></tstamp>
+		<echo>■ [${b.w.o}] WAS backup 시작</echo>
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${backup.was.log}"
+			command="cd deploy;./${backup.cmd} ${deploy.id}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${backup.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<tstamp><format property="b.w.c" pattern="yyyy-MM-dd HH:mm:ss"/></tstamp>
+		<echo>■ [${b.w.c}] WAS backup 완료</echo>
+	</target>
+	
+	<!-- ================================================== -->
+	<!-- receive -->
+	<!-- ================================================== -->
+	<target name="get">
+		<tstamp><format property="m.d" pattern="yyyy-MM-dd HH:mm:ss"/></tstamp>
+		<echo>■ [${m.d}] 작업 디렉토리 생성</echo>
+		<mkdir dir="${wrkspc}/${service.root.dir}"/>
+		<antcall target="get_web"/>
+		<antcall target="get_was"/>
+	</target>
+	
+	<target name="get_web">
+		<tstamp><format property="d.b.f" pattern="yyyy-MM-dd HH:mm:ss"/></tstamp>
+		<echo>■ [${d.b.f}] 기존 Web backup 파일 삭제</echo>
+		<delete verbose="true">
+			<fileset dir="${wrkspc}/${service.root.dir}" includes="*_WEB.tar"/>
+		</delete>
+		<tstamp><format property="g.w.o" pattern="yyyy-MM-dd HH:mm:ss"/></tstamp>
+		<echo>■ [${g.w.o}] 운영서버에서 Web backup 파일 가져오기 시작</echo>
+		<scp file="${user.id}:${user.pwd}@${web.ip}:${stopover.dir}/${deploy.id}/backup/${service.root.dir}/${deploy.id}_WEB.tar" 
+			todir="${wrkspc}/${service.root.dir}" trust="true"/>
+		<tstamp><format property="g.w.c" pattern="yyyy-MM-dd HH:mm:ss"/></tstamp>
+		<echo>■ [${g.w.c}] 운영서버에서 Web backup 파일 가져오기 완료</echo>
+	</target>
+	
+	<target name="get_was">
+		<tstamp><format property="d.b.f" pattern="yyyy-MM-dd HH:mm:ss"/></tstamp>
+		<echo>■ [${d.b.f}] 기존 WAS backup 파일 삭제</echo>
+		<delete verbose="true">
+			<fileset dir="${wrkspc}/${service.root.dir}" includes="*_WAS.tar"/>
+		</delete>
+		<tstamp><format property="g.w.o" pattern="yyyy-MM-dd HH:mm:ss"/></tstamp>
+		<echo>■ [${g.w.o}] 운영서버에서 WAS backup 파일 가져오기 시작</echo>
+		<scp file="${user.id}:${user.pwd}@${was.ip}:${stopover.dir}/${deploy.id}/backup/${service.root.dir}/${deploy.id}_WAS.tar" 
+			todir="${wrkspc}/${service.root.dir}" trust="true"/>
+		<tstamp><format property="g.w.c" pattern="yyyy-MM-dd HH:mm:ss"/></tstamp>
+		<echo>■ [${g.w.c}] 운영서버에서 WAS backup 파일 가져오기 완료</echo>
+	</target>
+	
+	<!-- ================================================== -->
+	<!-- send to project server -->
+	<!-- ================================================== -->	
+	<target name="put">	
+		<tstamp><format property="p.w.o" pattern="yyyy-MM-dd HH:mm:ss"/></tstamp>
+		<echo>■ [${p.w.o}] 프로젝트서버로 Web/WAS backup 파일 보내기 시작</echo>
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${docroot}/${service.root.dir}" trust="true">
+			<fileset dir="${wrkspc}/${service.root.dir}">
+				<include name="${deploy.id}_WEB.tar"/>
+				<include name="${deploy.id}_WAS.tar"/>
+			</fileset>
+		</scp>
+		<tstamp><format property="p.w.o" pattern="yyyy-MM-dd HH:mm:ss"/></tstamp>
+		<echo>■ [${p.w.o}] 프로젝트서버로 Web/WAS backup 파일 보내기 완료</echo>
+	</target>
+	
+	<!-- ================================================== -->
+	<!-- restore -->
+	<!-- ================================================== -->	
+	<target name="restore">
+		<tstamp><format property="r.w.o" pattern="yyyy-MM-dd HH:mm:ss"/></tstamp>
+		<echo>■ [${r.w.o}] 프로젝트서버에서 tar 풀기 시작</echo>
+		<sshexec host="${host.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${restore.srv.log}"
+			command="cd ${docroot}/${service.root.dir};tar xvf ${deploy.id}_WEB.tar;tar xvf ${deploy.id}_WAS.tar" />
+		<!--
+		<condition property="isSuccess">
+			<resourcecontains resource="${restore.srv.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		-->
+		<tstamp><format property="r.w.o" pattern="yyyy-MM-dd HH:mm:ss"/></tstamp>
+		<echo>■ [${r.w.o}] 프로젝트서버에서 tar 풀기 완료</echo>
+		
+		<tstamp><format property="d.w.o" pattern="yyyy-MM-dd HH:mm:ss"/></tstamp>
+		<echo>■ [${d.w.o}] 프로젝트서버에서 tar 삭제 시작</echo>
+		<sshexec host="${host.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${delete.srv.log}"
+			command="cd ${docroot}/${service.root.dir};\\rm -rf ${deploy.id}_WEB.tar ${deploy.id}_WAS.tar" />
+		<!--
+		<condition property="isSuccess">
+			<resourcecontains resource="${delete.srv.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		-->
+		<tstamp><format property="d.w.c" pattern="yyyy-MM-dd HH:mm:ss"/></tstamp>
+		<echo>■ [${d.w.c}] 프로젝트서버에서 tar 삭제 완료</echo>
+	</target>
+	
+	<!-- ================================================== -->
+	<!-- was restart -->
+	<!-- ================================================== -->
+</project>

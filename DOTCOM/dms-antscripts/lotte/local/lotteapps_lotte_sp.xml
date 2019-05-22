@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lotteapps_lotte_sp">
+	<import file="./lotte2010.xml" />
+    <!-- **************************************************************** -->
+	<!-- PROPERTY -->
+	<!-- **************************************************************** -->
+	<property name="deploy.id" value="${DEPLOY_ID}" />
+	<echo>PROPERTY FILE : ${ant.project.name}.${deploy.phase}.properties</echo>
+	<property file="${deployer.home.dir}/scripts/${ant.project.name}.${deploy.phase}.properties" />
+	
+	<!-- **************************************************************** -->
+	<!-- CHECK -->
+	<!-- **************************************************************** -->
+	<target name="check_single">
+		<fail message="빌드성공!!! 단일 JOB 실행이 요청되어 이 JOB의 실행을 중단합니다." if="${isSingle}"/>
+	</target>
+	
+	<target name="check_deployid">
+		<condition property="isValid">
+		  <and>
+			<length   string="${deploy.id}" when="greater"     length="10"/>
+			<contains string="${deploy.id}" substring="SP_"    casesensitive="true"/>
+		  </and>
+		</condition>
+		<fail message="배포ID가 유효하지 않아 JOB을 중단합니다." unless="${isValid}"/>
+	</target>
+		
+	
+	<!-- **************************************************************** -->
+	<!-- LOCK, 접수 : 정기배포, 자동접수 시에만 사용 -->
+	<!-- **************************************************************** -->		
+
+	
+	
+	
+	
+	<!-- **************************************************************** -->	
+	<!-- MERGE -->
+	<!-- **************************************************************** -->
+	<target name="merge">
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="merge"/>
+		</java> 
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- BUILD -->
+	<!-- **************************************************************** -->
+	<target name="clean">
+
+	</target>
+	
+	<target name="build">
+
+	</target>	
+	
+	<!-- **************************************************************** -->
+	<!-- PACK -->
+	<!-- **************************************************************** -->
+	<target name="pack_test">
+		<delete>
+			<fileset dir="D:\docroot\htdocs\deploy" includes="smartpick-*-test1.apk, smartpick-*-test2.apk, smartpick-*-stage.apk, smartpick-*-real.apk"/>
+		</delete>
+		<copy todir="D:\docroot\htdocs\deploy">
+			<fileset dir="${wkspc}/lotteapps/branches/TEST/smartpick/SmartPick/bin">
+				<include name="*.apk"/>
+				<exclude name="*-unaligned.apk"/>
+				<exclude name="*-unsigned.apk"/>
+			</fileset>
+		</copy>		
+	</target>
+
+	<target name="pack_real">
+		<delete>
+			<fileset dir="D:\docroot\htdocs\deploy" includes="smartpick-*-release.apk"/>
+		</delete>
+		<copy todir="D:\docroot\htdocs\deploy">
+			<fileset dir="${wkspc}/lotteapps/branches/REAL/smartpick/SmartPick/bin">
+				<include name="*.apk"/>
+				<exclude name="*-unaligned.apk"/>
+				<exclude name="*-unsigned.apk"/>
+			</fileset>
+		</copy>		
+	</target>	
+	
+	<!-- **************************************************************** -->
+	<!-- GENERATE HTML -->
+	<!-- **************************************************************** -->
+	<target name="generate_html">
+		<taskdef name="generatehtml" classname="com.es.dms.ant.task.GenerateHtml" classpath="D:\deployer\bin\deploy-generator.jar"/>
+		<generatehtml appname="smartpick" dir="D:\docroot\htdocs\deploy" type="apk"/>
+	</target>	
+	
+	<!-- **************************************************************** -->
+	<!-- DEPLOY -->
+	<!-- **************************************************************** -->	
+
+	
+	
+	<!-- **************************************************************** -->
+	<!-- RECORD -->
+	<!-- **************************************************************** -->	
+	<target name="record">
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="record"/>
+		</java> 
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- NOTICE -->
+	<!-- **************************************************************** -->	
+	<target name="notice_fail">
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="notice"/>
+			<arg value="FAIL"/>
+		</java> 
+	</target>
+	
+	<target name="notice_success">
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="notice"/>
+			<arg value="SUCCESS"/>
+		</java> 
+	</target>
+</project>

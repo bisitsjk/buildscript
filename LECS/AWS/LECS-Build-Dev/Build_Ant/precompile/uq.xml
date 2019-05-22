@@ -1,0 +1,71 @@
+<project name="Webapp Precompilation" default="all" basedir="."> 
+
+   <property name="appname" value="uniqlo" />
+   <property name="tomcat.home" value="/usr2/apache-tomcat/engine/apache-tomcat-8.5.15"/>
+   <property name="tomcat.ins.home" value="/usr2/apache-tomcat/instance"/>   	
+   <property name="webapp.path" value="/lotte/lecs/webapp/${appname}/ROOT"/>	
+   <property name="tomcat.work.dir" value="${tomcat.ins.home}/nuniqlo/work/Catalina/localhost/ROOT" /> 
+	
+   <import file="${tomcat.home}/bin/catalina-tasks.xml"/>
+   
+   <target name="jspc"> 
+
+    <jasper 
+             validateXml="false" 
+             uriroot="${webapp.path}" 
+             webXmlFragment="${webapp.path}/WEB-INF/generated_web.xml" 
+             outputDir="${webapp.path}/WEB-INF/src" /> 
+
+  </target> 
+
+  <target name="compile" depends="jspc">
+
+    <mkdir dir="${webapp.path}/WEB-INF/classes"/>
+    <mkdir dir="${webapp.path}/WEB-INF/lib"/>
+
+    <javac executable="/usr/java1.7/bin/javac"
+    	   destdir="${webapp.path}/WEB-INF/src"
+	       source="1.7" target="1.7"
+           optimize="off"
+		   encoding="utf-8"
+           debug="on" failonerror="true"
+           srcdir="${webapp.path}/WEB-INF/src" 
+	       excludes="**/*.smap"
+    	   fork="true" memoryinitialsize="128m"  
+		   memorymaximumsize="512m" includeantruntime="false">
+    	
+      <classpath>
+        <pathelement location="${webapp.path}/WEB-INF/classes"/>
+        <fileset dir="${webapp.path}/WEB-INF/lib">
+          <include name="*.jar"/>
+        </fileset>
+        <pathelement location="${tomcat.home}/lib"/>
+        <fileset dir="${tomcat.home}/lib">
+          <include name="*.jar"/>
+        </fileset>
+        <fileset dir="${tomcat.home}/bin"> 
+          <include name="*.jar"/> 
+        </fileset> 
+      </classpath>
+      <include name="**" />
+      <exclude name="tags/**" />
+    </javac> 
+  </target>
+
+  <target name="deploy" depends="compile">  
+   		   <mkdir dir="${tomcat.work.dir}"/>
+          
+  		   <copy todir="${tomcat.work.dir}">  
+                <fileset dir="${webapp.path}/WEB-INF/src" includes="**/*.class" />  
+           </copy>   
+  </target>  
+	
+  <target name="all" depends="cleanup,jspc,compile,deploy">
+     <antcall target="cleanup"/>
+  </target>
+
+  <target name="cleanup">
+    <delete dir="${webapp.path}/WEB-INF/src"/>
+  </target>
+
+</project>

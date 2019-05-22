@@ -1,0 +1,125 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottesuper2018lb_AWS_jenkins">
+    <!-- **************************************************************** -->
+	<!-- PROPERTY -->
+	<!-- **************************************************************** -->
+	<property name="deploy.id" value="lotte-super-lottebatch"/>
+	
+	<property file="${deployer.home.dir}/scripts/${ant.project.name}.${deploy.phase}.properties"/>
+	<!-- E:/jenkins-lottesuper/jobs/LOTTEBATCH_2017_PRJ_RENEWAL/workspace/lottesuper2011/pack/PROJECT/lotte-super-lottebatch/BIN/shell -->
+	<!-- 굳이 svrWebappPath 까지 가서 지울필요 있는가, 상위 폴더 삭제하면 될거 같은데.. -->
+	<!--<property name="pack.real.path" value="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/${svrWebappPath}" />-->
+	<property name="pack.real.path" value="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}" />
+	<property name="dist.path" value="lotte-super-lottebatch/dist" />
+	
+	<property name="init.build.log" value="../logs/${ant.project.name}/${deploy.id}_BUILD.log" />
+	<property name="init.was.log" value="../logs/${ant.project.name}/${deploy.id}_INIT.log" />
+	<property name="dep.was.log" value="../logs/${ant.project.name}/${deploy.id}_DEP.log" />
+	<property name="dep.test.was.log" value="../logs/${ant.project.name}/${deploy.id}_DEP_TEST.log" />
+	<property name="rollback.was.log" value="../logs/${ant.project.name}/${deploy.id}_ROLLBACK_.log" />
+		
+	<property name="user.id" value="${svrUserId}"/>
+	<property name="user.pwd" value="${svrUserPassword}"/>
+	
+	<property name="ssh.init.cmd" value="ssh_lbinit" /><!-- 2017/01/25 19:20 ssh lbinit 추가 -->
+	<property name="ssh.dep.cmd" value="ssh_lbdeploy" /><!-- 2017/01/25 19:20 ssh lbdeploy 추가 -->
+	<property name="ssh.dep.test.cmd" value="ssh_lbdeploytest" /><!-- 2017/01/25 19:20 ssh lbdeploy 추가 -->
+	<property name="ssh.rollback.cmd" value="ssh_lbrollback" /><!-- 2017/01/26 21:46 ssh lbRollback 추가 -->
+	<property name="ssh.rollback.test.cmd" value="ssh_lbrollbacktest" /><!-- 2017/01/26 21:46 ssh lbRollback 추가 -->
+
+	
+	<target name="run_build">
+		<antcall target="build" />
+		<antcall target="pack" />
+	</target>
+	
+		
+	<target name="check_remote_work" unless="isSuccess">
+		<fail message="원격지 작업이 실패하였습니다..." />
+	</target>
+
+	
+	
+<!-- **************************************************************** -->
+	<!-- BUILD -->
+	<!-- **************************************************************** -->
+	<target name="build">
+		<path id="classpath">
+			<fileset dir="${java.home.dir}/jre/lib">
+				<include name="rt.jar" />
+			</fileset>
+			
+			<!-- lib 폴더 Jar 참조 -->
+			<!-- E:/jenkins-lottesuper/jobs/LOTTEBATCH_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-lottebatch/lib/*.jar -->
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcLibPath}">
+				<include name="*.jar" />
+			</fileset>
+		</path>
+		
+		<property file="${hdsnWrkSpPath}/${svnReposNm}/LB.info"/>
+	    <!-- static -->
+		<!-- 
+			## 폴더 삭제후 생성 ##
+			E:/jenkins-lottesuper/jobs/LOTTEBATCH_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-lottebatch/build 
+		-->
+		<!-- srcdir  = E:/jenkins-lottesuper/jobs/LOTTEBATCH_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-lottebatch/src -->
+	    <!-- destdir = E:/jenkins-lottesuper/jobs/LOTTEBATCH_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-lottebatch/build -->
+		<delete dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}" />
+	    <mkdir dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}" />
+		<javac source="1.6"
+			target="1.6"
+			srcdir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcJavaPath}"
+			classpathref="classpath"
+			destdir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			fork="true" 
+			memoryMaximumSize="256m"
+			includeantruntime="false"/>	
+		
+
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- PACK -->
+	<!-- **************************************************************** -->
+	<target name="pack">
+        <!-- E:/jenkins-lottesuper/jobs/LOTTEBATCH_2017_PRJ_RENEWAL/workspace/lottesuper2011/pack/PROJECT/lotte-super-lottebatch/BIN/shell -->
+		<!--위에 라인처럼 /BIN/shell 가지 가서 지울필요가 없을것으로 보임 -  E:/jenkins-lottesuper/jobs/LOTTEBATCH_2017_PRJ_RENEWAL/workspace/lottesuper2011/pack/PROJECT/lotte-super-lottebatch -->
+		<delete dir="${pack.real.path}" /> <!-- 2013-01-02 추가 -->
+		<!-- E:/jenkins-lottesuper/jobs/LOTTEBATCH_2017_PRJ_RENEWAL/workspace/lottesuper2011/pack/PROJECT/lotte-super-lottebatch/BIN/shell -->
+		<!-- 위에 라인처럼 /BIN/shell 가지 가서 지울필요가 없을것으로 보임 - E:/jenkins-lottesuper/jobs/LOTTEBATCH_2017_PRJ_RENEWAL/workspace/lottesuper2011/pack/PROJECT/lotte-super-lottebatch -->
+		<!-- E:/jenkins-lottesuper/jobs/LOTTEBATCH_2017_PRJ_RENEWAL/workspace/lottesuper2011/pack/PROJECT/lotte-super-lottebatch -->
+		<mkdir dir="${pack.real.path}" />  <!-- 2013-01-02 추가 -->
+		
+		<antcall target="pack_jar" />
+	</target>
+	
+	<target name="pack_jar">		
+		<mkdir dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${dist.path}" />  <!-- 2017-03-17 추가 -->
+		<delete includeemptydirs="true">
+			<!-- Jar 생성 폴더 삭제 -->
+			<!-- E:/jenkins-lottesuper/jobs/LOTTEBATCH_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-lottebatch/dist/**/* -->
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${dist.path}" includes="**/*" />
+    	</delete>
+		
+		<!-- Jar 생성 -->
+		<!-- E:/jenkins-lottesuper/jobs/LOTTEBATCH_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-lottebatch/dist/lottesuper-batch.jar -->
+		<jar encoding="UTF-8" destfile="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${dist.path}/lottesuper-batch.jar">
+			<!-- E:/jenkins-lottesuper/jobs/LOTTEBATCH_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-lottebatch/build -->
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}" />
+		</jar>
+
+		<!-- branches 에 있는 Jar 파일을 서버 경로로 복사 -->
+		<!-- E:/jenkins-lottesuper/jobs/LOTTEBATCH_2017_PRJ_RENEWAL/workspace/lottesuper2011/pack/PROJECT/lotte-super-lottebatch/BIN/lib -->
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/${svrLibPath}">
+			<!-- E:/jenkins-lottesuper/jobs/LOTTEBATCH_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/2017RenewalPj/lotte-super-lottebatch/dist/lottesuper-batch.jar -->
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${dist.path}">
+				<include name="lottesuper-batch.jar"/>
+		    </fileset>
+		</copy>
+	</target>
+	
+</project>

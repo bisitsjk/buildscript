@@ -1,0 +1,439 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="spp2014appsntest" basedir=".">
+    <!-- **************************************************************** -->
+	<!-- PROPERTY -->
+	<!-- **************************************************************** -->
+	<property name="java.home"   value="c:/Program Files (x86)/Java/jdk1.7.0_45" />
+	<property name="hudson.home" value="e:/hudson-spp" />
+	
+	<property name="job.name"    value="ONLY_TEST_SPP_APP_SN" />
+	<property name="workspace"   value="${hudson.home}/jobs/${job.name}/workspace" />
+	<property name="project.sn"  value="spp-app-sn" />
+	<property name="project.cm"  value="spp-app-cm" />
+	
+	<property name="src.dir"      value="src/main" />
+	<property name="docroot"      value="/lotte/spp_platform/servers" />
+	<property name="service.name" value="server_sn" />
+		
+	<property name="cm.java.dir"          value="spp-app-common-lib/${src.dir}/java" />
+	<property name="cm.clib.dir"          value="spp-app-common-lib/LIB-INF/common-lib" />
+	<property name="cm.dlib.dir"          value="spp-app-common-lib/LIB-INF/daemon-lib" />
+	<property name="cm.class.dir"         value="spp-app-common-lib/classes" />
+	<property name="cm.jar.dir"           value="spp-app-common-lib/jar" />
+	<property name="cm.jar.name"          value="spp-app-common-lib.1.7.jar" />
+
+	<property name="sv.java.dir"          value="spp-app-service-lib/${src.dir}/java" />
+	<property name="sv.resource.original" value="spp-app-service-lib/${src.dir}/resources" />
+	<property name="sv.class.dir"         value="spp-app-service-lib/classes" />
+	<property name="sv.jar.dir"           value="spp-app-service-lib/jar" />
+	<property name="sv.jar.name"          value="spp-app-service-lib.jar" />
+	
+	<property name="sn.java.dir"          value="${src.dir}/java" />
+	<property name="sn.resource.original" value="${src.dir}/resources" />
+	<property name="sn.properties"        value="deploy/${PARAM1}" />
+	<property name="sn.class.dir"         value="classes" />
+	<property name="sn.jar.dir"           value="jar" />
+	<property name="sn.jar.name"          value="com.lotte.spp.platform.sn.jar" />
+	
+	<property name="package.dir"  value="${workspace}/spp-sn-package" />
+	<property name="package.name" value="spp-app-sn.tar" />
+	
+	<property name="server.ip" value="${PARAM2}" />
+	<property name="user.id"   value="xclass" />
+	<property name="user.pwd"  value="s7uxEDRe#8R=" />
+	
+	<property name="service.start.cmd" value="spp.server.sn.start.sh" />
+	<property name="service.stop.cmd"  value="spp.server.sn.stop.sh" />	
+	
+	<property name="main.class" value="com.lotte.spp.platform.server.CouponSendIFServer" />
+		
+	
+	<!-- **************************************************************** -->
+	<!-- CHECK -->
+	<!-- **************************************************************** -->
+	<target name="check_remote_work" unless="isSuccess">
+		<fail message="connect fails..." />
+	</target>
+	
+	
+	<!-- **************************************************************** -->
+	<!-- BUILD -->
+	<!-- **************************************************************** -->
+	<target name="build_cm">
+		<path id="cm.classpath">
+			<fileset dir="${java.home}/lib">
+				<include name="*.jar" />
+			</fileset>
+			<fileset dir="${workspace}/${project.cm}/${cm.clib.dir}">
+				<include name="*.jar"/>
+			</fileset>
+			<fileset dir="${workspace}/${project.cm}/${cm.dlib.dir}">
+				<include name="*.jar"/>
+			</fileset>			
+		</path>
+		
+		<!-- common compile -->
+		<echo>clean class path</echo>
+		<mkdir dir="${workspace}/${project.cm}/${cm.class.dir}" />
+		<delete includeemptydirs="true">
+			<fileset dir="${workspace}/${project.cm}/${cm.class.dir}" includes="**/*"/>
+    	</delete>
+		<echo>compile common sources</echo>
+		<javac 
+			srcdir="${workspace}/${project.cm}/${cm.java.dir}" 
+			destdir="${workspace}/${project.cm}/${cm.class.dir}"
+			classpathref="cm.classpath"
+			nowarn="true" 
+			deprecation="true"
+			debug="true"
+			listfiles="false" 
+			failonerror="true" 
+			optimize="false" 
+			includeantruntime="false"
+			target="1.7"
+			encoding="UTF-8" />		
+		
+		<!-- common jar -->
+		<echo>delete jar file</echo>
+		<mkdir dir="${workspace}/${project.cm}/${cm.jar.dir}" />
+		<delete includeemptydirs="true">
+			<fileset dir="${workspace}/${project.cm}/${cm.jar.dir}" includes="**/*"/>
+    	</delete>
+		<echo>create jar file</echo>
+		<jar encoding="UTF-8" 
+			 destfile="${workspace}/${project.cm}/${cm.jar.dir}/${cm.jar.name}">
+			<fileset dir="${workspace}/${project.cm}/${cm.class.dir}" />
+			<manifest>
+				<attribute name="Built-By" value="owner"/>
+				<attribute name="Main-Class" value="com.lotte.spp.platform.frm.Config"/>
+				<attribute name="Class-Path" value=".
+					aopalliance-1.0.jar
+					aspectjrt-1.6.8.jar
+					aspectjweaver-1.6.8.jar
+					barbecue-1.0.6c.jar
+					bcprov-jdk16-145.jar
+					commons-beanutils-1.8.0.jar
+					commons-collections-3.2.jar
+					commons-dbcp-1.2.2.jar
+					commons-lang-2.2.jar
+					commons-logging-1.1.1.jar
+					commons-net-1.4.1.jar
+					commons-pool-1.5.3.jar
+					ibatis-2.3.4.726.jar
+					jai_codec.jar
+					jai_core.jar
+					jdom.jar
+					javax.inject-1.jar
+					junit-4.9.jar
+					log4j-1.2.15.jar
+					log4j-1.2.8.jar
+					ojdbc5.jar
+					poi-3.6-20091214.jar
+					servlet-api.jar
+					spring-aop-3.1.1.RELEASE.jar
+					spring-asm-3.1.1.RELEASE.jar
+					spring-beans-3.1.1.RELEASE.jar
+					spring-context-3.1.1.RELEASE.jar
+					spring-core-3.1.1.RELEASE.jar
+					spring-expression-3.1.1.RELEASE.jar
+					spring-jdbc-3.1.1.RELEASE.jar
+					spring-orm-3.0.6.RELEASE.jar
+					spring-test-3.1.1.RELEASE.jar
+					spring-tx-3.1.1.RELEASE.jar
+					spring-web-3.1.1.RELEASE.jar
+					spring-webmvc-3.1.1.RELEASE.jar
+				"/>
+			</manifest>					
+		</jar>
+	</target>
+	
+	<target name="build_sv">
+		<path id="sv.classpath">
+			<fileset dir="${java.home}/lib">
+				<include name="*.jar" />
+			</fileset>
+			<fileset dir="${workspace}/${project.cm}/${cm.clib.dir}">
+				<include name="*.jar"/>
+			</fileset>
+			<fileset dir="${workspace}/${project.cm}/${cm.dlib.dir}">
+				<include name="*.jar"/>
+			</fileset>
+			<fileset dir="${workspace}/${project.cm}/${cm.jar.dir}">
+				<include name="${cm.jar.name}"/>
+			</fileset>			
+		</path>
+		
+		<!-- service compile -->
+		<echo>clean class path</echo>
+		<mkdir dir="${workspace}/${project.cm}/${sv.class.dir}" />
+		<delete includeemptydirs="true">
+			<fileset dir="${workspace}/${project.cm}/${sv.class.dir}" includes="**/*"/>
+    	</delete>
+		<echo>compile common sources</echo>
+		<javac 
+			srcdir="${workspace}/${project.cm}/${sv.java.dir}" 
+			destdir="${workspace}/${project.cm}/${sv.class.dir}"
+			classpathref="sv.classpath"
+			nowarn="true" 
+			deprecation="true"
+			debug="true"
+			listfiles="false" 
+			failonerror="true" 
+			optimize="false" 
+			includeantruntime="false"
+			target="1.7"
+			encoding="UTF-8" />	
+		
+		<!-- service properties copy -->
+		<echo>copy resources</echo>
+		<copy todir="${workspace}/${project.cm}/${sv.class.dir}" overwrite="true">
+			<fileset dir="${workspace}/${project.cm}/${sv.resource.original}">
+				<include name="**/*"/>
+				<exclude name="**/.svn/**"/>
+		    </fileset>
+		</copy>
+		
+		<!-- service jar -->
+		<echo>delete jar file</echo>
+		<mkdir dir="${workspace}/${project.cm}/${sv.jar.dir}" />
+		<delete includeemptydirs="true">
+			<fileset dir="${workspace}/${project.cm}/${sv.jar.dir}" includes="**/*"/>
+    	</delete>
+		<echo>create jar file</echo>
+		<jar encoding="UTF-8" 
+			 destfile="${workspace}/${project.cm}/${sv.jar.dir}/${sv.jar.name}">
+			<fileset dir="${workspace}/${project.cm}/${sv.class.dir}" />
+			<manifest>
+				<attribute name="Built-By" value="owner"/>
+				<attribute name="Main-Class" value="com.lotte.spp.platform.service.common.CommonConst"/>
+				<attribute name="Class-Path" value=".
+					aopalliance-1.0.jar
+					aspectjrt-1.6.8.jar
+					aspectjweaver-1.6.8.jar
+					barbecue-1.0.6c.jar
+					bcprov-jdk16-145.jar
+					commons-beanutils-1.8.0.jar
+					commons-collections-3.2.jar
+					commons-dbcp-1.2.2.jar
+					commons-lang-2.2.jar
+					commons-logging-1.1.1.jar
+					commons-net-1.4.1.jar
+					commons-pool-1.5.3.jar
+					ibatis-2.3.4.726.jar
+					jai_codec.jar
+					jai_core.jar
+					jdom.jar
+					javax.inject-1.jar
+					junit-4.9.jar
+					log4j-1.2.15.jar
+					log4j-1.2.8.jar
+					ojdbc5.jar
+					poi-3.6-20091214.jar
+					servlet-api.jar
+					spring-aop-3.1.1.RELEASE.jar
+					spring-asm-3.1.1.RELEASE.jar
+					spring-beans-3.1.1.RELEASE.jar
+					spring-context-3.1.1.RELEASE.jar
+					spring-core-3.1.1.RELEASE.jar
+					spring-expression-3.1.1.RELEASE.jar
+					spring-jdbc-3.1.1.RELEASE.jar
+					spring-orm-3.0.6.RELEASE.jar
+					spring-test-3.1.1.RELEASE.jar
+					spring-tx-3.1.1.RELEASE.jar
+					spring-web-3.1.1.RELEASE.jar
+					spring-webmvc-3.1.1.RELEASE.jar
+					spp-app-common-lib.1.7.jar
+				"/>
+			</manifest>				
+		</jar>
+	</target>	
+	
+	<target name="build_sn">
+		<path id="sn.classpath">
+			<fileset dir="${java.home}/lib">
+				<include name="*.jar" />
+			</fileset>
+			<fileset dir="${workspace}/${project.cm}/${cm.clib.dir}">
+				<include name="*.jar"/>
+			</fileset>
+			<fileset dir="${workspace}/${project.cm}/${cm.dlib.dir}">
+				<include name="*.jar"/>
+			</fileset>
+			<fileset dir="${workspace}/${project.cm}/${cm.jar.dir}">
+				<include name="${cm.jar.name}"/>
+			</fileset>
+			<fileset dir="${workspace}/${project.cm}/${sv.jar.dir}">
+				<include name="${sv.jar.name}"/>
+			</fileset>				
+		</path>
+
+		<!-- sn compile -->
+		<echo>clean class path</echo>
+		<mkdir dir="${workspace}/${project.sn}/${sn.class.dir}" />
+		<delete includeemptydirs="true">
+			<fileset dir="${workspace}/${project.sn}/${sn.class.dir}" includes="**/*"/>
+    	</delete>
+		<echo>compile web application sources</echo>
+		<javac 
+			srcdir="${workspace}/${project.sn}/${sn.java.dir}" 
+			destdir="${workspace}/${project.sn}/${sn.class.dir}"
+			classpathref="sn.classpath"
+			nowarn="true" 
+			deprecation="true"
+			debug="true"
+			listfiles="false" 
+			failonerror="true" 
+			optimize="false" 
+			includeantruntime="false"
+			target="1.7"
+			encoding="UTF-8" />
+		
+		<!-- sn properties copy -->
+		<echo>copy resources</echo>	
+		<copy todir="${workspace}/${project.sn}/${sn.class.dir}" overwrite="true">
+			<fileset dir="${workspace}/${project.sn}/${sn.resource.original}">
+				<include name="**/*"/>
+				<exclude name="**/.svn/**"/>
+		    </fileset>
+		</copy>
+		<echo>copy properties</echo>
+		<copy todir="${workspace}/${project.sn}/${sn.class.dir}" overwrite="true">
+			<fileset dir="${workspace}/${project.sn}/${sn.properties}">
+				<include name="*.properties"/>
+		    </fileset>
+		</copy>	
+		
+		<!-- sn jar -->
+		<echo>delete jar file</echo>
+		<mkdir dir="${workspace}/${project.sn}/${sn.jar.dir}" />
+		<delete includeemptydirs="true">
+			<fileset dir="${workspace}/${project.sn}/${sn.jar.dir}" includes="**/*"/>
+    	</delete>
+		<echo>create jar file</echo>
+		<jar encoding="UTF-8" 
+			 destfile="${workspace}/${project.sn}/${sn.jar.dir}/${sn.jar.name}">
+			<fileset dir="${workspace}/${project.sn}/${sn.class.dir}" />		
+			<manifest>
+				<attribute name="Built-By" value="owner"/>
+				<attribute name="Main-Class" value="${main.class}"/>
+				<attribute name="Class-Path" value=".
+					lib/aopalliance-1.0.jar
+					lib/aspectjrt-1.6.8.jar
+					lib/aspectjweaver-1.6.8.jar
+					lib/barbecue-1.0.6c.jar
+					lib/bcprov-jdk16-145.jar
+					lib/commons-beanutils-1.8.0.jar
+					lib/commons-collections-3.2.jar
+					lib/commons-dbcp-1.2.2.jar
+					lib/commons-lang-2.2.jar
+					lib/commons-logging-1.1.1.jar
+					lib/commons-net-1.4.1.jar
+					lib/commons-pool-1.5.3.jar
+					lib/ibatis-2.3.4.726.jar
+					lib/jai_codec.jar
+					lib/jai_core.jar
+					lib/jdom.jar
+					lib/javax.inject-1.jar
+					lib/junit-4.9.jar
+					lib/log4j-1.2.15.jar
+					lib/log4j-1.2.8.jar
+					lib/ojdbc5.jar
+					lib/poi-3.6-20091214.jar
+					lib/servlet-api.jar
+					lib/spring-aop-3.1.1.RELEASE.jar
+					lib/spring-asm-3.1.1.RELEASE.jar
+					lib/spring-beans-3.1.1.RELEASE.jar
+					lib/spring-context-3.1.1.RELEASE.jar
+					lib/spring-core-3.1.1.RELEASE.jar
+					lib/spring-expression-3.1.1.RELEASE.jar
+					lib/spring-jdbc-3.1.1.RELEASE.jar
+					lib/spring-orm-3.0.6.RELEASE.jar
+					lib/spring-test-3.1.1.RELEASE.jar
+					lib/spring-tx-3.1.1.RELEASE.jar
+					lib/spring-web-3.1.1.RELEASE.jar
+					lib/spring-webmvc-3.1.1.RELEASE.jar
+					lib/spp-app-common-lib.1.7.jar
+					lib/spp-app-service-lib.jar
+				"/>
+			</manifest>				
+		</jar>		
+		
+		<!-- all tar -->
+		<echo>clean package path</echo>
+		<mkdir dir="${package.dir}" />
+		<delete includeemptydirs="true">
+			<fileset dir="${package.dir}" includes="**/*"/>
+    	</delete>
+		<echo>package spp application AT</echo>
+		<tar destfile="${package.dir}/${package.name}" longfile="gnu">
+			<tarfileset dir="${workspace}/${project.sn}/${sn.jar.dir}"
+				prefix="${docroot}/${service.name}"
+				preserveLeadingSlashes="true">
+				<include name="${sn.jar.name}"/>
+			</tarfileset>
+			<tarfileset dir="${workspace}/${project.cm}/${cm.clib.dir}"
+				prefix="${docroot}/${service.name}/lib"
+				preserveLeadingSlashes="true">
+				<include name="*.jar"/>
+			</tarfileset>
+			<tarfileset dir="${workspace}/${project.cm}/${cm.dlib.dir}"
+				prefix="${docroot}/${service.name}/lib"
+				preserveLeadingSlashes="true">
+				<include name="*.jar"/>
+			</tarfileset>			
+			<tarfileset dir="${workspace}/${project.cm}/${cm.jar.dir}"
+				prefix="${docroot}/${service.name}/lib"
+				preserveLeadingSlashes="true">
+				<include name="${cm.jar.name}"/>
+			</tarfileset>
+			<tarfileset dir="${workspace}/${project.cm}/${sv.jar.dir}"
+				prefix="${docroot}/${service.name}/lib"
+				preserveLeadingSlashes="true">
+				<include name="${sv.jar.name}"/>
+			</tarfileset>			
+		</tar>
+	</target>
+	
+	
+	<!-- **************************************************************** -->
+	<!-- DEPLOY -->
+	<!-- **************************************************************** -->	
+	<target name="send">
+		<scp todir="${user.id}:${user.pwd}@${server.ip}:${docroot}" port="22" verbose="yes" trust="yes">
+			<fileset dir="${package.dir}">
+				<include name="${package.name}"></include>
+			</fileset>
+		
+		</scp>
+	</target>
+	
+	<target name="deploy">
+		<property name="deploy.log.file"    value="../logs/${ant.project.name}/deploy_smarttst.log" />
+		<tstamp>
+			<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>remote cotrol...</echo>
+		<echo>${server.ip} connect start... [${conn_time}]</echo>
+		<record name="${deploy.log.file}" action="start"/>
+		<sshexec host="${server.ip}" username="${user.id}" password="${user.pwd}" trust="true" verbose="false"
+			command="cd ${docroot}/${service.name};
+			sh ./${service.stop.cmd};
+			\rm -rf ../z_${service.name};
+			cp -f -R ../${service.name} ../z_${service.name};
+			cd .. ;
+			./build ${package.name};
+			cd ${service.name};
+			sh ./${service.start.cmd};
+			exit" />
+		<record name="${deploy.log.file}" action="stop"/>
+		<tstamp>
+			<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${server.ip} connect end... [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<resourcecontains resource="${deploy.log.file}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>trans ended...</echo>		
+	</target>
+</project>

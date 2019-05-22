@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="test_lotte_gl_test1" basedir=".">
+<!-- ================================================================ -->
+<!-- PROPERTY -->
+<!-- ================================================================ -->
+	<!-- PARAM -->
+	<property name="dep.id" value="${DEPLOY_ID}"/>
+	<!-- SET PROPERTY -->
+	<property file="test_lotte.properties" />
+		
+	<!-- TEST SERVER -->
+	<property name="tst.web.ip"   value="10.149.193.34"/>
+	<property name="tst.was.ip"   value="10.149.193.44"/>
+	<property name="user.id"  value="jeus"/>
+	<!-- <property name="user.pwd" value="8Yqi4q(1=Z"/> -->
+	
+	<!-- DIRECTORY -->
+	<property name="gl.req.dir"   value="${workspace}/request/global"/>
+	<property name="gl.dep.dir"   value="/usr1/home/jeus/deploy/src"/>
+	
+	<!-- LOG FILE -->
+	<property name="log.file"     value="${workspace}/remote_work.log"/>
+	
+	<!-- COMMAND -->
+	<property name="init.cmd" value="glinit"/>
+	<property name="dep.cmd"  value="gldeploy"/>
+	
+<!-- ================================================================ -->
+<!-- CHECK -->
+<!-- ================================================================ -->
+	<target name="check_param" description="허드슨에서 파라미터로 넘어 오는 배포ID의 유효성을 확인">
+		<condition property="isValid">
+		  <and>
+			<length   string="${dep.id}" when="greater"     length="10"/>
+			<contains string="${dep.id}" substring="GL_"    casesensitive="true"/>
+		  	<contains string="${dep.id}" substring="_TEST_" casesensitive="true"/>
+		  </and>
+		</condition>
+	</target>
+
+	<target name="check_source">
+		<condition property="isWeb">
+			<resourceexists>
+				<file file="${gl.req.dir}/${dep.id}/gl/webroot"/>
+			</resourceexists>
+		</condition>		
+		<condition property="isWas">
+			<or>
+				<resourceexists>				
+					<file file="${gl.req.dir}/${dep.id}/common/conf"/>
+				</resourceexists>
+				<resourceexists>
+					<file file="${gl.req.dir}/${dep.id}/gl/APP-INF"/>
+				</resourceexists>
+				<resourceexists>
+					<file file="${gl.req.dir}/${dep.id}/gl/webapp"/>				
+				</resourceexists>
+			</or>
+		</condition>
+	</target>
+	
+	<target name="check_restart">
+		<condition property="isClass">
+			<resourceexists>
+				<file file="${gl.req.dir}/${dep.id}/gl/APP-INF"/>
+			</resourceexists>
+		</condition>
+	</target>
+	
+	<target name="fail_check_param" unless="isValid">
+		<echo>${workspace}</echo>
+		<echo>${dep.id}</echo>
+		<fail message="DEPLOY_ID가 유효하지 않습니다."/>
+	</target>		
+	
+	<target name="check_remote_work" unless="isSuccess">
+		<fail message="원격지 작업이 실패하였습니다..." />
+	</target>
+	
+<!-- ================================================================ -->
+<!-- UPDATE -->
+<!-- ================================================================ -->
+	<!-- 허드슨에서 수행 -->
+
+<!-- ================================================================ -->
+<!-- INIT -->
+<!-- ================================================================ -->
+	<target name="init">
+		<antcall target="initcmd"/>
+		<antcall target="transfer"/>
+	</target>
+	
+	<target name="init2web" depends="check_source" if="${isWeb}">
+		<antcall target="initcmd"/>
+		<antcall target="transfer2web"/>
+	</target>
+	
+	<target name="init2was" depends="check_source" if="${isWas}">
+		<antcall target="initcmd"/>
+		<antcall target="transfer2was"/>
+	</target>
+	
+	<target name="initcmd">
+		<sshexec host="${server.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${log.file}"
+			command="cd deploy;./${init.cmd} ${dep.id}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${log.file}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<!--
+		<tstamp>
+			<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>초기화 작업을 진행합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+		<echo>${server.ip} 접속을 시작합니다... [${conn_time}]</echo>
+		<record name="${log.file}" action="start"/>
+		<telnet server="${server.ip}" userid="${user.id}" password="${user.pwd}">
+			<read>/jeus]%</read>
+			<write>cd deploy</write>
+			<read>/jeus/deploy]%</read>
+			<write>./${init.cmd} ${dep.id}</write>
+			<read>/jeus/deploy]%</read>
+			<write>exit</write>
+		</telnet>
+		<record name="${log.file}" action="stop"/>
+		<tstamp>
+			<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${server.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<resourcecontains resource="${log.file}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>초기화 작업이 완료되었습니다...</echo>
+		-->
+	</target>
+
+<!-- ================================================================ -->
+<!-- TRANSFER -->
+<!-- ================================================================ -->		
+	<target name="transfer">
+		<ftp server="${server.ip}" userid="${user.id}" password="${user.pwd}" passive="yes"
+		     remotedir="${gl.dep.dir}/${dep.id}"
+		     action="put" verbose="yes">
+			<fileset dir="${gl.req.dir}/${dep.id}">
+				<include name="gl/webroot/**/*"></include>
+				<include name="common/conf/**/*"></include>
+				<include name="gl/APP-INF/**/*"></include>
+				<include name="gl/webapp/**/*"></include>				
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</ftp>
+	</target>
+		
+	<target name="transfer2web">
+		<ftp server="${server.ip}" userid="${user.id}" password="${user.pwd}" passive="yes"
+		     remotedir="${gl.dep.dir}/${dep.id}"
+		     action="put" verbose="yes">
+			<fileset dir="${gl.req.dir}/${dep.id}">
+				<include name="gl/webroot/**/*"></include>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</ftp>
+	</target>
+		
+	<target name="transfer2was">
+		<ftp server="${server.ip}" userid="${user.id}" password="${user.pwd}" passive="yes"
+		     remotedir="${gl.dep.dir}/${dep.id}"
+		     action="put" verbose="yes">
+			<fileset dir="${gl.req.dir}/${dep.id}">
+				<include name="common/conf/**/*"></include>
+				<include name="gl/APP-INF/**/*"></include>
+				<include name="gl/webapp/**/*"></include>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</ftp>
+	</target>
+	
+	<target name="transfer2all">
+		<ftp server="${server.ip}" userid="${user.id}" password="${user.pwd}" passive="yes"
+		     remotedir="${gl.dep.dir}/${dep.id}"
+		     action="put" verbose="yes">
+			<fileset dir="${gl.req.dir}/${dep.id}">
+				<include name="gl/webroot/**/*"></include>
+				<include name="common/conf/**/*"></include>
+				<include name="gl/APP-INF/**/*"></include>
+				<include name="gl/webapp/**/*"></include>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</ftp>
+	</target>	
+
+<!-- ================================================================ -->
+<!-- COPY -->
+<!-- ================================================================ -->
+	<target name="copy2web" depends="check_source" if="${isWeb}">
+		<antcall target="copycmd"/>
+	</target>
+	
+	<target name="copy2was" depends="check_source" if="${isWas}">
+		<antcall target="copycmd"/>
+	</target>	
+	
+	<target name="copycmd">
+		<sshexec host="${server.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${log.file}"
+			command="cd deploy;./${dep.cmd} ${dep.id}" />
+		<condition property="isSuccess">
+			<and>
+				<resourcecontains resource="${log.file}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+				<not>
+					<resourcecontains resource="${log.file}" substring="BUILD FAILED" casesensitive="true" />
+				</not>
+			</and>
+		</condition>
+		<antcall target="check_remote_work" />
+		<!--
+		<tstamp>
+			<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>배포 작업을 진행합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+		<echo>${server.ip} 접속을 시작합니다... [${conn_time}]</echo>
+		<record name="${log.file}" action="start"/>
+		<telnet server="${server.ip}" userid="${user.id}" password="${user.pwd}">
+			<read>/jeus]%</read>
+			<write>cd deploy</write>
+			<read>/jeus/deploy]%</read>
+			<write>./${dep.cmd} ${dep.id}</write>
+			<read>/jeus/deploy]%</read>
+			<write>exit</write>
+		</telnet>
+		<record name="${log.file}" action="stop"/>
+		<tstamp>
+			<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${server.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<and>
+				<resourcecontains resource="${log.file}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+				<not>
+					<resourcecontains resource="${log.file}" substring="BUILD FAILED" casesensitive="true" />
+				</not>
+			</and>
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>배포 작업이 완료되었습니다...</echo>
+		-->
+	</target>
+	
+<!-- ================================================================ -->
+<!-- RESTART JEUS CONTAINER -->
+<!-- ================================================================ -->
+	<target name="restart_jeus" depends="check_restart" if="${isClass}">
+		<sshexec host="${server.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${log.file}"
+			command="ja downcon ${con.name};ja startcon ${con.name}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${log.file}" substring="Succeeded to start" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<!--
+		<tstamp>
+			<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>컨테이너 재시작 작업을 진행합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+		<echo>${server.ip} 접속을 시작합니다... [${conn_time}]</echo>
+		<record name="${log.file}" action="start"/>
+		<telnet server="${server.ip}" userid="${user.id}" password="${user.pwd}">
+			<read>/jeus]%</read>
+			<write>ja downcon ${con.name}</write>
+			<read>/jeus]%</read>
+			<write>ja startcon ${con.name}</write>
+			<read>/jeus]%</read>
+			<write>exit</write>
+		</telnet>
+		<record name="${log.file}" action="stop"/>
+		<tstamp>
+			<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${server.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<resourcecontains resource="${log.file}" substring="Succeeded to start" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>컨테이너 재시작 작업이 완료되었습니다...</echo>
+		-->
+	</target>	
+	<!--	=================================================================	-->
+	<!--	==================== RESTART TOMCAT INSTANCE ====================	-->
+	<!--	=================================================================	-->	
+	<target name="shutdown_tomcat" depends="check_restart" if="isClass"> <!-- for test1 server only -->
+			<sshexec host="${server.ip}" username="${user.id}" password="${user.pwd}" 
+				trust="true" verbose="false" output="${log.file}"
+				command="${inst.dir}${instance1}/bin/shutdown.sh;" />
+		</target>
+		
+		<target name="start_tomcat"> 
+			<sshexec host="${server.ip}" username="${user.id}" password="${user.pwd}" 
+				trust="true" verbose="false" output="${log.file}"
+				command="${inst.dir}${instance1}/bin/start.sh;" />
+		</target>
+					
+		<target name="was_status_check"> 
+			<sshexec host="${server.ip}" username="${user.id}" password="${user.pwd}" 
+				trust="true" verbose="false" output="${log.file}"
+				command="${tomcat.check}" />
+			<condition property="isSuccess">
+				<and>
+					<resourcecontains resource="${log.file}" substring="/usr2/apache-tomcat/insta"     casesensitive="true" />
+				</and>
+			</condition>
+			<antcall target="check_remote_work" />
+		</target>	
+</project>

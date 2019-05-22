@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lecs20.deploy" basedir="."><!-- Global Param: ${target} -->
+	
+	<property file="pwd.properties" />
+	
+	<tstamp>
+		<format property="DATETIMESTAMP" pattern="yyyyMMddHHmm" />
+	</tstamp>
+	
+	<target name="DR.SSH.RESTART.SERVERS">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jdown;jboot;sleep 1" trust="true" verbose="false" timeout="20000" failonerror="false"/>
+	</target>
+	
+	<target name="lecs20dev1.Jeus.Backup.Copyfile">
+		<sshexec host="10.149.187.70" username="jeus" password="${jeuspwd}" command="cp /usr2/jeus6/license/license  /usr2/jeus6/license/license_${DATETIMESTAMP}" trust="true"/>
+		<scp file="/Source/lecs2/jobs/lecs20dev1/workspace/LicenseFile/Lecs20dev1/jeus/license" remoteTofile="jeus:${jeuspwd}@10.149.187.70:/usr2/jeus6/license" trust="true"/>
+	</target>
+	
+</project>

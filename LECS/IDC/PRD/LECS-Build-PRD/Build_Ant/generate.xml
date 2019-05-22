@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lecs" basedir=".">
+		
+	<!-- generate html -->
+	<target name="nike_generate_html">
+		<taskdef name="generatehtml" classname="com.es.dms.ant.task.GenerateHtml" classpath="D:\deployer\bin\deploy-generator.jar"/>
+		<generatehtml appname="nikeplus" dir="D:\docroot\htdocs\deploy" type="apk"/>
+	</target>
+	
+	<!-- apk copy -->
+	<target name="nikeapp_copy_apk">
+		<delete>
+			<fileset dir="D:\docroot\htdocs\deploy">
+	    		<include name="nikeplus-*-google-release.apk"/>
+			</fileset>
+		</delete>
+		<copy todir="D:\docroot\htdocs\deploy">
+			<fileset dir="E:\hudson-lecs2\jobs\NikePlusAndroid.build.deploy\workspace\work\NikePlusAndroid\build\outputs\apk">
+    			<include name="nikeplus-*-google-release.apk"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<!-- build app -->
+	<target name="build_run">
+<!--		<delete>
+			<fileset dir="E:\hudson-lecs2\jobs\NikePlusAndroid.build.deploy\workspace\work\NikePlusAndroid\build\outputs\apk">
+	    		<include name="*.apk"/>
+			</fileset>
+		</delete> -->
+		<exec dir="E:\hudson-lecs2\jobs\NikePlusAndroid.build.deploy\workspace\work" executable="cmd">
+			<arg line="/C gradlew assembleRelease"/>
+		</exec>
+	</target>
+</project>

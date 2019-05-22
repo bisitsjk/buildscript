@@ -1,0 +1,21 @@
+version: 0.0
+os: linux
+files:
+- source: /UQOAWEB.zip
+  destination: /lotte/lecsDocs/temp
+
+permissions:
+- object: /lotte/lecsDocs/temp
+  pattern: "**"
+  owner: jeus
+  group: www
+  mode: 644
+
+hooks:
+  ApplicationStop:
+   - location: scripts/Stop.sh
+     timeout: 900
+  ApplicationStart:
+   - location: scripts/Start.sh
+     timeout: 900
+     

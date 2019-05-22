@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="sync_lottesuper_backoffice_esptstb" basedir=".">
+	<!-- ================================================== -->
+	<!-- properties -->
+	<!-- ================================================== -->
+	<!-- test and real server info -->
+	<property name="tst.web.ip" value="110.45.204.90"/>
+	<property name="tst.was.ip" value="110.45.204.90"/>
+	<property name="real.was.ip" value="110.45.204.159"/>
+	<property name="tst.user.id" value="jeus"/>
+	<property name="tst.user.pwd" value="6sUvCHdV$!"/>
+	<property name="real.user.id" value="jeus"/>
+	<property name="real.user.pwd" value="6sUvCHdV$!/>
+	
+	<!-- path -->
+	<property name="con_backoffice"     value="esptstb_prodev" />
+	<property name="con_mpking"     value="esptstb_mpickingdev" />
+	<property name="con_partner"     value="esptstb_partnerdev" />
+	
+	<property name="request.dir" value="E:/hudson-lottesuper/jobs/SYNC_LOTTESUPER_BACKOFFICE_esptstb/workspace/WebContent"/>
+	<property name="dep.dir" value="/esuper/project/back/WEB-INF"/>
+	
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->		
+	<target name="check_host">
+		<condition property="isHost">
+			<contains string="${hostname}" substring="esptstb"/>
+		</condition>
+		<echo>hostname is `${hostname}`</echo>
+	</target>
+			
+	<target name="check_valid" depends="check_host" unless="isHost">
+		<fail message="동기화 대상 서버가 아닙니다."/>
+	</target>
+	
+	<!-- ================================================== -->
+	<!-- Sync -->
+	<!-- ================================================== -->
+	<target name="sync_was">
+		<echo>=================================================================================== sync 시작 ==========</echo>
+		<antcall target="tar_was"/>
+		<antcall target="check_valid"/>
+		<antcall target="backup_was"/>		
+		<!--
+		<antcall target="sync_rename"/>
+		<antcall target="config_send_was"/>
+		<antcall target="config_was"/>
+		-->
+		<echo>=================================================================================== sync 종료 ==========</echo>
+	</target>
+	
+	<!-- ================================================== -->
+	<!-- 테스트 서버 프로젝트 백업(이동) : 유닉스 mv명령어 사용 --> 
+	<!-- ================================================== -->
+	<target name="backup_was">
+			<tstamp>
+				<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+			</tstamp>
+			<tstamp>
+				<format property="backup_day" pattern="yyyyMMdd"/>
+			</tstamp>
+			<echo>테스트서버 소스를 백업(이동)합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+			<echo>${tst.was.ip} 접속을 시작합니다... [${conn_time}]</echo>
+			<telnet server="${tst.was.ip}" userid="${tst.user.id}" password="${tst.user.pwd}">
+				<read>/jeus]%</read>
+				<!-- back -->
+				<write>cd /esuper/project/back</write>	<!-- 경로이동 -->
+				<read>/back]%</read>
+				<write>mv WEB-INF ${backup_day}_pro</write> <!-- 파일백업(이동) -->
+				<read>/back]%</read>
+				<write>tar xpf BO_SYNC.tar</write> <!-- 운영파일 tar풀기 -->
+				<read>/back]%</read>
+				<!-- mback -->
+				<write>cd /esuper/project/mback</write>	<!-- 경로이동 -->
+				<read>/mback]%</read>
+				<write>mv WEB-INF ${backup_day}_mpking</write> <!-- 파일백업(이동) -->
+				<read>/mback]%</read>
+				<write>tar xpf MB_SYNC.tar</write> <!-- 운영파일 tar풀기 -->
+				<read>/mback]%</read>
+				<!-- partner -->
+				<write>cd /esuper/project/partner</write>	<!-- 경로이동 -->
+				<read>/partner]%</read>
+				<write>mv WEB-INF ${backup_day}_partner</write> <!-- 파일백업(이동) -->
+				<read>/partner]%</read>
+				<write>tar xpf PA_SYNC.tar</write> <!-- 운영파일 tar풀기 -->
+				<read>/partner]%</read>
+				<write>exit</write>
+			</telnet>
+			<tstamp>
+				<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+			</tstamp>
+			<echo>${tst.was.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+			
+	</target>
+	
+	<!-- ================================================== -->
+	<!-- 운영서버 프로젝트 백업 : 유닉스 tar명령어 사용 --> 
+	<!-- ================================================== -->
+	<target name="tar_was">
+			<tstamp>
+				<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+			</tstamp>
+			<tstamp>
+				<format property="backup_day" pattern="yyyyMMdd"/>
+			</tstamp>
+			<echo>운영 서버 소스를 백업(tar묶기)합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+			<echo>${real.was.ip} 접속을 시작합니다... [${conn_time}]</echo>
+			<telnet server="${real.was.ip}" userid="${real.user.id}" password="${real.user.pwd}">
+				<read>/jeus]%</read>
+				<!-- back tar 생성 -->
+				<write>cd /esuper/project/back</write> <!-- 경로이동 -->
+				<read>/back]%</read>
+				<write>tar cf BO_SYNC.tar WEB-INF</write> <!-- tar 묶기 -->
+				<read>/back]%</read>
+				<!-- mback tar 생성 -->				
+				<write>cd /esuper/project/mback</write> <!-- 경로이동 -->
+				<read>/mback]%</read>
+				<write>tar cf MB_SYNC.tar WEB-INF</write> <!-- tar 묶기 -->
+				<read>/mback]%</read>
+				<!-- partner tar 생성 -->
+				<write>cd /esuper/project/partner</write> <!-- 경로이동 -->
+				<read>/partner]%</read>
+				<write>tar cf PA_SYNC.tar WEB-INF</write> <!-- tar 묶기 -->
+				<read>/partner]%</read>
+				<write>cd /esuper/project/back</write> <!-- 경로이동 -->
+				<read>/back]%</read>
+				<!-- ftp 접속후 전송 -->
+				<write>ftp ${tst.was.ip}</write> <!-- ftp 접속 -->
+				<read>:jeus):</read>
+				<write>${tst.user.id}</write>	<!-- ID -->
+				<read>Password:</read>
+				<write>${tst.user.pwd}</write>	<!-- PASSWORD -->
+				<read>ftp></read>
+				<!-- back 전송 -->
+				<write>cd /esuper/project/back</write> <!-- 경로이동 -->
+				<read>ftp></read>
+				<write>!pwd</write>	<!-- 경로확인 -->
+				<read>ftp></read>
+				<write>pwd</write>	<!-- 경로확인 -->
+				<read>ftp></read>
+				<write>put BO_SYNC.tar</write> <!-- tar 파일 전송 -->
+				<read>ftp></read>
+				<!-- mback 전송 -->
+				<write>lcd /esuper/project/mback</write> <!-- 경로이동 -->
+				<read>ftp></read>
+				<write>!pwd</write>	<!-- 경로확인 -->
+				<read>ftp></read>
+				<write>cd /esuper/project/mback</write> <!-- 경로이동 -->
+				<read>ftp></read>
+				<write>pwd</write>	<!-- 경로확인 -->
+				<read>ftp></read>
+				<write>put MB_SYNC.tar</write> <!-- tar 파일 전송 -->
+				<read>ftp></read>
+				<!-- partner 전송 -->
+				<write>lcd /esuper/project/partner</write> <!-- 경로이동 -->
+				<read>ftp></read>
+				<write>!pwd</write>	<!-- 경로확인 -->
+				<read>ftp></read>
+				<write>cd /esuper/project/partner</write> <!-- 경로이동 -->
+				<read>ftp></read>
+				<write>pwd</write>	<!-- 경로확인 -->
+				<read>ftp></read>
+				<write>put PA_SYNC.tar</write> <!-- tar 파일 전송 -->
+				<read>ftp></read>
+				<write>bye</write> 	<!-- ftp 접속해지 -->
+				<read>/back]%</read>
+				<write>exit</write>
+			</telnet>
+			<tstamp>
+				<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+			</tstamp>
+			<echo>${tst.was.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+			
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- config CHECK -->
+	<!-- **************************************************************** -->
+	<target name="check_rename1">
+		<condition property="existFile1">
+			<resourceexists><file file="${request.dir}/WEB-INF/config-test.xml" /></resourceexists>
+		</condition>
+		<echo>config-test.xml : ${existFile1}</echo>
+	</target>
+	<target name="check_rename2">
+		<condition property="existFile2">
+			<resourceexists><file file="${request.dir}/WEB-INF/jeus-web-dd-test.xml" /></resourceexists>
+		</condition>
+		<echo>jeus-web-dd-test.xml : ${existFile2}</echo>
+	</target>
+	<target name="check_rename3">
+		<condition property="existFile3">
+			<resourceexists><file file="${request.dir}/WEB-INF/x2config/x2config-test.xml" /></resourceexists>
+		</condition>
+		<echo>x2config-test.xml : ${existFile3}</echo>
+	</target>
+	<target name="check_rename4">
+		<condition property="existFile4">
+			<resourceexists><file file="${request.dir}/WEB-INF/x2config/log4jconfig-test.xml" /></resourceexists>
+		</condition>
+		<echo>log4jconfig-test.xml : ${existFile4}</echo>
+	</target>
+	<target name="check_rename5">
+		<condition property="existFile5">
+			<resourceexists><file file="${request.dir}/WEB-INF/lib/report-test.info" /></resourceexists>
+		</condition>
+		<echo>report.info : ${existFile5}</echo>
+	</target>
+	<target name="check_rename6">
+		<condition property="existFile6">
+			<resourceexists><file file="${request.dir}/WEB-INF/lib/ubigateway-test.property" /></resourceexists>
+		</condition>
+		<echo>ubigateway.property : ${existFile6}</echo>
+	</target>
+	
+	<!-- ================================================== -->
+	<!-- config file rename -->
+	<!-- ================================================== -->
+		<target name="config.xml" depends="check_rename1" if="existFile1">
+			<move file="${request.dir}/WEB-INF/config-test.xml" 
+				  tofile="${request.dir}/WEB-INF/config.xml" overwrite="true" verbose="true" />
+		</target>
+		<target name="jeus-web-dd.xml" depends="check_rename2" if="existFile2">
+			<move file="${request.dir}/WEB-INF/jeus-web-dd-test.xml" 
+				  tofile="${request.dir}/WEB-INF/jeus-web-dd.xml" overwrite="true" verbose="true" />
+		</target>
+		<target name="x2config.xml" depends="check_rename3" if="existFile3">
+			<move file="${request.dir}/WEB-INF/x2config/x2config-test.xml" 
+				  tofile="${request.dir}/WEB-INF/x2config/x2config.xml" overwrite="true" verbose="true" />
+		</target>
+		<target name="log4jconfig.xml" depends="check_rename4" if="existFile4">
+			<move file="${request.dir}/WEB-INF/x2config/log4jconfig-test.xml" 
+				  tofile="${request.dir}/WEB-INF/x2config/log4jconfig.xml" overwrite="true" verbose="true" />
+		</target>			  	
+		<target name="report.info" depends="check_rename5" if="existFile5">
+			<move file="${request.dir}/WEB-INF/lib/report-test.info" 
+				tofile="${request.dir}/WEB-INF/lib/report.info" overwrite="true" verbose="true" />
+		</target>
+		<target name="ubigateway.property" depends="check_rename6" if="existFile6">
+			<move file="${request.dir}/WEB-INF/lib/ubigateway-test.property" 
+				tofile="${request.dir}/WEB-INF/lib/ubigateway.property" overwrite="true" verbose="true" />
+		</target>
+		<target name="sync_rename">
+			<echo>=================================================================================== config rename 시작 ==========</echo>
+			<antcall target="config.xml"/>
+			<antcall target="jeus-web-dd.xml"/>
+			<antcall target="x2config.xml"/>
+			<antcall target="log4jconfig.xml"/>
+			<antcall target="report.info"/>
+			<antcall target="ubigateway.property"/>
+			<echo>=================================================================================== config rename 종료 ==========</echo>
+		</target>
+	<!-- ================================================== -->
+	<!-- 테스트서버 config파일 sync: ftp --> 
+	<!-- ================================================== -->
+	<target name="config_send_was">
+		<!-- FTP (from local to nas) -->
+		<ftp server="${tst.was.ip}" userid="${tst.user.id}" password="${tst.user.pwd}"
+		     remotedir="${dep.dir}"
+		     action="put">
+			<fileset dir="${request.dir}/WEB-INF">
+				<exclude name="config.xml"></exclude>
+				<exclude name="jeus-web-dd.xml"></exclude>
+				<exclude name="x2config/x2config.xml"></exclude>
+				<exclude name="x2config/log4jconfig.xml"></exclude>
+				<exclude name="lib/report.info"></exclude>
+				<exclude name="lib/ubigateway.property"></exclude>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</ftp>
+	</target>
+	
+	<!-- ================================================== -->
+		<!-- 테스트 서버 config(수정) 및 재기동  --> 
+		<!-- ================================================== -->
+	<target name="config_was">
+			<tstamp>
+				<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+			</tstamp>
+			<tstamp>
+				<format property="backup_day" pattern="yyyyMMdd"/>
+			</tstamp>
+			<echo>테스트서버 소스를 config수정 및 재기동 합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+			<echo>${tst.was.ip} 접속을 시작합니다... [${conn_time}]</echo>
+			<telnet server="${tst.was.ip}" userid="${tst.user.id}" password="${tst.user.pwd}">
+				<read>/jeus]%</read>
+				<write>cd deploy</write>
+				<read>/deploy]%</read>
+				<write>./bosync</write>
+				<read>/deploy]%</read>
+				<write>ja downcon ${con_backoffice}</write>
+				<read>/deploy]%</read>
+				<write>ja startcon ${con_backoffice}</write>
+				<read>/deploy]%</read>
+				<write>ja downcon ${con_mpking}</write>
+				<read>/deploy]%</read>
+				<write>ja startcon ${con_mpking}</write>
+				<read>/deploy]%</read>
+				<write>ja downcon ${con_partner}</write>
+				<read>/deploy]%</read>
+				<write>ja startcon ${con_partner}</write>
+				<read>/deploy]%</read>
+				<write>exit</write>
+			</telnet>
+			<tstamp>
+				<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+			</tstamp>
+			<echo>${tst.was.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+			
+	</target>
+</project>

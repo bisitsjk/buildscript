@@ -1,0 +1,403 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottesuper2018fo_aws_prj_jenkins">
+    <!-- **************************************************************** -->
+	<!-- PROPERTY -->
+	<!-- **************************************************************** -->
+	<property name="deploy.id" value="lotte-super-front" />
+	<property name="comm.deploy.id" value="lotte-super-commons" />
+
+	<!-- property file="D:/deployer/scripts/lottesuper2017fo_renewal_jenkins.prj.properties" -->
+	<property file="${deployer.home.dir}/scripts/AWS_script/${ant.project.name}.${deploy.phase}.properties" />
+		
+	<!-- E:/jenkins-lottesuper/jobs/FRONT_2017_PRJ_RENEWAL/workspace/lottesuper2011/pack/PROJECT/lotte-super-front/project/front -->	
+	<property name="pack.real.path" value="${hdsnWrkSpPath}/${JOB_NAME}/workspace/${svnReposNm}/${hdsnPackPath}/${prj.name}/${deploy.id}/${svrWebappPath}" />
+		
+		
+	<property name="comm.wrksp.path" value="E:/jenkins-lottesuper/jobs/${JOB_NAME}/workspace" />
+	<property name="comm.lib.path" value="lotte-super-commons/lib" />
+	<property name="comm.jar.path" value="lotte-super-commons/dist" />
+	<property name="comm.pack.lib.path" value="project/front/WEB-INF/lib" />
+	<property name="user.id" value="${svrUserId}" />
+	<property name="user.pwd" value="${svrUserPassword}" />
+	<property name="srcStaticJavaPath" value="E:/jenkins-lottesuper/jobs/${JOB_NAME}/workspace/lottesuper2011/branches/PROJECT/${prj.name}/lotte-super-front/src" />
+	<property name="srcDynamicJavaPath" value="E:/jenkins-lottesuper/jobs/${JOB_NAME}/workspace/lottesuper2011/branches/PROJECT/${prj.name}/lotte-super-front/src_dynamic" />
+	<property name="srcStaticClassesPath" value="E:/jenkins-lottesuper/jobs/${JOB_NAME}/workspace/lottesuper2011/branches/PROJECT/${prj.name}/lotte-super-front/WebContent/WEB-INF/classes" />
+	<property name="srcDynamicClassesPath" value="E:/jenkins-lottesuper/jobs/${JOB_NAME}/workspace/lottesuper2011/branches/PROJECT/${prj.name}/lotte-super-front/WebContent/WEB-INF/dynamic_classes" />
+	
+	<target name="run_build">
+		<antcall target="build" />
+		<antcall target="pack" />
+		<!-- <antcall target="zip" />  -->
+		<!-- <antcall target="ssh_send_source" />
+		<antcall target="ssh_unzip" />
+		<antcall target="ssh_restart_jeus" />   -->
+	</target>
+	
+	<target name="aws_build">
+	    <mkdir dir="E:/jenkins-lottesuper/jobs/${JOB_NAME}/workspace/awsdeploy" />
+			<antcall target="tar.was" />   
+			<antcall target="s3.copy" />
+			<antcall target="sh.replace" />
+	</target>
+	
+	
+	<!-- **************************************************************** -->
+	<!-- CHECK -->
+	<!-- **************************************************************** -->
+	<target name="ip_check">
+	<echo>echo ${was.ip}</echo>
+	  <condition property="con_front" value="esptstf_dev">
+	   		<equals arg1="${was.ip}" arg2="10.149.199.31" />
+	  </condition>
+
+	  <condition property="con_front" value="esptstf2_dev">
+		   <equals arg1="${was.ip}" arg2="10.149.199.46" />
+	  </condition>
+	</target>
+
+	
+	<!-- 2013-01-02 변경 -->
+	<!-- file file="E:/jenkins-lottesuper/jobs/FRONT_2017_PRJ_RENEWAL/workspace/lottesuper2011/pack/PROJECT/lotte-super-front/project/front/WEB-INF/config-prj.xml" -->
+	<target name="check_rename1">
+		<condition property="existFile1">
+			<resourceexists><file file="${pack.real.path}/WEB-INF/config-${deploy.phase}.xml" /></resourceexists>
+		</condition>
+		<echo>config-${deploy.phase}.xml : ${existFile1}</echo>
+	</target>
+	<target name="check_rename2">
+		<condition property="existFile2">
+			<resourceexists><file file="${pack.real.path}/WEB-INF/jeus-web-dd-${deploy.phase}.xml" /></resourceexists>
+		</condition>
+		<echo>jeus-web-dd-${deploy.phase}.xml : ${existFile2}</echo>
+	</target>
+	<target name="check_rename3">
+		<condition property="existFile3">
+			<resourceexists><file file="${pack.real.path}/WEB-INF/x2config/x2config-${deploy.phase}.xml" /></resourceexists>
+		</condition>
+		<echo>x2config-${deploy.phase}.xml : ${existFile3}</echo>
+	</target>
+	<target name="check_rename4">
+		<condition property="existFile4">
+			<resourceexists><file file="${pack.real.path}/WEB-INF/x2config/log4jconfig-${deploy.phase}.xml" /></resourceexists>
+		</condition>
+		<echo>log4jconfig-${deploy.phase}.xml : ${existFile4}</echo>
+	</target>
+	<target name="check_rename7">
+		<condition property="existFile7">
+			<resourceexists><file file="${pack.real.path}/WEB-INF/x2config/lgdacom/conf/mall-${deploy.phase}.conf" /></resourceexists>
+		</condition>
+		<echo>mall-${deploy.phase}.conf : ${existFile7}</echo>
+	</target>
+	<target name="check_rename8">
+		<condition property="existFile8">
+			<resourceexists><file file="${pack.real.path}/WEB-INF/x2config/smpi/smpi-${deploy.phase}.properties" /></resourceexists>
+		</condition>
+		<echo>smpi-${deploy.phase}.properties : ${existFile8}</echo>
+	</target>
+	<target name="check_rename9">
+		<condition property="existFile9">
+			<resourceexists><file file="${pack.real.path}/WEB-INF/x2config/pmpi/pmpi-${deploy.phase}.properties" /></resourceexists>
+		</condition>
+		<echo>pmpi-${deploy.phase}.properties : ${existFile9}</echo>
+	</target>	
+	
+	<target name="check_remote_work" unless="isSuccess">
+		<fail message="원격지 작업이 실패하였습니다..." />
+	</target>
+	
+	<target name="check_lock_prop">
+		<condition property="existLockProp">
+			<resourceexists>
+				<file file="${lock.workspace}/${rglr.dep.id}_lock.properties"/>
+			</resourceexists>
+		</condition>
+	</target>
+
+	<!-- file file=E:/jenkins-lottesuper/jobs/FRONT_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-front/project/front/WEB-INF/dynamic_classes -->
+	<target name="check_exist"> 	<!--source type check-->
+		<condition property="isExistClass">
+			<or>
+			<resourceexists><file file="${hdsnWrkSpPath}/${JOB_NAME}/workspace/lottesuper2011/${hdsnPackPath}/${prj.name}/${deploy.id}/project/front/WEB-INF/dynamic_classes"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/${JOB_NAME}/workspace/lottesuper2011/${hdsnPackPath}/${prj.name}/${deploy.id}/project/front/WEB-INF/classes"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/${JOB_NAME}/workspace/lottesuper2011/${hdsnPackPath}/${prj.name}/${deploy.id}/project/front/WEB-INF/lib"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/${JOB_NAME}/workspace/lottesuper2011/${hdsnPackPath}/${prj.name}/${deploy.id}/project/front/WEB-INF/x2config"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/${JOB_NAME}/workspace/lottesuper2011/${hdsnPackPath}/${prj.name}/${deploy.id}/project/front/WEB-INF/x2scenario"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/${JOB_NAME}/workspace/lottesuper2011/${hdsnPackPath}/${prj.name}/${deploy.id}/project/front/WEB-INF/config.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/${JOB_NAME}/workspace/lottesuper2011/${hdsnPackPath}/${prj.name}/${deploy.id}/project/front/WEB-INF/config-dev.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/${JOB_NAME}/workspace/lottesuper2011/${hdsnPackPath}/${prj.name}/${deploy.id}/project/front/WEB-INF/config-test.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/${JOB_NAME}/workspace/lottesuper2011/${hdsnPackPath}/${prj.name}/${deploy.id}/project/front/WEB-INF/config-real.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/${JOB_NAME}/workspace/lottesuper2011/${hdsnPackPath}/${prj.name}/${deploy.id}/project/front/WEB-INF/jeus-web-dd.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/${JOB_NAME}/workspace/lottesuper2011/${hdsnPackPath}/${prj.name}/${deploy.id}/project/front/WEB-INF/jeus-web-dd-dev.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/${JOB_NAME}/workspace/lottesuper2011/${hdsnPackPath}/${prj.name}/${deploy.id}/project/front/WEB-INF/jeus-web-dd-test.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/${JOB_NAME}/workspace/lottesuper2011/${hdsnPackPath}/${prj.name}/${deploy.id}/project/front/WEB-INF/jeus-web-dd-real.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/${JOB_NAME}/workspace/lottesuper2011/${hdsnPackPath}/${prj.name}/${deploy.id}/project/front/WEB-INF/web.xml"/></resourceexists>
+			</or>
+		</condition>
+		<condition property="isExistJsp">
+			<or>
+				<resourceexists><file file="${hdsnWrkSpPath}/${JOB_NAME}/workspace/lottesuper2011/${hdsnPackPath}/${prj.name}/${deploy.id}/project/front/WEB-INF/jsp"/></resourceexists>
+				<resourcecount when="greater" count="0">
+					<filelist dir="${hdsnWrkSpPath}/${JOB_NAME}/workspace/lottesuper2011/${hdsnPackPath}/${prj.name}/${deploy.id}/project/front" files="*.jsp,*.html"/>
+				</resourcecount>				
+			</or>
+		</condition>
+		
+		<condition property="isJspAndClass">
+			<and>
+				<istrue value="${isExistClass}"/>
+				<istrue value="${isExistJsp}"/>
+			</and>
+		</condition>
+		<condition property="isJsp">
+			<and>
+				<isfalse value="${isExistClass}"/>
+				<istrue value="${isExistJsp}"/>
+			</and>
+		</condition>
+		<condition property="isClass">
+			<and>
+				<istrue value="${isExistClass}"/>
+				<isfalse value="${isExistJsp}"/>
+			</and>
+		</condition>
+		<condition property="isExist">
+			<or>
+				<istrue value="${isExistClass}"/>
+				<istrue value="${isExistJsp}"/>
+			</or>
+		</condition>		
+		<condition property="isRestart">
+			<or>
+				<istrue value="${isJspAndClass}"/>
+				<istrue value="${isClass}"/>
+			</or>
+		</condition>
+		<echo>isJsp : ${isJsp} </echo>
+		<echo>isClass : ${isClass} </echo>
+		<echo>isJspAndClass : ${isJspAndClass} </echo>
+		<echo>jeus restart - >> ${isRestart}</echo>
+	</target>
+		
+	<!-- **************************************************************** -->
+	<!-- BUILD -->
+	<!-- **************************************************************** -->
+	<target name="build">
+		<path id="classpath">
+			<fileset dir="${java.home.dir}/jre/lib">
+				<include name="rt.jar" />
+			</fileset>
+			<!-- fileset dir = C:/TmaxSoft/JEUS6.0/lib/datasource/*.jar -->
+			<!-- <fileset dir="${jeus.home.dir}/lib/datasource">
+				<include name="*.jar" />
+			</fileset>  -->
+			<!-- fileset dir = C:/TmaxSoft/JEUS6.0/lib/system/*.jar -->
+			<!-- <fileset dir="${jeus.home.dir}/lib/system">
+				<include name="*.jar" />
+			</fileset>   -->
+			
+			<fileset dir="${tomcat.home.dir}/lib">
+				<include name="*.jar" />
+			</fileset>
+			
+			<!-- E:/jenkins-lottesuper/jobs/FRONT_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-commons/lib --> <!-- 공통라이브러리 lib 파일들 --><!-- 여기에는 lottesuper-commons.jar 파일은 없음 -->
+			<fileset dir="${comm.wrksp.path}/${svnReposNm}/${hdsnBranchPath}/${prj.name}/${comm.lib.path}">
+				<include name="*.jar" />
+			</fileset>
+			<!-- E:/jenkins-lottesuper/jobs/FRONT_2017_PRJ_RENEWAL/workspace/branches/PROJECT/2017RenewalPj/lotte-super-commons/dist/*.jar --> <!-- 공통라이브러리 class 로 묶인 Jar -->
+			<fileset dir="${comm.wrksp.path}/${svnReposNm}/${hdsnBranchPath}/${prj.name}/${comm.jar.path}">
+				<include name="*.jar" />
+			</fileset>
+			<!-- E:/jenkins-lottesuper/jobs/FRONT_2017_PRJ_RENEWAL/workspace/branches/PROJECT/2017RenewalPj/lotte-super-front/WebContent/WEB-INF/lib/*.jar / lottesuper-commons.jar 가 있으면 안됨.  E:/jenkins-lottesuper/jobs/FRONT_2017_PRJ_RENEWAL/workspace/branches/PROJECT/2017RenewalPj/lotte-super-commons/dist/*.jar 과 충돌 생길수 있음. 단 서버에는 배포하므로 있어야함.--> 
+			<fileset dir="${hdsnWrkSpPath}/${JOB_NAME}/workspace/${svnReposNm}/${hdsnBranchPath}/${prj.name}/${srcLibPath}">
+				<include name="*.jar" />
+			</fileset>
+			<!-- E:/jenkins-lottesuper/jobs/FRONT_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-front/WebContent/WEB-INF/classes --><!-- FO static class 파일들-->
+			<dirset dir="${srcStaticClassesPath}" />
+		    <!-- E:/jenkins-lottesuper/jobs/FRONT_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-front/WebContent/WEB-INF/dynamic_classes --><!-- FO dynamic class 파일들 -->
+			<dirset dir="${srcDynamicClassesPath}" />
+		</path>
+		
+		<!-- E:/jenkins-lottesuper/jobs/FRONT_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-front/WebContent/WEB-INF/classes -->				
+	    <mkdir dir="${srcStaticClassesPath}" />
+	    <!-- E:/jenkins-lottesuper/jobs/FRONT_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-front/WebContent/WEB-INF/dynamic_classes -->
+		<mkdir dir="${srcDynamicClassesPath}" />
+
+
+	    <!-- Static / Dynamic Java Compile -->
+		<!-- static -->	
+		<!-- srcStaticJavaPath = E:/jenkins-lottesuper/jobs/FRONT_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-front/src -->
+		<!-- srcStaticClassesPath = E:/jenkins-lottesuper/jobs/FRONT_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-front/WebContent/WEB-INF/classes -->
+		<javac source="1.7" 
+			target="1.7" 
+			srcdir="${srcStaticJavaPath}"
+			classpathref="classpath"
+			destdir="${srcStaticClassesPath}"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			fork="false" 
+			memoryMaximumSize="256m"
+			includeantruntime="false"/>
+			
+		<!-- dynamic -->		
+		<!-- srcDynamicJavaPath    = E:/jenkins-lottesuper/jobs/FRONT_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-front/src_dynamic -->
+		<!-- srcDynamicClassesPath = E:/jenkins-lottesuper/jobs/FRONT_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-front/WebContent/WEB-INF/dynamic_classes -->
+		<javac source="1.7"
+			target="1.7"
+			srcdir="${srcDynamicJavaPath}"
+			classpathref="classpath"
+			destdir="${srcDynamicClassesPath}"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			fork="false"
+			memoryMaximumSize="256m"
+			includeantruntime="false"/>  
+
+
+		<!-- dynamic 폴더로 XML 파일들 전송 -->
+		<!-- srcDynamicJavaPath    = E:/jenkins-lottesuper/jobs/FRONT_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-front/src_dynamic -->
+		<!-- srcDynamicClassesPath = E:/jenkins-lottesuper/jobs/FRONT_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-front/WebContent/WEB-INF/dynamic_classes -->
+		<copy todir="${srcDynamicClassesPath}">
+			<fileset dir="${srcDynamicJavaPath}">
+				<include name="**/**/*.xml"/>
+		    </fileset>
+		</copy>
+		
+		<!-- 19.02.11 src에 properties 전송 -->
+		<copy todir="${srcStaticClassesPath}">
+					<fileset dir="${srcStaticJavaPath}">
+						<include name="*.properties"/>
+				    </fileset>
+				</copy>
+		
+		<echo> 컴파일 완료 pack 시작 </echo>
+	</target>
+	
+	
+	<!-- **************************************************************** -->
+	<!-- PACK -->
+	<!-- **************************************************************** -->
+	<target name="pack">
+		<!-- E:/jenkins-lottesuper/jobs/FRONT_2017_PRJ_RENEWAL/workspace/lottesuper2011/pack/PROJECT/lotte-super-front/project/front -->
+		<!-- Pack 폴더 삭제후 재생성 -->
+		<delete dir="${pack.real.path}" /> <!-- 2013-01-02 추가 -->
+		<mkdir dir="${pack.real.path}" />  <!-- 2013-01-02 추가 -->
+
+			<!-- 
+					# BackUp Source
+					1) static-root
+					zip -r front_static-root_20170917.zip css css_jsp css_ssl js js_ssl v3
+			
+					2) WEB-INF
+					zip -r front_WEB-INF_20170917.zip jsp classes dynamic_classes x2config x2scenario *.xml lib/lottesuper-commons.jar
+			-->
+			<!-- copy todir=E:/jenkins-lottesuper/jobs/FRONT_2017_PRJ_RENEWAL/workspace/lottesuper2011/pack/PROJECT/lotte-super-front/project/front -->
+			<copy todir="${hdsnWrkSpPath}/${JOB_NAME}/workspace/${svnReposNm}/${hdsnPackPath}/${prj.name}/${deploy.id}/project/front">
+				<fileset dir="${hdsnWrkSpPath}/${JOB_NAME}/workspace/lottesuper2011/branches/PROJECT/${prj.name}/lotte-super-front/WebContent">
+					<!--<include name="**/**"/>-->
+					<include name="WEB-INF/classes/**/*"/><!-- Build 되어있는 것들 -->
+					<include name="WEB-INF/dynamic_classes/**/*"/><!-- Build 되어있는 것들 -->
+					<include name="WEB-INF/jsp/**/*"/>
+					<!-- 제외요청 20180418 -->
+					<exclude name="WEB-INF/jsp/common/include/_js.jsp"/>
+					<exclude name="WEB-INF/jsp/common/include/_js_popup.jsp"/>
+					<include name="WEB-INF/x2config/messages/**/*"/>
+					<!-- AWS 관련으로 생성 20180418 -->
+					<include name="WEB-INF/x2config/x2config-test.xml"/>
+					<include name="WEB-INF/x2config/x2config-stg.xml"/>
+					<include name="WEB-INF/x2config/x2config-real.xml"/>
+					<include name="WEB-INF/x2config/log4jconfig-stg.xml"/>
+					<include name="WEB-INF/x2config/log4jconfig-test.xml"/>
+					<include name="WEB-INF/x2scenario/**/*"/>
+					<!-- KT 기가지니 관련으로 18.07.20 추가 -->
+					<include name="WEB-INF/web.xml" />
+					
+					<!--<include name="WEB-INF/lib/lottesuper-commons.jar"/>-->
+		<!--  static-root 미포함 20180416 LCMS 사용
+					<include name="static-root/v3/**/*"/>
+					<include name="static-root/js/**/*"/>
+					<include name="static-root/js_ssl/**/*"/>
+					<include name="static-root/css/**/*"/>
+					<include name="static-root/css_jsp/**/*"/>
+					<include name="static-root/css_ssl/**/*"/>    -->
+			    </fileset>
+			</copy>
+		
+		<antcall target="copy_lottesuper_commons" />
+
+	</target>
+	
+	<!-- copy todir = E:/jenkins-lottesuper/jobs/FRONT_2017_PRJ_RENEWAL/workspace/lottesuper2011/pack/PROJECT/lotte-super-front/project/front/WEB-INF/lib -->
+	<!-- fileset dir = E:/jenkins-lottesuper/jobs/FRONT_2017_PRJ_RENEWAL/workspace/lottesuper2011/pack/PROJECT/lotte-super-commons/project/front/WEB-INF/lib/*.* -->
+	
+		<target name="copy_lottesuper_commons">
+		<copy todir="${hdsnWrkSpPath}/${JOB_NAME}/workspace/${svnReposNm}/${hdsnPackPath}/${prj.name}/${deploy.id}/${svrLibPath}">
+			<fileset dir="${comm.wrksp.path}/${svnReposNm}/${hdsnPackPath}/${prj.name}/${comm.deploy.id}/${comm.pack.lib.path}">
+				<include name="*.*"/>
+		    </fileset>
+		</copy>
+	</target>
+
+	
+	<!-- zip destfile= E:/jenkins-lottesuper/jobs/FRONT_2017_PRJ_RENEWAL/workspace/lottesuper2011/pack/PROJECT/lotte-super-front/project/front/front_project.zip -->
+	<!-- basedir= E:/jenkins-lottesuper/jobs/FRONT_2017_PRJ_RENEWAL/workspace/lottesuper2011/pack/PROJECT/lotte-super-front/project/front -->
+	<!--
+	<target name="zip">
+	<zip destfile="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/project/front/front_project.zip"
+	    basedir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/project/front"
+		includes="**/**"/>
+	</target>
+    -->
+		
+		
+
+	<!-- ##### SSH SEND ##### -->
+	<!-- 1. SCP (from local to Server) -->
+	<target name="ssh_send_source">
+		<scp todir="${user.id}:${user.pwd}@${was.ip}:/esuper/project/front" trust="true">
+			<fileset dir="${hdsnWrkSpPath}/${JOB_NAME}/workspace/${svnReposNm}/${hdsnPackPath}/${prj.name}/${deploy.id}/project/front">
+				<include name="*.zip"></include>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</scp>
+	</target>	
+	
+	<target name="ssh_unzip">
+			<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+				trust="true" verbose="false" command="cd /esuper/project/front;unzip -o -q front_project.zip" />
+	</target>
+
+	<!-- #### SSH JESU RESTART ####-->
+	<target name="ssh_restart_jeus" depends="check_exist,ip_check" if="isRestart">	 <!-- only test - restart_jeus -->
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" command="ja downcon ${con_front};ja startcon ${con_front}" />
+	</target>
+	
+	<target name="tar.was">
+		<tar destfile="E:/jenkins-lottesuper/jobs/${JOB_NAME}/workspace/awsdeploy/FO_prj_WAS.tar" longfile="gnu">
+			<!-- <tarfileset dir="E:\jenkins-lottesuper\jobs\AWS_LOTTESUPER_FRONT_PROJECT\workspace\lottesuper2011\pack\TEST\FO_20180308_1330">  -->
+			<!-- <tarfileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/project/front">  -->
+				<tarfileset dir="${pack.real.path}">
+					<include name="**/*/**"/>
+				</tarfileset>		
+		</tar>	
+	</target>
+	<target name="s3.copy">
+			<copy todir="E:/jenkins-lottesuper/jobs/${JOB_NAME}/workspace/awsdeploy">
+	 			<fileset dir="E:/jenkins-lottesuper/jobs/${JOB_NAME}/workspace/S3">
+					<exclude name="**/.svn/**" />
+				</fileset>
+			</copy>
+	</target>
+	
+	<target name="sh.replace">
+				<replace dir="E:/jenkins-lottesuper/jobs/${JOB_NAME}/workspace/awsdeploy/scripts" value="${target}">
+					<include name="*Start.sh"/>
+					<replacetoken>target</replacetoken>
+				</replace>
+			</target>
+
+</project>

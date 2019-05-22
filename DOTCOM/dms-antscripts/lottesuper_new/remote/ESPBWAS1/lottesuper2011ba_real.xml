@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottesuper2011ba_test">
+	<property name="deploy.id" value="${DEPLOY_ID}"/>
+	<property name="deploy.dir" value="/usr1/home/jeus/deploy"/>
+	<property name="app.dir" value="project/batch"/>
+	
+	<property name="base.dir" value="/esuper/project"/>
+	<property name="batch.dir" value="${base.dir}/batch"/>
+	
+	<property name="batch.test.dir" value="${base.dir}/batch/deploytest"/>
+		
+	<!-- source.dir = /usr1/home/jeus/deploy/BA_20170125_1330  -->
+	<property name="source.dir" value="${deploy.dir}/${deploy.id}"/>
+	
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->		
+	<target name="check_host">
+		<condition property="isHost">
+			<contains string="${hostname}" substring="espbwas"/>
+		</condition>
+		<echo>hostname is `${hostname}`</echo>
+	</target>
+			
+	<target name="check_valid" depends="check_host" unless="isHost">
+		<fail message="배포 대상 서버가 아닙니다."/>
+	</target>
+
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->
+	<!-- source.dir = /usr1/home/jeus/deploy/src/BA_20170124_1330 -->
+	<target name="check_exist">
+		<condition property="isExistBA">
+			<resourceexists>
+				<file file="${source.dir}"/>
+			</resourceexists>
+		</condition>
+	</target>
+
+	<!-- ================================================== -->
+	<!-- init -->
+	<!-- ================================================== -->
+	<target name="init">
+		<antcall target="check_valid" />
+		<antcall target="delete_sources" />
+		<antcall target="make_directory" />
+	</target>
+
+	<target name="ssh_init">
+		<antcall target="check_valid" />
+		<antcall target="delete_sources" />
+		<antcall target="make_directory" />
+	</target>
+
+	<target name="delete_sources">
+		<echo>Target directory `${source.dir}/project`...</echo>
+		<delete dir="${source.dir}/project" />
+	</target>
+	
+	<target name="make_directory">
+		<echo>Target directory `${source.dir}`...</echo>
+		<mkdir dir="${source.dir}" />
+	</target>		
+
+	<!-- ================================================== -->
+	<!-- ssh deploy -->
+	<!-- ================================================== -->
+	<target name="ssh_deploy_was">
+		<antcall target="ssh_backup_was" />
+		<antcall target="ssh_copy_was" />
+	</target>
+
+	<!--
+	${source.dir}/${app.dir}                          =   /usr1/home/jeus/deploy/BA_20170124_1330/project/batch
+	${batch.dir}                                                     =  /esuper/project/batch
+	${source.dir}_backup/project/batch  = /usr1/home/jeus/deploy/BA_20170124_1330_backup/project/batch 
+	-->
+	<!-- ${source.dir}/${app.dir} = -->
+	<target name="ssh_backup_was">
+			<echo>Backup ${source.dir}</echo>
+			<java jvm="/usr/java1.6/bin/java" fork="yes"
+			      failonerror="yes"
+			      jar="${ant.home}/bin/lotte.jar">
+				<arg value="${source.dir}/${app.dir}"/>
+				<arg value="${batch.dir}"/>
+				<arg value="${source.dir}_backup/project/batch"/>
+			</java>
+  </target>
+		
+	<!-- ================================================== -->
+	<!-- copy -->
+	<!-- ================================================== -->	
+	<target name="copy_was">
+		<echo>copy to docroot</echo>
+		<copy todir="${batch.dir}" failonerror="false" overwrite="true">
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="conf/**/*"/>
+				<include name="lib/**/*"/>
+				<include name="*.sh"/>
+		    </fileset>
+		</copy>
+	</target>	
+	
+	<!-- batch.dir                      =  /esuper/project/batch  -->	
+	<!-- source.dir/app.dir  =  /usr1/home/jeus/deploy/BA_20170124_1330/project/batch -->
+	<target name="ssh_copy_was">
+		<echo>copy to docroot</echo>
+		<!--
+		<chmod dir="${source.dir}/${app.dir}" perm="ugo+rx" 
+		       includes="*.sh"/>
+		-->		       
+		<copy todir="${batch.dir}" failonerror="false" overwrite="true">
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="conf/**/*"/>
+				<include name="lib/**/*"/>
+				<include name="*.sh"/>
+		    </fileset>
+		</copy>
+		<chmod dir="${batch.dir}" perm="ugo+rx" 
+		       includes="*.sh"/>
+	</target>	
+
+	<!-- batch.test.dir =  /esuper/project/batch/deploytest  -->	
+	<!-- source.dir/app.dir  =  /usr1/home/jeus/deploy/BA_20170124_1330/project/batch -->
+	<target name="ssh_copy_test_was">
+		<echo>copy to docroot</echo>
+		<copy todir="${batch.test.dir}" failonerror="false" overwrite="true">
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="conf/**/*"/>
+				<include name="lib/**/*"/>
+				<include name="*.sh"/>
+		    </fileset>
+		</copy>
+	</target>	
+
+		    	
+	<!-- ================================================== -->
+	<!-- LotteSuper BA ssh_Rollback -->
+	<!-- ================================================== -->
+	<!-- check_exist = /usr1/home/jeus/deploy/BA_20161117_1330 -->
+	
+	<target name="ssh_rollback" depends="check_exist">
+		<antcall target="check_valid"/>
+		<echo message="Rollback Java Applications"/>
+		<antcall target="rollbackba"/>
+	</target>	
+
+	<!-- SSH Rollback -->
+	<!-- source.dir = /usr1/home/jeus/deploy/BA_20170125_1330  -->	
+	<!-- source.dir_backup = /usr1/home/jeus/deploy/BA_20170125_1330_backup  -->
+	<!-- app.dir = project/batch -->
+	<!-- source.dir_backup/app.dir =  /usr1/home/jeus/deploy/BA_20170125_1330_backup/project/batch -->
+	<target name="rollbackba" if="isExistBA">        
+        <copy todir="/esuper/project/batch" overwrite="yes" verbose="true">
+			<fileset dir="${source.dir}_backup/${app.dir}">
+				<include name="conf/**/*"/>
+				<include name="lib/**/*"/>
+				<include name="*.sh"/>
+		    </fileset>
+        </copy>
+    </target>		
+
+</project>

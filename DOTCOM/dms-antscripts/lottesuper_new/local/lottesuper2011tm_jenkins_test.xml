@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottesuper2011tm_jenkins">
+    <taskdef resource="net/sf/antcontrib/antcontrib.properties" />
+    <!-- **************************************************************** -->
+	<!-- PROPERTY -->
+	<!-- **************************************************************** -->
+	<property name="deploy.id" value="${DEPLOY_ID}"/>
+	<property name="comm.deploy.id" value="${COMM_DEPLOY_ID}"/>
+	<!-- deployer.home.dir=D:/deployer/scripts/lottesuper2011tm_jenkins.test.properties -->
+	<property file="${deployer.home.dir}/scripts/${ant.project.name}.${deploy.phase}.properties"/>
+	
+	<!-- 테스트일경우 -->
+	<!-- pack.real.path = E:/jenkins-lottesuper/jobs/LOTTESUPER_TMS_1_TEST_BUILD/workspace/lottesuper2011/pack/TEST/TM_20170131_1330/project/tms -->
+	
+	<!-- 운영일경우 -->
+	<!-- pack.real.path = E:/jenkins-lottesuper/jobs/LOTTESUPER_TMS_1_TEST_BUILD/workspace/lottesuper2011/pack/REAL/TM_20170131_1330/project/tms -->
+	
+	<property name="user.id" value="${svrUserId}"/>
+	<property name="user.pwd" value="${svrUserPassword}"/>
+
+    <property name="init.build.log" value="../logs/${ant.project.name}/${deploy.id}_BUILD.log" />
+	<property name="init.was.log" value="../logs/${ant.project.name}/${deploy.id}_INIT_WAS.log" />
+	<property name="init.web.log" value="../logs/${ant.project.name}/${deploy.id}_INIT_WEB.log" />
+	<property name="dep.was.log" value="../logs/${ant.project.name}/${deploy.id}_DEP_WAS.log" />
+	<property name="rollback.was.log" value="../logs/${ant.project.name}/${deploy.id}_ROLLBACK_WAS.log" />
+	<property name="dep.web.log" value="../logs/${ant.project.name}/${deploy.id}_DEP_WEB.log" />
+	<property name="jeus.restart.log" value="../logs/${ant.project.name}/${deploy.id}_JEUS_RESTART.log" />
+
+	
+	<!-- **************************************************************** -->
+	<!-- BUILD -->
+	<!-- **************************************************************** -->
+	<target name="build">
+<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_TMS_1_TEST_BUILD/workspace/lottesuper2011/branches/TEST/lotte-super-tms/WebContent/WEB-INF/services/TMSIF006SERVICE -->
+			
+		<path id="classpath">
+			<!-- C:/Program Files (x86)/Java/jdk1.7.0_80/jre/lib -->
+			<fileset dir="${java.home.dir}/jre/lib">
+				<include name="rt.jar" />
+			</fileset>
+
+			
+			<!-- Tomcat Library Reference -->
+			<fileset dir="${tomcat.home.dir}/lib">
+				<include name="*.jar" />
+			</fileset>
+
+
+			<fileset dir="E:/jenkins-lottesuper/jobs/LOTTESUPER_TMS_1_TEST_BUILD/workspace/lottesuper2011/branches/TEST/lotte-super-tms/WebContent/WEB-INF/lib">
+				<include name="*.jar" />
+			</fileset>
+
+		</path>
+	    
+			
+		<!-- dynamic -->
+		<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_TMS_1_TEST_BUILD/workspace/lottesuper2011/branches/TEST/lotte-super-tms/WebContent/WEB-INF/services/TMSIF006SERVICE -->
+		<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_TMS_1_TEST_BUILD/workspace/lottesuper2011/branches/TEST/lotte-super-tms/src -->
+		<!-- memoryMaximumSize="256m" 을  memoryMaximumSize="1G" 로 수정 -->
+		<mkdir dir="E:/jenkins-lottesuper/jobs/LOTTESUPER_TMS_1_TEST_BUILD/workspace/lottesuper2011/branches/TEST/lotte-super-tms/WebContent/WEB-INF/services/TMSIF006SERVICE" />
+		<javac source="1.7"
+			target="1.7"
+			srcdir="E:/jenkins-lottesuper/jobs/LOTTESUPER_TMS_1_TEST_BUILD/workspace/lottesuper2011/branches/TEST/lotte-super-tms/src"
+			classpathref="classpath"
+			destdir="E:/jenkins-lottesuper/jobs/LOTTESUPER_TMS_1_TEST_BUILD/workspace/lottesuper2011/branches/TEST/lotte-super-tms/WebContent/WEB-INF/services/TMSIF006SERVICE"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			memoryMaximumSize="1G"
+			includeantruntime="false"/>
+
+
+		<copy todir="E:/jenkins-lottesuper/jobs/LOTTESUPER_TMS_1_TEST_BUILD/workspace/lottesuper2011/branches/TEST/lotte-super-tms/WebContent/WEB-INF/services/TMSIF006SERVICE">
+			<fileset dir="E:/jenkins-lottesuper/jobs/LOTTESUPER_TMS_1_TEST_BUILD/workspace/lottesuper2011/branches/TEST/lotte-super-tms/src">
+				<include name="**/**/*.xml"/>
+		    </fileset>
+		</copy>
+	</target>
+	
+	
+</project>

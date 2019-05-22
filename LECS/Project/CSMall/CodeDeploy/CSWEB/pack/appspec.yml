@@ -1,0 +1,18 @@
+version: 0.0
+os: linux
+files:
+- source: /CSWEB.zip
+  destination: /usr1/home/jeus/deploy
+
+permissions:
+- object: /usr1/home/jeus/deploy
+  pattern: "**"
+  owner: jeus
+  group: www
+  mode: 644
+
+hooks:
+  ApplicationStart:
+   - location: scripts/Start.sh
+     timeout: 900
+     

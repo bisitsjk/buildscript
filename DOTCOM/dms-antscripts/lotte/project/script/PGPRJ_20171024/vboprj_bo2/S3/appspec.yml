@@ -1,0 +1,23 @@
+version: 0.0
+os: linux
+files:
+- source: /bo2_PGPRJ_20171024_PROJECT_WAS.tar
+  destination: /h2010/bo2
+- source: /bo2_PGPRJ_20171024_PROJECT_WEB.tar
+  destination: /h2010/bo2
+
+permissions:
+- object: /h2010/bo2
+  pattern: "**"
+  owner: jeus
+  group: www
+  mode: 644
+
+hooks:
+  ApplicationStop:
+   - location: scripts/ApplicationStop.sh
+     timeout: 60
+  ApplicationStart:
+   - location: scripts/ApplicationStart.sh
+     timeout: 120
+     

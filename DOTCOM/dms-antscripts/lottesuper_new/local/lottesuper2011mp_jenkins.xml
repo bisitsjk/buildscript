@@ -1,0 +1,697 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottesuper2011mp_jenkins">
+    <!-- **************************************************************** -->
+	<!-- PROPERTY -->
+	<!-- **************************************************************** -->
+	<property name="deploy.id" value="${DEPLOY_ID}"/>
+	<property name="comm.deploy.id" value="${COMM_DEPLOY_ID}"/>
+	<!-- D:/deployer/scripts/lottesuper2011mp_jenkins.test.properties -->
+	<!-- D:/deployer/scripts/lottesuper2011mp_jenkins.real.properties -->
+	<property file="${deployer.home.dir}/scripts/${ant.project.name}.${deploy.phase}.properties"/>
+
+	<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_MPICKOFFICE_1_TEST_BUILD/workspace/lottesuper2011/pack/REAL/MP_20160706_1300/project/mback -->
+	<property name="pack.real.path" value="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/${svrWebappPath}" />
+	<property name="comm.wrksp.path" value="E:/jenkins-lottesuper/jobs/LOTTESUPER_COMMONS_1_TEST_BUILD/workspace" />
+	<property name="comm.lib.path" value="lotte-super-commons/lib" />
+	<property name="comm.jar.path" value="lotte-super-commons/dist" />
+	<property name="comm.pack.lib.path" value="project/mback/WEB-INF/lib" />
+	<property name="user.id" value="${svrUserId}"/>
+	<property name="user.pwd" value="${svrUserPassword}"/>
+	
+	<property name="init.build.log" value="../logs/${ant.project.name}/${deploy.id}_BUILD.log" />
+	<property name="init.was.log" value="../logs/${ant.project.name}/${deploy.id}_INIT_WAS.log" />
+	<property name="init.web.log" value="../logs/${ant.project.name}/${deploy.id}_INIT_WEB.log" />
+	<property name="dep.was.log" value="../logs/${ant.project.name}/${deploy.id}_DEP_WAS.log" />
+	<property name="dep.web.log" value="../logs/${ant.project.name}/${deploy.id}_DEP_WEB.log" />
+	<property name="jeus.restart.log" value="../logs/${ant.project.name}/${deploy.id}_JEUS_RESTART.log" />
+	<property name="rollback.was.log" value="../logs/${ant.project.name}/${deploy.id}_ROLLBACK_WAS.log" />
+	
+	<property name="init.cmd" value="mpinit" />
+	<property name="dep.cmd" value="mpdeploy" />	
+
+	<property name="con_pro"     value="esptstb_prodev" />
+	<property name="con_partner" value="esptstb_partnerdev" />
+	<property name="con_mpick"   value="esptstb_mpickingdev" />
+	
+	<!-- 시험배포 자동화용 -->
+	<tstamp><format property="deploy.date" pattern="yyyyMMdd"/></tstamp>
+	<property name="rglr.dep.id" value="MP_${deploy.date}_1330"/>
+
+	<!-- 첫 접수시 0건이면, 다음 접수시 지각한 건 접수하지 않도록 하기위함 -->
+	<property name="lock.workspace" value="E:/jenkins-lottesuper/jobs/LOTTESUPER_MPICKOFFICE_0_TEST_LOCK/workspace" />
+	
+	<!-- properties -->
+	<!-- hudson setting properties
+		deployer.home.dir
+		java.home.dir
+		jeus.home.dir
+		deploy.phase
+	-->
+	
+	<target name="run_build">
+		<antcall target="merge" />
+		<antcall target="build" />
+		<antcall target="pack" />
+	</target>
+	
+	<target name="run_deploy">
+		<antcall target="backup_was" />
+		<antcall target="deploy_was" />
+		<antcall target="copy_was" />
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- CHECK -->
+	<!-- **************************************************************** -->
+	<target name="check_common">
+		<echo>♠ 공통 배포ID가 있는지 확인합니다.</echo>
+		<condition property="existCommon">
+			<and>
+				<contains string="${comm.deploy.id}" substring="CM_" casesensitive="true" />
+				<length string="${comm.deploy.id}" when="greater" length="15"/>
+			</and>
+		</condition>
+	</target>
+	
+	<!-- 2013-01-02 변경 -->
+	<target name="check_rename1">
+		<condition property="existFile1">
+			<resourceexists><file file="${pack.real.path}/WEB-INF/config-${deploy.phase}.xml" /></resourceexists>
+		</condition>
+		<echo>config-${deploy.phase}.xml : ${existFile1}</echo>
+	</target>
+	<target name="check_rename2">
+		<condition property="existFile2">
+			<resourceexists><file file="${pack.real.path}/WEB-INF/jeus-web-dd-${deploy.phase}.xml" /></resourceexists>
+		</condition>
+		<echo>jeus-web-dd-${deploy.phase}.xml : ${existFile2}</echo>
+	</target>
+	<target name="check_rename3">
+		<condition property="existFile3">
+			<resourceexists><file file="${pack.real.path}/WEB-INF/x2config/x2config-${deploy.phase}.xml" /></resourceexists>
+		</condition>
+		<echo>x2config-${deploy.phase}.xml : ${existFile3}</echo>
+	</target>
+	<target name="check_rename4">
+		<condition property="existFile4">
+			<resourceexists><file file="${pack.real.path}/WEB-INF/x2config/log4jconfig-${deploy.phase}.xml" /></resourceexists>
+		</condition>
+		<echo>log4jconfig-${deploy.phase}.xml : ${existFile4}</echo>
+	</target>
+	<target name="check_rename5">
+		<condition property="existFile5">
+			<resourceexists><file file="${pack.real.path}/WEB-INF/lib/report-${deploy.phase}.info" /></resourceexists>
+		</condition>
+		<echo>report-${deploy.phase}.info : ${existFile5}</echo>
+	</target>
+	<target name="check_rename6">
+		<condition property="existFile6">
+				<resourceexists><file file="${pack.real.path}/WEB-INF/lib/ubigateway-${deploy.phase}.property" /></resourceexists>
+		</condition>
+		<echo>ubigateway-${deploy.phase}.property : ${existFile6}</echo>
+	</target>
+	
+	<target name="check_remote_work" unless="isSuccess">
+		<fail message="원격지 작업이 실패하였습니다..." />
+	</target>
+
+	<target name="check_lock_prop">
+		<condition property="existLockProp">
+			<resourceexists>
+				<file file="${lock.workspace}/${rglr.dep.id}_lock.properties"/>
+			</resourceexists>
+		</condition>
+	</target>
+	
+	<target name="check_exist"> 	<!--source type check-->
+		<condition property="isExistClass">
+			<or>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/mback/WEB-INF/dynamic_classes"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/mback/WEB-INF/classes"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/mback/WEB-INF/lib"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/mback/WEB-INF/x2config"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/mback/WEB-INF/x2scenario"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/mback/WEB-INF/config.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/mback/WEB-INF/config-dev.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/mback/WEB-INF/config-test.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/mback/WEB-INF/config-real.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/mback/WEB-INF/jeus-web-dd.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/mback/WEB-INF/jeus-web-dd-dev.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/mback/WEB-INF/jeus-web-dd-test.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/mback/WEB-INF/jeus-web-dd-real.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/mback/WEB-INF/web.xml"/></resourceexists>
+			</or>
+		</condition>
+		<condition property="isExistJsp">
+			<or>
+				<!-- jsp 폴더가 있던지 -->
+				<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_MPICKOFFICE_1_TEST_BUILD/workspace/lottesuper2011/pack/REAL/MP_20160706_1300/project/mback/WEB-INF/jsp-->
+				<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/mback/WEB-INF/jsp"/></resourceexists>
+
+				<!-- mback 폴더 밑에 jsp 파일이나, html 파일이 있다면 -->
+				<resourcecount when="greater" count="0">
+					<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_MPICKOFFICE_1_TEST_BUILD/workspace/lottesuper2011/pack/REAL/MP_20160706_1300/project/mback-->
+					<filelist dir="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/mback" files="*.jsp,*.html"/>
+				</resourcecount>				
+			</or>
+		</condition>
+		
+		<condition property="isJspAndClass">
+			<and>
+				<istrue value="${isExistClass}"/>
+				<istrue value="${isExistJsp}"/>
+			</and>
+		</condition>
+		<condition property="isJsp">
+			<and>
+				<isfalse value="${isExistClass}"/>
+				<istrue value="${isExistJsp}"/>
+			</and>
+		</condition>
+		<condition property="isClass">
+			<and>
+				<istrue value="${isExistClass}"/>
+				<isfalse value="${isExistJsp}"/>
+			</and>
+		</condition>
+		<condition property="isExist">
+			<or>
+				<istrue value="${isExistClass}"/>
+				<istrue value="${isExistJsp}"/>
+			</or>
+		</condition>		
+		<condition property="isRestart">
+			<or>
+				<istrue value="${isJspAndClass}"/>
+				<istrue value="${isClass}"/>
+			</or>
+		</condition>
+		<echo>isJsp : ${isJsp} </echo>
+		<echo>isClass : ${isClass} </echo>
+		<echo>isJspAndClass : ${isJspAndClass} </echo>
+		<echo>jeus restart - >> ${isRestart}</echo>
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- LOCK, 접수 : 정기배포, 자동접수 시에만 사용 -->
+	<!-- **************************************************************** -->
+	<target name="set_prop" unless="existLockProp">
+		<propertyfile file="${lock.workspace}/${rglr.dep.id}_lock.properties">
+			<entry key="deploy_count" type="int" value="0" />
+			<entry key="first_error" value="false" />
+		</propertyfile>
+	</target>
+		
+	<target name="exec_app">
+		<property file="${lock.workspace}/${rglr.dep.id}_lock.properties" />
+		
+		<condition property="isStop">
+			<equals arg1="${first_error}" arg2="true" trim="true" />
+		</condition>
+		<fail if="${isStop}" message="당일 접수한 배포 건이 없습니다." />		
+		
+		<java jvm="${java.home.dir}/bin/java" fork="yes"
+		      failonerror="false"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar"
+			  errorproperty="error">
+			<arg value="${ant.project.name}"/>
+			<arg value="${rglr.dep.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="accept"/>
+		</java>
+		<condition property="isError">
+			<length string="${error}" when="greater" length="0" />
+		</condition>
+		
+		<condition property="isFirstError">
+			<and>
+				<istrue value="${isError}" />
+				<equals arg1="0" arg2="${deploy_count}" trim="true" />
+			</and>
+		</condition>
+		
+		<propertyfile file="${lock.workspace}/${rglr.dep.id}_lock.properties">
+			<entry key="deploy_count" default="0" type="int" operation="+" />
+			<entry key="first_error" value="${isFirstError}" />
+		</propertyfile>
+		
+		<fail if="${isError}" message="." />
+		
+		<record name="${ant.project.name}_param.properties" emacsmode="true" action="start" />
+		<echo>DEPLOY_ID=${rglr.dep.id}</echo>
+		<record name="${ant.project.name}_param.properties" emacsmode="true" action="stop" />
+	</target>
+	
+	<target name="accept" depends="check_lock_prop">
+		<antcall target="set_prop" />
+		<antcall target="exec_app" />
+	</target>	
+	
+	<!-- **************************************************************** -->	
+	<!-- MERGE -->
+	<!-- **************************************************************** -->
+	<target name="merge">
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="merge"/>
+		</java> 
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- BUILD -->
+	<!-- **************************************************************** -->
+	<target name="build">
+		<record name="${init.build.log}" action="start"/>
+		<!-- 빌드에 필요한 추가정보 획득  -->
+		<!-- 파일로 저장 -->
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="build"/>
+		</java>		
+		<!-- 추가정보가 담겨있는 파일에서 값을 획득 -->
+		<!-- Jar Build 시 info 파일 생성 -->
+		<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_MPICKOFFICE_1_TEST_BUILD/workspace/lottesuper2011/MP_20160706_1300.info -->
+		<property file="${hdsnWrkSpPath}/${svnReposNm}/${deploy.id}.info"/>
+		<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_MPICKOFFICE_1_TEST_BUILD/workspace/lottesuper2011/branches/REAL/lotte-super-mpicking/src -->
+		<property name="srcStaticJavaPath" value="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcJavaPath1}" />
+
+		<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_MPICKOFFICE_1_TEST_BUILD/workspace/lottesuper2011/branches/REAL/lotte-super-mpicking/src_dynamic -->
+		<property name="srcDynamicJavaPath" value="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcJavaPath0}" />
+
+		<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_MPICKOFFICE_1_TEST_BUILD/workspace/lottesuper2011/branches/REAL/lotte-super-mpicking/WebContent/WEB-INF/classes -->
+		<property name="srcStaticClassesPath" value="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath1}" />
+
+		<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_MPICKOFFICE_1_TEST_BUILD/workspace/lottesuper2011/branches/REAL/lotte-super-mpicking/WebContent/WEB-INF/dynamic_classes -->
+		<property name="srcDynamicClassesPath" value="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath0}" />
+				
+		<path id="classpath">
+			<fileset dir="${java.home.dir}/jre/lib">
+				<include name="rt.jar" />
+			</fileset>
+			<fileset dir="${jeus.home.dir}/lib/datasource">
+				<include name="*.jar" />
+			</fileset>
+			<fileset dir="${jeus.home.dir}/lib/system">
+				<include name="*.jar" />
+			</fileset>
+			<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_COMMONS_1_TEST_BUILD/workspace/lottesuper2011/branches/REAL/lotte-super-commons/lib/*.jar -->
+			<fileset dir="${comm.wrksp.path}/${svnReposNm}/${hdsnBranchPath}/${comm.lib.path}">
+				<include name="*.jar" />
+			</fileset>
+
+			<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_COMMONS_1_TEST_BUILD/workspace/lottesuper2011/branches/REAL/lotte-super-commons/dist -->
+			<fileset dir="${comm.wrksp.path}/${svnReposNm}/${hdsnBranchPath}/${comm.jar.path}">
+				<include name="*.jar" />
+			</fileset>
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcLibPath}">
+				<include name="*.jar" />
+			</fileset>
+			<dirset dir="${srcStaticClassesPath}" />
+			<dirset dir="${srcDynamicClassesPath}" />
+		</path>
+		
+	    <!-- static -->
+	    <mkdir dir="${srcStaticClassesPath}" />
+		<javac source="1.6" 
+			target="1.6" 
+			srcdir="${srcStaticJavaPath}"
+			classpathref="classpath"
+			destdir="${srcStaticClassesPath}"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			fork="true" 
+			memoryMaximumSize="256m"
+			includeantruntime="false"/>
+			
+		<!-- dynamic -->
+		<mkdir dir="${srcDynamicClassesPath}" />
+		<javac source="1.6"
+			target="1.6"
+			srcdir="${srcDynamicJavaPath}"
+			classpathref="classpath"
+			destdir="${srcDynamicClassesPath}"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			fork="true"
+			memoryMaximumSize="256m"
+			includeantruntime="false"/>
+
+		<copy todir="${srcDynamicClassesPath}">
+			<fileset dir="${srcDynamicJavaPath}">
+				<include name="**/**/*.xml"/>
+		    </fileset>
+		</copy>
+		
+		<record name="${init.build.log}" action="stop"/>
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- PACK -->
+	<!-- **************************************************************** -->
+	<target name="pack">
+		<delete dir="${pack.real.path}" /> <!-- 2013-01-02 추가 -->
+		<mkdir dir="${pack.real.path}" />  <!-- 2013-01-02 추가 -->
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="pack"/>
+		</java>
+		
+		<!-- 2013-01-02 변경 -->
+		<antcall target="config.xml" />
+		<antcall target="jeus-web-dd.xml" />
+		<antcall target="x2config.xml" />
+		<antcall target="log4jconfig.xml" />
+		<antcall target="report.info" />
+		<antcall target="ubigateway.property" />
+			
+		<antcall target="copy_lottesuper_commons" />
+	</target>
+	<!-- rename -->
+	<target name="config.xml" depends="check_rename1" if="existFile1">
+		<move file="${pack.real.path}/WEB-INF/config-${deploy.phase}.xml" 
+			  tofile="${pack.real.path}/WEB-INF/config.xml" overwrite="true" verbose="true" />
+	</target>
+	<target name="jeus-web-dd.xml" depends="check_rename2" if="existFile2">
+		<move file="${pack.real.path}/WEB-INF/jeus-web-dd-${deploy.phase}.xml" 
+			  tofile="${pack.real.path}/WEB-INF/jeus-web-dd.xml" overwrite="true" verbose="true" />
+	</target>
+	<target name="x2config.xml" depends="check_rename3" if="existFile3">
+		<move file="${pack.real.path}/WEB-INF/x2config/x2config-${deploy.phase}.xml" 
+			  tofile="${pack.real.path}/WEB-INF/x2config/x2config.xml" overwrite="true" verbose="true" />
+	</target>
+	<target name="log4jconfig.xml" depends="check_rename4" if="existFile4">
+		<move file="${pack.real.path}/WEB-INF/x2config/log4jconfig-${deploy.phase}.xml" 
+			  tofile="${pack.real.path}/WEB-INF/x2config/log4jconfig.xml" overwrite="true" verbose="true" />
+	</target>			  	
+	<target name="report.info" depends="check_rename5" if="existFile5">
+		<move file="${pack.real.path}/WEB-INF/lib/report-${deploy.phase}.info" 
+			tofile="${pack.real.path}/WEB-INF/lib/report.info" overwrite="true" verbose="true" />
+	</target>
+	<target name="ubigateway.property" depends="check_rename6" if="existFile6">
+		<move file="${pack.real.path}/WEB-INF/lib/ubigateway-${deploy.phase}.property" 
+			tofile="${pack.real.path}/WEB-INF/lib/ubigateway.property" overwrite="true" verbose="true" />
+	</target>
+	<!-- common -->		
+	<target name="copy_lottesuper_commons" depends="check_common" if="existCommon">
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/${svrLibPath}">
+			<fileset dir="${comm.wrksp.path}/${svnReposNm}/${hdsnPackPath}/${comm.deploy.id}/${comm.pack.lib.path}">
+				<include name="*.*"/>
+		    </fileset>
+		</copy>
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- BACKUP -->
+	<!-- **************************************************************** -->
+	<target name="backup_was">
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="deploy"/>
+			<arg value="${was.ip}" />
+			<arg value="21" />
+			<arg value="${user.id}" />
+			<arg value="${user.pwd}" />
+		</java> 
+	</target>
+	<target name="backup_web">
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="deploy"/>
+			<arg value="${web.ip}" />
+			<arg value="21" />
+			<arg value="${user.id}" />
+			<arg value="${user.pwd}" />
+		</java> 
+	</target>
+
+	<!-- **************************************************************** -->
+	<!-- DEPLOY -->
+	<!-- **************************************************************** -->
+	<target name="deploy_was" depends="check_exist" if="isExist">
+		<antcall target="init_was" />
+		<antcall target="send_was" />
+	</target>
+
+	<target name="init_was">
+		<tstamp>
+			<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>초기화 작업을 진행합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+		<echo>${was.ip} 접속을 시작합니다... [${conn_time}]</echo>
+		<record name="${init.was.log}" action="start"/>
+		<telnet server="${was.ip}" userid="${user.id}" password="${user.pwd}">
+			<read>/jeus]%</read>
+			<write>cd deploy</write>
+			<read>/jeus/deploy]%</read>
+			<write>./${init.cmd} ${deploy.id}</write>
+			<read>/jeus/deploy]%</read>
+			<write>exit</write>
+		</telnet>
+		<record name="${init.was.log}" action="stop"/>
+		<tstamp>
+			<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${was.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<resourcecontains resource="${init.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>초기화 작업이 완료되었습니다...</echo>
+	</target>
+	
+	<target name="send_was">
+		<ftp server="${was.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${nas.dir}/${deploy.id}"
+		     action="put" passive="yes">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}">
+				<include name="project/mback/**/*"></include>
+				<exclude name="project/mback/WEB-INF/config-*.xml"></exclude>
+				<exclude name="project/mback/WEB-INF/jeus-web-dd-*.xml"></exclude>
+				<exclude name="project/mback/WEB-INF/x2config/x2config-*.xml"></exclude>
+				<exclude name="project/mback/WEB-INF/x2config/log4jconfig-*.xml"></exclude>
+				<exclude name="project/mback/WEB-INF/lib/report-*.info"></exclude>
+				<exclude name="project/mback/WEB-INF/lib/ubigateway-*.property"></exclude>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</ftp>
+	</target>
+	
+	<target name="copy_was"> <!-- for 운영 server -->
+		<tstamp>
+			<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>deploy 작업을 진행합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+		<echo>${was.ip} 접속을 시작합니다... [${conn_time}]</echo>
+		<record name="${dep.was.log}" action="start"/>
+		<telnet server="${was.ip}" userid="${user.id}" password="${user.pwd}">
+			<read>/jeus]%</read>
+			<write>cd deploy</write>
+			<read>/deploy]%</read>
+			<write>find ${deploy.id} -type f</write>
+			<read>/deploy]%</read>
+			<write>./${dep.cmd} ${deploy.id}</write>
+			<read>/deploy]%</read>
+			<write>exit</write>
+		</telnet>
+		<record name="${dep.was.log}" action="stop"/>
+		<tstamp>
+			<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${was.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<resourcecontains resource="${dep.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>deploy 작업이 완료되었습니다...</echo>
+	</target>
+	
+	<target name="test_copy_was"> <!-- for test server -->
+		<tstamp>
+			<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>deploy 작업을 진행합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+		<echo>${was.ip} 접속을 시작합니다... [${conn_time}]</echo>
+		<record name="${dep.was.log}" action="start"/>
+		<telnet server="${was.ip}" userid="${user.id}" password="${user.pwd}">
+			<read>/jeus]%</read>
+			<write>cd deploy</write>
+			<read>/deploy]%</read>
+			<write>find ${deploy.id} -type f</write>
+			<read>/deploy]%</read>
+			<write>./${dep.cmd} ${deploy.id}</write>
+			<read>/deploy]%</read>
+			<write>exit</write>
+		</telnet>
+		<record name="${dep.was.log}" action="stop"/>
+		<tstamp>
+			<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${was.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<resourcecontains resource="${dep.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>deploy 작업이 완료되었습니다...</echo>
+	</target>
+
+	<target name="restart_jeus" depends="check_exist" if="isRestart">	 <!-- only test - restart_jeus -->
+		<tstamp>
+			<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>jeus restart 작업을 진행합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+		<echo>${was.ip} 접속을 시작합니다... [${conn_time}]</echo>
+		<record name="${jeus.restart.log}" action="start"/>
+		<telnet server="${was.ip}" userid="${user.id}" password="${user.pwd}">
+			<read>/jeus]%</read>
+			<write>ja downcon ${con_mpick}</write>
+			<read>/jeus]%</read>
+			<write>ja startcon ${con_mpick}</write>
+			<read>/jeus]%</read>
+			<write>exit</write>
+		</telnet>
+		<record name="${jeus.restart.log}" action="stop"/>
+		<tstamp>
+			<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${was.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<and>
+			<resourcecontains resource="${jeus.restart.log}" substring="Succeeded to start ${con_pro}" casesensitive="true" />
+			<resourcecontains resource="${jeus.restart.log}" substring="Succeeded to start ${con_partner}" casesensitive="true" />
+			<resourcecontains resource="${jeus.restart.log}" substring="Succeeded to start ${con_mpick}" casesensitive="true" />
+			</and>
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>jeus restart 작업이 완료되었습니다...</echo>
+	</target>
+	<!-- **************************************************************** -->
+	<!-- RECORD -->
+	<!-- **************************************************************** -->	
+	<target name="record">
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="record"/>
+		</java> 
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- NOTICE -->
+	<!-- **************************************************************** -->	
+	<target name="notice_fail">
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="notice"/>
+			<arg value="FAIL"/>
+		</java> 
+	</target>
+	
+	<target name="notice_success">
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="notice"/>
+			<arg value="SUCCESS"/>
+		</java> 
+	</target>	
+	
+	<!-- **************************************************************** -->
+	<!-- ROLLBACK FOR TEST SERVER -->
+	<!-- **************************************************************** -->
+	<target name="rollback_was">
+		<antcall target="rollback_start_time" />
+		<antcall target="rollback_mback" />
+		<!-- policy change in 2014.10.22 that separate pro, parnter and mpicking.    
+		<antcall target="rollback_back" />
+		<antcall target="rollback_partner" />		
+		-->
+		<antcall target="rollback_end_time" />
+	</target>
+	
+	<target name="rollback_start_time">
+		<tstamp>
+			<format property="DSTAMP" pattern="yyyy.MM.dd"/>
+			<format property="TSTAMP" pattern="HH:mm"/>
+		</tstamp>
+		<echo message="Rollback Start ==> ${DSTAMP}-${TSTAMP}"/>
+	</target>
+	
+	<target name="rollback_end_time">
+		<tstamp>
+			<format property="DSTAMP" pattern="yyyy.MM.dd"/>
+			<format property="TSTAMP" pattern="HH:mm"/>
+		</tstamp>
+		<echo message="Rollback End ==> ${DSTAMP}-${TSTAMP}"/>
+	</target>
+	
+	<!-- 2. FTP (from local to nas) -->
+	<target name="rollback_mback">
+		<ftp server="${was.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${svrDocRoot}/project/mback"
+		     action="put"
+			 verbose="yes"
+			 passive="yes">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}_backup/project/mback">
+				<include name="WEB-INF/**/*"></include>
+			</fileset>
+		</ftp>
+	</target>
+	<!--
+	<target name="rollback_back">
+		<ftp server="${was.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${svrDocRoot}/project/mback"
+		     action="put"
+			 verbose="yes"
+			 passive="yes">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}_backup/project/mback">
+				<include name="WEB-INF/**/*"></include>
+			</fileset>
+		</ftp>
+	</target>
+	<target name="rollback_partner">
+		<ftp server="${was.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${svrDocRoot}/project/partner"
+		     action="put"
+			 verbose="yes"
+			 passive="yes">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}_backup/project/mback">
+				<include name="WEB-INF/**/*"></include>
+			</fileset>
+		</ftp>
+	</target>	
+	-->
+</project>

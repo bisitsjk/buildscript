@@ -1,0 +1,246 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<project name="LOHBS_MOBILE" xmlns:artifact="antlib:org.apache.maven.artifact.ant">
+	<path id="maven-ant-tasks.classpath" path="${ant.home}/lib/maven-ant-tasks-2.1.3.jar"/>
+	<typedef resource="org/apache/maven/artifact/ant/antlib.xml"
+	         uri="antlib:org.apache.maven.artifact.ant" classpathref="maven-ant-tasks.classpath"/>
+	<!-- param -->
+	<property name="deploy.id" value="${DEPLOY_ID}"/>
+	<!-- properties -->
+	<property name="java16.home"     value="C:/Program Files (x86)/Java/jdk1.6.0_25"/>
+	<property name="java15.home"     value="C:/Program Files (x86)/Java/jdk1.5.0_12"/>
+	<property name="deployer.home"   value="D:/deployer"/>
+	
+	<property file="${deployer.home}/scripts/${ant.project.name}.properties"/>	
+	
+	<property name="user.id"   value="xclass"/>
+	<property name="user.pwd"  value="aLPd%BgT1)Pl"/>
+	
+	<property name="req.dir"         value="${workspace}${requestPath}/${deploy.id}"/>
+	
+	<property name="src.home"        value="${workspace}${releasePath}"/>
+	<property name="java.src.dir"    value="${src.home}${srcPath}"/>
+	<property name="java.lib.dir"    value="${src.home}${libPath}"/>
+	<property name="pack.dir"        value="${workspace}${packPath}/${deploy.id}"/>
+	
+	<property name="dst.class.dir"   value="${src.home}/${ant.project.name}${svrClassPath}"/>
+	<property name="dst.lib.dir"     value="${src.home}/${ant.project.name}${svrLibPath}"/>
+	
+	<property name="java.dyna.src.dir"    value="${src.home}${srcDynaPath}"/>
+	<property name="dst.dyna.class.dir"   value="${src.home}/${ant.project.name}${svrDynaClassPath}"/>	
+	
+	<property name="remote.home.dir" value="${docRoot}"/>
+	
+	<property name="spring.maven.artifact.version" value="3.0.5.RELEASE"/>
+	
+	<!-- validation -->
+	<target name="param_check">
+		<condition property="isValid">
+			<and>
+			    <contains string="${deploy.id}" substring="LM_" casesensitive="true" />
+				<length string="${deploy.id}" when="greater" length="12"/>
+				<resourceexists>
+					<file file="${req.dir}"/>
+				</resourceexists>
+			</and>
+		</condition>
+	</target>
+	<target name="param_check_fail" unless="isValid">
+		<echo>${req.dir}</echo>
+		<fail message="DEPLOY_ID가 유효하지 않습니다."/>
+	</target>
+	
+	<!-- merge -->
+	<path id="deployerclasspath">
+		<fileset dir="${deployer.home}/lib">
+			<include name="*.jar" />
+		</fileset>
+	</path>	
+	
+	<target name="merge" depends="param_check">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="param_check_fail"/>
+		<antcall target="exec_merge"/>
+	</target>
+	<target name="exec_merge" if="isValid">
+		<java jar="${deployer.home}/bin/deployer1.1.3.jar"
+		      fork="true" failonerror="true" >
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="merge"/>			
+		</java> 
+	</target>
+	
+	<!-- build -->	
+	<artifact:dependencies pathId="dependency.classpath">
+		<dependency groupId="org.springframework" artifactId="spring-aop" version="${spring.maven.artifact.version}"/>
+		<dependency groupId="org.springframework" artifactId="spring-beans" version="${spring.maven.artifact.version}"/>
+		<dependency groupId="org.springframework" artifactId="spring-context" version="${spring.maven.artifact.version}"/>
+		<dependency groupId="org.springframework" artifactId="spring-context-support" version="${spring.maven.artifact.version}"/>
+		<dependency groupId="org.springframework" artifactId="spring-core" version="${spring.maven.artifact.version}"/>
+		<dependency groupId="org.springframework" artifactId="spring-jdbc" version="${spring.maven.artifact.version}"/>
+		<dependency groupId="org.springframework" artifactId="spring-orm" version="${spring.maven.artifact.version}"/>
+		<dependency groupId="org.springframework" artifactId="spring-test" version="${spring.maven.artifact.version}"/>
+		<dependency groupId="org.springframework" artifactId="spring-tx" version="${spring.maven.artifact.version}"/>
+		<dependency groupId="org.springframework" artifactId="spring-web" version="${spring.maven.artifact.version}"/>
+		<dependency groupId="org.springframework" artifactId="spring-webmvc" version="${spring.maven.artifact.version}"/>
+		<dependency groupId="egovframework.rte" artifactId="egovframework.rte.fdl.cmmn" version="2.5.0"/>
+		<dependency groupId="egovframework.rte" artifactId="egovframework.rte.ptl.mvc" version="2.5.0"/>
+		<dependency groupId="egovframework.rte" artifactId="egovframework.rte.psl.dataaccess" version="2.5.0"/>
+		<dependency groupId="egovframework.rte" artifactId="egovframework.rte.fdl.idgnr" version="2.5.0"/>
+		<dependency groupId="egovframework.rte" artifactId="egovframework.rte.fdl.property" version="2.5.0"/>
+		<dependency groupId="org.aspectj" artifactId="aspectjweaver" version="1.6.11"/>
+		<dependency groupId="org.aspectj" artifactId="aspectjrt" version="1.6.9"/>
+		<dependency groupId="aopalliance" artifactId="aopalliance" version="1.0"/>
+		<dependency groupId="org.apache.ibatis" artifactId="ibatis-sqlmap" version="2.3.4.726"/>
+		<dependency groupId="javax.annotation" artifactId="jsr250-api" version="1.0"/>
+		<dependency groupId="javax.servlet" artifactId="servlet-api" version="2.5" scope="provided"/>
+		<dependency groupId="javax.servlet" artifactId="jstl" version="1.2"/>
+		<dependency groupId="commons-dbcp" artifactId="commons-dbcp" version="1.3"/>
+		<dependency groupId="commons-logging" artifactId="commons-logging" version="1.1.1"/>
+		<dependency groupId="commons-beanutils" artifactId="commons-beanutils" version="1.8.3"/>
+		<dependency groupId="commons-lang" artifactId="commons-lang" version="2.6"/>
+		<dependency groupId="junit" artifactId="junit" version="4.8.1"/>
+		<dependency groupId="taglibs" artifactId="standard" version="1.1.2"/>
+		<dependency groupId="cglib" artifactId="cglib" version="2.2"/>
+		<dependency groupId="org.slf4j" artifactId="slf4j-log4j12" version="1.5.11"/>
+		<dependency groupId="log4j" artifactId="log4j" version="1.3alpha-8"/>
+		<dependency groupId="net.sf" artifactId="log4jdbc3" version="1.1"/>
+		<dependency groupId="hsqldb" artifactId="hsqldb" version="1.8.0.10"/>
+		<dependency groupId="org.easymock" artifactId="easymock" version="3.0"/>
+		<dependency groupId="commons-collections" artifactId="commons-collections" version="3.2"/>
+		<dependency groupId="commons-digester" artifactId="commons-digester" version="1.8"/>
+		<dependency groupId="org.antlr" artifactId="antlr" version="3.0.1"/>
+		<dependency groupId="org.codehaus.jackson" artifactId="jackson-mapper-asl" version="1.9.12"/>
+		<dependency groupId="org.codehaus.jackson" artifactId="jackson-core-asl" version="1.9.12"/>
+		<dependency groupId="commons-fileupload" artifactId="commons-fileupload" version="1.2.2"/>
+		<dependency groupId="commons-io" artifactId="commons-io" version="2.4"/>
+		
+		<remoteRepository id="remote.repos" url="http://www.egovframe.go.kr/maven" />
+	</artifact:dependencies>
+	
+	<path id="classpath.ref">
+		<path refid="dependency.classpath"/>
+		
+		<fileset dir="${java.lib.dir}">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="${java15.home}/jre/lib">
+			<include name="rt.jar" />
+		</fileset>
+		<fileset dir="C:/TmaxSoft/JEUS5.0/lib">
+			<include name="**/*.jar" />
+		</fileset>		
+		<fileset dir="${dst.lib.dir}">
+			<include name="*.jar"/>
+		</fileset>
+		
+		<dirset dir="${dst.class.dir}" />
+		<dirset dir="${dst.dyna.class.dir}" />
+	</path>
+	
+	<target name="build">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="compile"/>
+	</target>
+
+	<target name="compile">
+		<javac srcdir="${java.src.dir}"
+		       destdir="${dst.class.dir}"
+		       fork="no"
+		       classpathref="classpath.ref"
+		       nowarn="yes"
+		       source="1.5"
+		       target="1.5"
+		       compiler="javac1.5"
+			   encoding="utf-8" />
+		<copy todir="${dst.class.dir}">
+			<fileset dir="${java.src.dir}">
+				<include name="**/*"/>
+				<exclude name="**/*.java"/>
+			</fileset>
+		</copy>
+		<copy todir="${dst.dyna.class.dir}">
+			<fileset dir="${java.dyna.src.dir}">
+				<include name="**/*"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<!-- pack -->
+	<target name="pack" depends="param_check">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="param_check_fail"/>
+		<antcall target="exec_pack"/>
+	</target>
+	<target name="exec_pack" if="isValid">
+		<delete dir="${pack.dir}" />
+		<java jar="${deployer.home}/bin/deployer1.1.3.jar"
+		      fork="true" failonerror="true" >
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="pack"/>
+		</java>
+	</target>
+	
+	<!-- backup -->
+	<target name="backup" depends="param_check">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="param_check_fail"/>
+		<antcall target="exec_backup"/>
+	</target>
+	<target name="exec_backup" if="isValid">
+		<java jar="${deployer.home}/bin/deployer1.1.3.jar"
+		      fork="true" failonerror="true" >
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="backup"/>
+			<arg value="${host.ip}"/>
+			<arg value="${user.id}"/>
+			<arg value="${user.pwd}"/>
+		</java>
+	</target>
+
+	<!-- deploy -->
+	<target name="deploy" depends="param_check">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="param_check_fail"/>
+		<antcall target="exec_scp"/>
+	</target>
+	<target name="exec_scp" if="isValid">
+		<!--<ftp server="${host.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${remote.home.dir}/lohbs" passive="yes"
+		     action="put">
+			<fileset dir="${pack.dir}/${ant.project.name}/src/main/lohbs" 
+			         includes="**/*"/>
+		</ftp>-->
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${remote.home.dir}/lohbs" trust="true">
+			<fileset dir="${pack.dir}/${ant.project.name}/src/main/lohbs" 
+		         includes="**/*"/>
+		</scp>
+	</target>
+	
+	<!-- rollback -->
+	<target name="rollback" depends="param_check">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="param_check_fail"/>
+		<antcall target="exec_rollback"/>
+	</target>
+	<target name="exec_rollback" if="isValid">
+		<!--<ftp server="${host.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${remote.home.dir}" passive="yes"
+		     action="put">
+			<fileset dir="${pack.dir}_backup/${ant.project.name}" 
+			         includes="**/*"/>
+		</ftp>-->
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${remote.home.dir}/lohbs" trust="true">
+			<fileset dir="${pack.dir}_backup/${ant.project.name}" 
+		         includes="**/*"/>
+		</scp>
+	</target>
+</project>

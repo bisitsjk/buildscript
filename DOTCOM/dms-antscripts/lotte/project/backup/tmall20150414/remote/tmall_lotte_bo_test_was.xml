@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="bo was test deploy" default="help">
+	<!-- ================================================== -->
+	<!-- properties -->
+	<!-- ================================================== -->
+	<property name="dep.id" value="${DEPLOY_ID}" />
+	
+	<property name="source.dir" value="/usr1/home/jeus/deploy/src/${dep.id}" />
+	<property name="java.home"  value="/usr/java1.6" />
+	<property name="ant.home"   value="/usr1/home/jeus/deploy/apache-ant-1.8.2" />
+	<property name="docroot"    value="/h2010" />
+	
+	<!-- real server info -->
+	<property name="her1.ip"  value="10.149.144.65" />
+	<property name="www6.ip"  value="211.233.44.26" />
+	<property name="user.id"  value="jeus" />
+	<property name="user.pwd" value="w&uch6raDa*r" />
+	
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->
+	<target name="check_exist">
+		<condition property="isExistWebapp">
+			<resourceexists>
+				<file file="${source.dir}/bo/webapp"/>
+			</resourceexists>
+		</condition>
+		<condition property="isExistAppinf">
+			<resourceexists>
+				<file file="${source.dir}/bo/APP-INF"/>
+			</resourceexists>
+		</condition>
+		<condition property="isExistCommon">
+			<resourceexists>
+				<file file="${source.dir}/common/conf"/>
+			</resourceexists>
+		</condition>
+		<condition property="isJspAndClass">
+			<and>
+				<istrue value="${isExistWebapp}"/>
+				<istrue value="${isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="isJsp">
+			<and>
+				<istrue value="${isExistWebapp}"/>
+				<isfalse value="${isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="isClass">
+			<and>
+				<isfalse value="${isExistWebapp}"/>
+				<istrue value="${isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="isWeb">
+			<resourceexists>
+				<file file="${source.dir}/bo/webroot"/>
+			</resourceexists>
+		</condition>
+		<condition property="isWas">
+			<or>
+				<istrue value="${isExistWebapp}"/>
+				<istrue value="${isExistAppinf}"/>
+				<istrue value="${isExistCommon}"/>
+			</or>
+		</condition>
+		<condition property="isCommon">
+			<istrue value="${isExistCommon}"/>
+		</condition>
+	</target>
+
+	<target name="check_host">
+		<condition property="isValid">
+			<or>
+			<contains string="${hostname}" substring="ecfowstst"/>
+			<contains string="${hostname}" substring="ecfotst2"/>
+			<contains string="${hostname}" substring="fowasstg"/>
+			</or>
+		</condition>
+		<echo>hostname `${hostname}` is ${isValid}</echo>
+	</target>
+	
+	<target name="check_valid" depends="check_host" unless="isValid">
+		<fail message="배포 대상 서버가 아닙니다."/>
+	</target>
+		
+	
+	<!-- ================================================== -->
+	<!-- default target -->
+	<!-- ================================================== -->
+	<target name="help">
+		<echo>command1 : boinit [deploy id]</echo>
+		<echo>command2 : bodeploy [deploy id]</echo>
+		<echo>command2 : bosync [deploy id]</echo>
+	</target>
+	
+	
+	<!-- ================================================== -->
+	<!-- init -->
+	<!-- ================================================== -->
+	<target name="init">
+		<antcall target="check_valid" />
+		<antcall target="delete_sources" />
+		<antcall target="make_directory" />
+	</target>
+	
+	<target name="delete_sources">
+		<echo>Target directory `${source.dir}/bo`...</echo>
+		<delete dir="${source.dir}/bo" />
+	</target>
+	
+	<target name="make_directory">
+		<echo>Target directory `${source.dir}`...</echo>
+		<mkdir dir="${source.dir}" />
+	</target>
+	
+
+	
+	<!-- ================================================== -->
+	<!-- backup -->
+	<!-- ================================================== -->
+	<target name="backup_was">
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte.jar">
+			<arg value="${source.dir}"/>
+			<arg value="/h2010"/>
+			<arg value="${source.dir}_backup"/>
+		</java>
+	</target>
+		
+		
+	<!-- ================================================== -->
+	<!-- deploy -->
+	<!-- ================================================== -->
+	<target name="was" depends="check_exist" if="${isWas}">
+		<antcall target="check_valid" />
+		<antcall target="backup_was"/>
+		<antcall target="copy_common"/>
+		<antcall target="copy_class"/>
+		<antcall target="copy_jsp"/>
+	</target>
+
+	<target name="copy_jsp" if="isExistWebapp">
+        <echo message="WAS webapp(jsp)"/>
+        <copy todir="/h2010/bo/webapp" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/bo/webapp"
+                     includes="**/*.*"/>
+        </copy>
+    </target>
+
+    <target name="copy_class" if="isExistAppinf">
+        <echo message="WAS APP-INF(class, xml, properties and etc)"/>
+        <copy todir="/h2010/bo/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/bo/APP-INF"
+                     includes="**/*.class,**/*.xml,**/*.properties,**/*.jar,**/*.dat"
+                     excludes="**/*.tar,**/*.zip"/>
+        </copy>
+    </target>
+
+    <target name="copy_common" if="isExistCommon">
+		<echo message="WAS common(common/conf)"/>
+		<copy todir="/h2010/common/conf" overwrite="yes" verbose="true">
+			<fileset dir="${source.dir}/common/conf" 
+			         includes="**/*.*" 
+			         excludes="**/*.tar,**/*.bak,**/*.zip"/>
+		</copy>
+    </target>
+
+
+	<!-- ================================================== -->
+	<!-- sync -->
+	<!-- ================================================== -->
+	<target name="sync">
+		<antcall target="check_valid"/>
+		<antcall target="get_was"/>
+		<antcall target="clean_was"/>
+		<antcall target="untar_was"/>
+		<antcall target="copy_test_properties"/>
+	</target>
+	
+	<target name="sync2">
+		<antcall target="check_valid"/>
+		<antcall target="get_was"/>
+		<antcall target="clean_was"/>
+		<antcall target="untar_was"/>
+		<antcall target="copy_test_properties"/>
+	</target>	
+	
+	<target name="get_was">
+		<echo>docroot에 있는 오래된 tar 파일을 지웁니다.</echo>
+		<delete verbose="true">
+			<fileset dir="/h2010/bo" includes="*_WAS.tar"/>
+		</delete>
+		<echo>운영서버에서 백업받은 tar 파일을 docroot로 가져옵니다.</echo>
+		<ftp server="${her1.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="/ncontents/src/${dep.id}/backup/bo"
+		     action="get">
+			<fileset dir="/h2010/bo"
+				     includes="${dep.id}_WAS.tar"/>
+		</ftp>
+	</target>
+	
+	<target name="del_zip">
+		<delete file="/h2010/bo/${dep.id}_WAS.zip"/>
+	</target>
+	
+	<target name="del_tar">
+		<delete file="/h2010/bo/${dep.id}_WAS.tar"/>
+	</target>
+	
+	<target name="clean_was">
+		<antcall target="clean_pro_was" />
+		<antcall target="clean_cc_was" />
+	</target>
+	<target name="clean_pro_was">
+		<delete verbose="true">
+			<dirset dir="/h2010/bo">
+				<include name="z_APP-INF"/>
+				<include name="z_webapp"/>
+			</dirset>
+		</delete>
+		<move file="/h2010/bo/webapp"  tofile="/h2010/bo/z_webapp" failonerror="false"/>
+		<move file="/h2010/bo/APP-INF" tofile="/h2010/bo/z_APP-INF" failonerror="false"/>
+	</target>
+	<target name="clean_cc_was">
+		<delete verbose="true">
+			<dirset dir="/h2010/cc">
+				<include name="z_APP-INF"/>
+				<include name="z_webapp"/>
+			</dirset>
+		</delete>
+		<move file="/h2010/cc/webapp"  tofile="/h2010/bo/z_webapp" failonerror="false"/>
+		<move file="/h2010/cc/APP-INF" tofile="/h2010/bo/z_APP-INF" failonerror="false"/>
+	</target>
+	
+	<target name="unzip_was">
+		<unzip src="/h2010/bo/${dep.id}_WAS.zip" dest="/h2010/bo" overwrite="yes"/>
+	</target>
+	
+	<target name="untar_was">
+		<antcall target="untar_pro_was" />
+		<antcall target="untar_cc_was" />
+	</target>
+	<target name="untar_pro_was">
+		<untar src="/h2010/bo/${dep.id}_WAS.tar" dest="/h2010/bo" overwrite="yes"/>
+	</target>
+	<target name="untar_cc_was">
+		<untar src="/h2010/bo/${dep.id}_WAS.tar" dest="/h2010/cc" overwrite="yes"/>
+	</target>
+	
+	<target name="copy_test_properties">
+		<copy todir="/h2010/bo/APP-INF/conf">
+			<fileset dir="/h2010/bo/z_APP-INF/conf">
+				<include name="*.tst.*"/>
+			</fileset>
+		</copy>
+	</target>
+
+	
+	<!-- ================================================== -->
+	<!-- boobal all deploy -->
+	<!-- ================================================== -->	
+	<target name="deployfortest">
+		<antcall target="clean_was"/>
+		<antcall target="untar_was"/>
+	</target>
+	
+	<target name="move_was">
+		<antcall target="move_pro_was"/>
+		<antcall target="move_cc_was"/>
+	</target>
+	
+    <target name="move_pro_was">
+        <move todir="/h2010/bo">
+            <fileset dir="/h2010/bo/lotte2010/trunk/bo"/>
+        </move>
+    	<delete dir="/h2010/bo/lotte2010"/>
+    </target>
+	 <target name="move_cc_was">
+        <move todir="/h2010/cc">
+            <fileset dir="/h2010/cc/lotte2010/trunk/bo"/>
+        </move>
+	 	<delete dir="/h2010/cc"/>
+  		<rename src="/h2010/bo" dest="/h2010/cc"/>
+    </target>
+	
+	<target name="move_jar">
+        <move todir="/h2010/bo/APP-INF/lib">
+        	<fileset dir="/h2010/bo/lotteframework2010/branches/PROJECT/tmall_20150414/zCommon/common_lib"/>
+        	<fileset dir="/h2010/bo/lotteframework2010/branches/PROJECT/tmall_20150414/zPDK/dist"/>
+        	<fileset dir="/h2010/bo/lotteframework2010/branches/PROJECT/tmall_20150414/zPriceMgr/dist"/>
+        	<fileset dir="/h2010/bo/lotteframework2010/branches/PROJECT/tmall_20150414/zInterfaces/dist"/>
+        </move>
+		<delete dir="/h2010/bo/lotteframework2010"/>
+    </target>	
+	
+	<!-- ================================================== -->
+	<!-- changing for test only -->
+	<!-- ================================================== -->
+</project>

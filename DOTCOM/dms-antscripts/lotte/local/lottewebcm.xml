@@ -1,0 +1,822 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottewebcm">
+	<import file="./lotteweb.xml"/>
+<!-- **************************************************************** -->
+<!-- PROPERTY -->
+<!-- **************************************************************** -->
+	<property name="deploy.id.prefix" value="CM"/>
+	<property name="init.cmd"     value="cminit"/>
+	<property name="copy.cmd"     value="cmdeploy"/>
+	<property name="rollback.cmd" value="cmrollback"/>
+
+	
+<!-- **************************************************************** -->
+<!-- CHECK -->
+<!-- **************************************************************** -->	
+	<target name="check_exist">
+		<echo>♠ common jar와 properties가 있는지 확인합니다.</echo>
+		<condition property="existCmmJar"> <!-- packing 후 -->
+			<resourcecount when="greater" count="0">
+				<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}">
+					<include name="zCommon/common_lib/*.jar" />
+				</fileset>
+			</resourcecount>
+		</condition>
+		<condition property="existConfA" value="true" else="false"> <!-- packing 후 -->
+			<resourceexists>
+				<file file="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/common/conf/CancelRefund.real.properties"/>
+			</resourceexists>
+		</condition>
+		<condition property="existConfB" value="true" else="false"> <!-- packing 후 -->
+			<resourceexists>
+				<file file="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/common/conf/MCash_Cancel.real.properties"/>
+			</resourceexists>
+		</condition>
+		<condition property="existConfC" value="true" else="false"> <!-- packing 후 -->
+			<resourceexists>
+				<file file="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/common/conf/Mcash.real.properties"/>
+			</resourceexists>
+		</condition>
+		
+		<condition property="existPdkJar"> <!-- packing 전 -->
+			<resourcecount when="greater" count="0">
+				<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}">
+					<include name="zPDK/build/**/*" />
+				</fileset>
+			</resourcecount>		
+		</condition>
+		<condition property="existIfcJar"> <!-- packing 전 -->
+			<resourcecount when="greater" count="0">
+				<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}">
+					<include name="zInterfaces/build/**/*" />
+				</fileset>
+			</resourcecount>				
+		</condition>		
+		<condition property="existPrmJar"> <!-- packing 전 -->
+			<resourcecount when="greater" count="0">
+				<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}">
+					<include name="zPriceMgr/build/**/*" />
+				</fileset>
+			</resourcecount>				
+		</condition>
+		
+		<condition property="existJar">
+			<or>
+				<matches string="${existCmmJar}" pattern="true" />
+				<matches string="${existPdkJar}" pattern="true" />
+				<matches string="${existIfcJar}" pattern="true" />
+				<matches string="${existPrmJar}" pattern="true" />
+			</or>
+		</condition>
+		<echo>common_lib     : ${existCmmJar}</echo>
+		<echo>interfaces.jar : ${existIfcJar}</echo>
+		<echo>pionnet.jar    : ${existPdkJar}</echo>
+		<echo>pricemgr.jar   : ${existPrmJar}</echo>
+		
+		<condition property="existConf">
+			<or>
+				<matches string="${existConfA}" pattern="true" />
+				<matches string="${existConfB}" pattern="true" />
+				<matches string="${existConfC}" pattern="true" />
+			</or>
+		</condition>
+		<echo>CancelRefund.real.properties	: ${existConfA}</echo>
+		<echo>MCash_Cancel.real.properties	: ${existConfB}</echo>
+		<echo>Mcash.real.properties			: ${existConfC}</echo>
+		
+		<condition property="existComm">
+			<or>
+				<matches string="${existJar}" pattern="true" />
+				<matches string="${existConf}" pattern="true" />
+			</or>
+		</condition>
+	</target>
+	
+	<target name="check_host">
+		<condition property="isEcfowstst">
+			<or>
+				<equals arg1="10.149.193.44" arg2="${host.ip}"/>
+				<equals arg1="10.149.192.71" arg2="${host.ip}"/>
+				<equals arg1="10.149.193.39" arg2="${host.ip}"/>
+			</or>
+		</condition>
+		<condition property="isEcbowstst">
+			<or>
+				<equals arg1="10.149.193.60" arg2="${host.ip}"/>
+				<equals arg1="10.149.193.56" arg2="${host.ip}"/>
+			</or>
+		</condition>
+		<condition property="isHercules1">
+			<equals arg1="10.149.144.65" arg2="${host.ip}"/>
+		</condition>
+		<condition property="isProws1">
+			<equals arg1="10.149.144.47" arg2="${host.ip}"/>
+		</condition>
+		<condition property="isEcws1">
+			<equals arg1="10.149.144.75" arg2="${host.ip}"/>
+		</condition>		
+		<condition property="isLottebatch">
+			<or>
+				<equals arg1="211.233.44.17" arg2="${host.ip}"/>
+				<equals arg1="211.233.44.19" arg2="${host.ip}"/>
+				<equals arg1="211.172.253.250" arg2="${host.ip}"/>
+				<equals arg1="211.172.253.251" arg2="${host.ip}"/>
+				<equals arg1="211.172.253.252" arg2="${host.ip}"/>
+				<equals arg1="10.149.142.87" arg2="${host.ip}"/>
+				<equals arg1="10.149.142.63" arg2="${host.ip}"/>
+				<equals arg1="10.149.142.98" arg2="${host.ip}"/>
+			</or>
+		</condition>
+	</target>
+	
+	<target name="check_alive" depends="check_host">
+		<antcall target="check_alive_ecfowstst"/>
+		<antcall target="check_alive_ecbowstst"/>
+	</target>
+	
+	<target name="check_alive_ecfowstst" if="${isEcfowstst}">
+		<echo>check alive ${host.ip}</echo>
+		<waitfor maxwait="120000" checkevery="10000" timeoutproperty="isTimeout">
+			<and>
+				<socket server="${host.ip}" port="8081"/>
+				<socket server="${host.ip}" port="8095"/>
+			</and>
+		</waitfor>
+		<echo>isTimeout : ${isTimeout}</echo>
+	</target>
+	
+	<target name="check_alive_ecbowstst" if="${isEcbowstst}">
+		<echo>check alive ${host.ip}</echo>
+		<waitfor maxwait="300000" checkevery="10000" timeoutproperty="isTimeout">
+			<and>
+				<socket server="${host.ip}" port="8081"/>
+				<socket server="${host.ip}" port="8082"/>
+				<socket server="${host.ip}" port="8083"/>
+				<socket server="${host.ip}" port="8084"/>
+				<socket server="${host.ip}" port="8085"/>
+			</and>
+		</waitfor>
+		<echo>isTimeout : ${isTimeout}</echo>
+	</target>	
+	
+	
+<!-- **************************************************************** -->
+<!-- MAIN -->
+<!-- **************************************************************** -->
+	<target name="phase2.1">
+		<echo>================================================================================</echo>
+		<antcall target="accept"/>
+		<!-- <antcall target="merge"/> -->
+		<antcall target="build"/>
+		<antcall target="pack"/>
+		<echo>================================================================================</echo>
+	</target>
+	
+	<target name="phase2.2">
+		<echo>step2</echo>
+	</target>
+	
+	<target name="phase2.3">
+		<echo>================================================================================</echo>
+		<echo>${MESSAGES}</echo>
+		<property name="deploy.id" value="${main.deploy.id}"/>
+		<property name="user.id"   value="jeus"/>
+		<propertyvalue property="user.pwd" value="${user.id}"/>
+		<antcall target="deploy_was"/>
+		<echo>================================================================================</echo>
+	</target>
+	
+	<target name="phase2.4">
+		<echo>================================================================================</echo>
+		<property name="deploy.id" value="${main.deploy.id}"/>
+		<antcall target="notice_success"/>
+		<antcall target="record"/>
+		<echo>================================================================================</echo>
+	</target>
+
+	<target name="phase3.1">
+		<echo>================================================================================</echo>
+		<antcall target="accept_real"/>
+		<!-- <antcall target="merge"/> -->
+		<antcall target="build"/>
+		<antcall target="pack"/>
+		<echo>================================================================================</echo>
+	</target>
+	
+	<target name="phase3.2">
+		<echo>================================================================================</echo>
+		<echo>${MESSAGES}</echo>
+		<property name="deploy.id" value="${main.deploy.id}"/>
+		<property name="user.id"   value="jeus"/>
+		<propertyvalue property="user.pwd" value="${user.id}"/>
+		<antcall target="deploy"/>
+		<echo>================================================================================</echo>
+	</target>
+	
+	<target name="phase3.2a">
+		<echo>================================================================================</echo>
+		<property name="deploy.id" value="${main.deploy.id}"/>
+		<property name="user.id"   value="xclass"/>
+		<propertyvalue property="user.pwd" value="${user.id}"/>
+		<antcall target="backup"/>
+		<antcall target="send_ba"/>
+		<echo>================================================================================</echo>
+	</target>
+	
+	<target name="phase3.3">
+		<echo>================================================================================</echo>
+		<property name="deploy.id" value="${main.deploy.id}"/>
+		<antcall target="record"/>
+		<echo>================================================================================</echo>
+	</target>	
+
+	
+<!-- **************************************************************** -->
+<!-- BUILD -->
+<!-- build overriding -->
+<!-- javac 전에 <record name="${log.path}/${deploy.id}_BUILD.log" action="start"/> 구문 삽입         -->
+<!-- javac 안에 failonerror="false" errorProperty="isBuildError" 구문 삽입 -->
+<!-- javac 후에 <record name="${log.path}/${deploy.id}_BUILD.log" action="stop"/> 구문 삽입           -->
+<!-- fail task 앞에 <antcall target="notice_fail"/> 구문 삽입 -->
+<!-- 마지막에 <fail if="${isBuildError}" message="컴파일 오류가 발생했습니다." /> 구문 삽입 -->
+<!-- errorProerty 이름과 fail task의 if attribute에 사용되는 property 이름은 동일해야 함 -->
+<!-- **************************************************************** -->
+	<target name="build">
+		<echo>--------------------------------------------------------------------------------</echo>
+		<antcall target="pdk.compile" />
+		<antcall target="pdk.jar" />
+		<echo>--------------------------------------------------------------------------------</echo>
+		<antcall target="pricemgr.compile" />
+		<antcall target="pricemgr.jar" />
+		<echo>--------------------------------------------------------------------------------</echo>
+		<antcall target="if.compile" />
+		<antcall target="if.jar" />
+		<echo>--------------------------------------------------------------------------------</echo>
+	</target>
+	
+	<!-- ********** PIONNET.JAR  ********** -->	
+	<path id="pdk.classpath">
+		<fileset dir="${java.home.dir}/jre/lib">
+			<include name="rt.jar" />
+		</fileset>
+		<fileset dir="${jeus.home.dir}/lib">
+			<include name="**/*.jar" />
+		</fileset>		
+		<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zCommon/reference">
+			<include name="*.jar" />
+		</fileset>		
+		<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zCommon/common_lib">
+			<include name="*.jar" />
+			<exclude name="commons-pionnet.jar" />
+			<exclude name="commons-interfaces.jar" />
+			<exclude name="commons-pricemgr.jar" />
+			<exclude name="ZipIt.jar" /> <!-- 각 서비스의 lib 폴더 안에 있는 것을 사용함 -->
+		</fileset>	
+	</path>
+			
+	<target name="pdk.compile">
+		<mkdir dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPDK/build" />
+		<delete includeemptydirs="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPDK/build" includes="**/*"/>
+    	</delete>
+		<record name="${log.path}/${deploy.id}_BUILD.log" action="start"/> <!-- 컴파일 로그 기록 시작 -->
+		<javac source="1.6" 
+			target="1.6" 
+			srcdir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPDK/src"
+			classpathref="pdk.classpath"
+			destdir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPDK/build"
+			failonerror="false" errorProperty="isBuildError"
+			debug="on" nowarn="on"
+			encoding="utf-8"
+			fork="true" 
+			includeantruntime="false" />
+			
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPDK/build">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPDK/src">
+				<exclude name="**/*.java" />
+		    </fileset>
+		</copy>
+		<record name="${log.path}/${deploy.id}_BUILD.log" action="stop"/> <!-- 컴파일 로그 기록 종료 -->
+		<antcall target="notice_fail"/>
+		<fail if="${isBuildError}" message="zPDK 컴파일 오류가 발생했습니다." /> <!-- 컴파일 에러 여부 판단 -->
+	</target>
+	
+	<target name="pdk.jar">
+		<mkdir dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPDK/dist" />
+		<delete includeemptydirs="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPDK/dist" includes="**/*"/>
+    	</delete>
+		<jar encoding="UTF-8" destfile="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPDK/dist/commons-pionnet.jar">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPDK/build" />
+		</jar>
+	</target>
+	
+	<!-- ********** INTERFACES.JAR  ********** -->
+	<path id="ifapp.classpath">
+		<fileset dir="${java.home.dir}/jre/lib">
+			<include name="rt.jar" />
+		</fileset>
+		<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zCommon/common_lib">
+			<include name="*.jar" />
+			<exclude name="commons-pionnet.jar" />
+			<exclude name="commons-interfaces.jar" />
+			<exclude name="commons-pricemgr.jar" />
+			<exclude name="ZipIt.jar" /> <!-- 각 서비스의 lib 폴더 안에 있는 것을 사용함 -->			
+		</fileset>
+		<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPDK/dist">
+			<include name="commons-pionnet.jar" />
+		</fileset>
+	</path>
+		
+	<path id="if.classpath">
+		<fileset dir="${java.home.dir}/jre/lib">
+			<include name="rt.jar" />
+		</fileset>
+		<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zCommon/common_lib">
+			<include name="*.jar" />
+			<exclude name="commons-pionnet.jar" />
+			<exclude name="commons-interfaces.jar" />
+			<exclude name="commons-pricemgr.jar" />
+			<exclude name="ZipIt.jar" /> <!-- 각 서비스의 lib 폴더 안에 있는 것을 사용함 -->			
+		</fileset>
+		<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPDK/dist">
+			<include name="commons-pionnet.jar" />
+		</fileset>
+		<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zInterfaces/lib">
+			<include name="*.jar" />
+			<exclude name="commons-pionnet.jar" />
+			<exclude name="ibatis-2.3.4.726.jar" /> <!-- common_lib에 있는 것으로 사용 -->
+			<exclude name="mcash.jar" />  <!-- common_lib에 있는 것으로 사용 -->
+			<exclude name="mgcs.jar" /> <!-- common_lib에 있는 것으로 사용 -->
+		</fileset>
+		<dirset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zInterfaces/build_app"/>
+	</path>
+				
+	<target name="if.compile">
+		<mkdir dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zInterfaces/build_app" />
+		<delete includeemptydirs="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zInterfaces/build_app" includes="**/*"/>
+    	</delete>		
+		<record name="${log.path}/${deploy.id}_BUILD.log" action="start"/> <!-- 컴파일 로그 기록 시작 -->
+		<javac source="1.6" 
+			target="1.6" 
+			srcdir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zInterfaces/src_app"
+			classpathref="ifapp.classpath"
+			destdir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zInterfaces/build_app"
+			failonerror="false" errorProperty="isBuildError"
+			debug="on" nowarn="on"
+			encoding="utf-8"
+			fork="true" 
+			includeantruntime="false"
+			includes="com/mall/**" />
+		<record name="${log.path}/${deploy.id}_BUILD.log" action="stop"/> <!-- 컴파일 로그 기록 종료 -->
+		<antcall target="notice_fail"/>
+		<fail if="${isBuildError}" message="zInterfaces 컴파일 오류가 발생했습니다." /> <!-- 컴파일 에러 여부 판단 -->
+		
+		<mkdir dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zInterfaces/build" />
+		<delete includeemptydirs="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zInterfaces/build" includes="**/*"/>
+    	</delete>
+		<record name="${log.path}/${deploy.id}_BUILD.log" action="start"/> <!-- 컴파일 로그 기록 시작 -->
+		<javac source="1.6" 
+			target="1.6" 
+			srcdir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zInterfaces/src"
+			classpathref="if.classpath"
+			destdir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zInterfaces/build"
+			failonerror="false" errorProperty="isBuildError"
+			debug="on" nowarn="on"
+			encoding="utf-8"
+			fork="true" 
+			includeantruntime="false" />
+		<record name="${log.path}/${deploy.id}_BUILD.log" action="stop"/> <!-- 컴파일 로그 기록 종료 -->
+		<antcall target="notice_fail"/>
+		<fail if="${isBuildError}" message="zInterfaces 컴파일 오류가 발생했습니다." /> <!-- 컴파일 에러 여부 판단 -->	
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zInterfaces/build">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zInterfaces/src">
+				<exclude name="**/*.java" />
+		    </fileset>
+		</copy>
+	</target>
+	
+	<target name="if.jar">
+		<mkdir dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zInterfaces/dist" />
+		<delete includeemptydirs="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zInterfaces/dist" includes="**/*"/>
+    	</delete>
+		<jar encoding="UTF-8" destfile="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zInterfaces/dist/commons-interfaces.jar">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zInterfaces/build" />
+		</jar>		
+	</target>
+		
+	<!-- ********** PRICEMGR.JAR  ********** -->
+	<path id="pricemgr.classpath">
+		<fileset dir="${java.home.dir}/jre/lib">
+			<include name="rt.jar" />
+		</fileset>
+		<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zCommon/common_lib">
+			<include name="*.jar" />
+			<exclude name="commons-pionnet.jar" />
+			<exclude name="commons-interfaces.jar" />
+			<exclude name="commons-pricemgr.jar" />
+			<exclude name="ZipIt.jar" /> <!-- 각 서비스의 lib 폴더 안에 있는 것을 사용함 -->			
+		</fileset>
+		<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPDK/dist">
+			<include name="commons-pionnet.jar" />
+		</fileset>		
+	</path>	
+		
+	<target name="pricemgr.compile">
+		<mkdir dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPriceMgr/build" />
+		<delete includeemptydirs="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPriceMgr/build" includes="**/*"/>
+    	</delete>
+		<record name="${log.path}/${deploy.id}_BUILD.log" action="start"/> <!-- 컴파일 로그 기록 시작 -->
+		<javac source="1.6" 
+			target="1.6" 
+			srcdir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPriceMgr/src"
+			classpathref="pricemgr.classpath"
+			destdir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPriceMgr/build"
+			failonerror="false" errorProperty="isBuildError"
+			debug="on" nowarn="on"
+			encoding="utf-8"
+			fork="true" 
+			includeantruntime="false" />
+		<record name="${log.path}/${deploy.id}_BUILD.log" action="stop"/> <!-- 컴파일 로그 기록 종료 -->
+		<antcall target="notice_fail"/>
+		<fail if="${isBuildError}" message="zPriceMgr 컴파일 오류가 발생했습니다." /> <!-- 컴파일 에러 여부 판단 -->	
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPriceMgr/build">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPriceMgr/src">
+				<exclude name="**/*.java" />
+		    </fileset>
+		</copy>
+	</target>
+	
+	<target name="pricemgr.jar">
+		<mkdir dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPriceMgr/dist" />
+		<delete includeemptydirs="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPriceMgr/dist" includes="**/*"/>
+    	</delete>
+		<jar encoding="UTF-8" destfile="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPriceMgr/dist/commons-pricemgr.jar">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPriceMgr/build" />
+		</jar>
+	</target>
+
+	
+<!-- **************************************************************** -->
+<!-- PACK -->
+<!-- pack.jar overriding -->
+<!-- **************************************************************** -->
+	<target name="pack.jar" depends="check_exist" if="existComm"> <!-- dist 아래 있는 특정 jar 처리 -->
+		<!-- common jar -->
+		<antcall target="make.dir"/>
+		<antcall target="cmm.pack" />
+		<antcall target="pdk.pack" />
+		<antcall target="if.pack" />
+		<antcall target="pricemgr.pack" />
+		<!-- common/conf properties -->
+		<antcall target="confa.pack" />
+		<antcall target="confb.pack" />
+		<antcall target="confc.pack" />
+	</target>
+	
+	<target name="make.dir" if="${existJar}">
+		<mkdir dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/bo/APP-INF/lib" />
+		<mkdir dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/fo/APP-INF/lib" />
+		<mkdir dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/gl/APP-INF/lib" />
+		<mkdir dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/mpo/APP-INF/lib" />
+		<mkdir dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/mcgl/APP-INF/lib" />	
+		<mkdir dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/JAVA_APP/lib" />
+	</target>
+	
+	<target name="confa.pack" if="${existConfA}">		
+		<copy file="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/common/conf/CancelRefund.real.properties" 
+			tofile="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/common/conf/CancelRefund.properties" 
+		   verbose="true" overwrite="true"/>
+	</target>
+	<target name="confb.pack" if="${existConfB}">		
+		<copy file="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/common/conf/MCash_Cancel.real.properties" 
+			tofile="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/common/conf/MCash_Cancel.properties" 
+		   verbose="true" overwrite="true"/>
+	</target>
+	<target name="confc.pack" if="${existConfC}">		
+		<copy file="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/common/conf/Mcash.real.properties" 
+			tofile="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/common/conf/Mcash.properties" 
+		   verbose="true" overwrite="true"/>
+	</target>
+	
+	<target name="cmm.pack" if="existCmmJar">
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/bo/APP-INF/lib" verbose="true" overwrite="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/zCommon/common_lib">
+				<include name="*.jar"/>
+		    </fileset>
+		</copy>
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/fo/APP-INF/lib" verbose="true" overwrite="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/zCommon/common_lib">
+				<include name="*.jar"/>
+		    </fileset>
+		</copy>		
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/gl/APP-INF/lib" verbose="true" overwrite="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/zCommon/common_lib">
+				<include name="*.jar"/>
+		    </fileset>
+		</copy>		
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/mpo/APP-INF/lib" verbose="true" overwrite="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/zCommon/common_lib">
+				<include name="*.jar"/>
+		    </fileset>
+		</copy>		
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/JAVA_APP/lib" verbose="true" overwrite="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/zCommon/common_lib">
+				<include name="*.jar"/>
+		    </fileset>
+		</copy>		
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/mcgl/APP-INF/lib" verbose="true" overwrite="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/zCommon/common_lib">
+				<include name="*.jar"/>
+		    </fileset>
+		</copy>		
+	</target>
+	
+	<target name="pdk.pack" if="existPdkJar">
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/bo/APP-INF/lib" verbose="true" overwrite="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPDK/dist">
+				<include name="commons-pionnet.jar"/>
+		    </fileset>			
+		</copy>
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/fo/APP-INF/lib" verbose="true" overwrite="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPDK/dist">
+				<include name="commons-pionnet.jar"/>
+		    </fileset>			
+		</copy>
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/gl/APP-INF/lib" verbose="true" overwrite="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPDK/dist">
+				<include name="commons-pionnet.jar"/>
+		    </fileset>			
+		</copy>		
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/mpo/APP-INF/lib" verbose="true" overwrite="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPDK/dist">
+				<include name="commons-pionnet.jar"/>
+		    </fileset>			
+		</copy>		
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/mcgl/APP-INF/lib" verbose="true" overwrite="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPDK/dist">
+				<include name="commons-pionnet.jar"/>
+		    </fileset>			
+		</copy>
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/JAVA_APP/lib" verbose="true" overwrite="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPDK/dist">
+				<include name="commons-pionnet.jar"/>
+		    </fileset>			
+		</copy>
+	</target>
+	
+	<target name="if.pack" if="existIfcJar">
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/bo/APP-INF/lib" verbose="true" overwrite="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zInterfaces/dist">
+				<include name="commons-interfaces.jar"/>
+		    </fileset>
+		</copy>		
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/fo/APP-INF/lib" verbose="true" overwrite="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zInterfaces/dist">
+				<include name="commons-interfaces.jar"/>
+		    </fileset>
+		</copy>
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/gl/APP-INF/lib" verbose="true" overwrite="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zInterfaces/dist">
+				<include name="commons-interfaces.jar"/>
+		    </fileset>
+		</copy>
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/mpo/APP-INF/lib" verbose="true" overwrite="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zInterfaces/dist">
+				<include name="commons-interfaces.jar"/>
+		    </fileset>
+		</copy>		
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/mcgl/APP-INF/lib" verbose="true" overwrite="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zInterfaces/dist">
+				<include name="commons-interfaces.jar"/>
+		    </fileset>
+		</copy>
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/JAVA_APP/lib" verbose="true" overwrite="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zInterfaces/dist">
+				<include name="commons-interfaces.jar"/>
+		    </fileset>
+		</copy>
+	</target>
+	
+	<target name="pricemgr.pack" if="existPrmJar">
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/bo/APP-INF/lib" verbose="true" overwrite="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPriceMgr/dist">
+				<include name="commons-pricemgr.jar"/>
+		    </fileset>
+		</copy>		
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/fo/APP-INF/lib" verbose="true" overwrite="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPriceMgr/dist">
+				<include name="commons-pricemgr.jar"/>
+		    </fileset>
+		</copy>
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/gl/APP-INF/lib" verbose="true" overwrite="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPriceMgr/dist">
+				<include name="commons-pricemgr.jar"/>
+		    </fileset>
+		</copy>		
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/mpo/APP-INF/lib" verbose="true" overwrite="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPriceMgr/dist">
+				<include name="commons-pricemgr.jar"/>
+		    </fileset>
+		</copy>		
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/mcgl/APP-INF/lib" verbose="true" overwrite="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPriceMgr/dist">
+				<include name="commons-pricemgr.jar"/>
+		    </fileset>
+		</copy>
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/JAVA_APP/lib" verbose="true" overwrite="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/zPriceMgr/dist">
+				<include name="commons-pricemgr.jar"/>
+		    </fileset>
+		</copy>
+	</target>	
+	
+	
+<!-- **************************************************************** -->
+<!-- BACKUP은 해당 서버에서 처리 -->
+<!-- **************************************************************** -->
+
+
+<!-- **************************************************************** -->
+<!-- DEPLOY -->
+<!-- send_web, send_was overriding -->
+<!-- **************************************************************** -->					
+	<target name="send_was" depends="check_host">
+		<!-- <antcall target="send_was_fo_gl"/> -->
+		<!-- <antcall target="send_was_bo_mpo_ba"/> -->
+		<antcall target="send_was_ba"/>
+	</target>
+	
+	<target name="send_was_fo_gl" if="${isEcfowstst}">
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${stopover.dir}/${deploy.id}" trust="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}">
+				<include name="fo/APP-INF/lib/*.jar"></include>
+				<include name="gl/APP-INF/lib/*.jar"></include>
+				<include name="mcgl/APP-INF/lib/*.jar"></include>
+				<include name="common/conf/**/*"></include>
+				<exclude name="common/conf/*.dev.properties"></exclude>
+				<exclude name="common/conf/*.real.properties"></exclude>
+			</fileset>
+		</scp>
+	</target>
+	
+	<target name="send_was_bo_mpo_ba" if="${isEcbowstst}">
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${stopover.dir}/${deploy.id}" trust="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}">
+				<include name="bo/APP-INF/lib/*.jar"></include>
+				<include name="mpo/APP-INF/lib/*.jar"></include>
+				<include name="JAVA_APP/lib/*.jar"></include>
+				<include name="common/conf/**/*"></include>
+				<exclude name="common/conf/*.dev.properties"></exclude>
+				<exclude name="common/conf/*.real.properties"></exclude>
+			</fileset>
+		</scp>
+	</target>
+	
+	<target name="send_was_ba" if="${isEcbowstst}">
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${stopover.dir}/${deploy.id}" trust="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}">
+				<include name="JAVA_APP/lib/*.jar"></include>
+				<include name="common/conf/**/*"></include>
+				<exclude name="common/conf/*.dev.properties"></exclude>
+				<exclude name="common/conf/*.real.properties"></exclude>
+			</fileset>
+		</scp>
+	</target>
+	
+	<target name="send" depends="check_host">
+		<antcall target="send_fo_gl"/>
+		<antcall target="send_bo_mpo"/>
+	</target>
+
+	<target name="send_fo_gl" if="${isHercules1}">
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${stopover.dir}/${deploy.id}" trust="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}">
+				<include name="fo/APP-INF/lib/*.jar"></include>
+				<include name="gl/APP-INF/lib/*.jar"></include>
+				<include name="mcgl/APP-INF/lib/*.jar"></include>
+				<include name="common/conf/**/*"></include>
+				<exclude name="common/conf/*.dev.properties"></exclude>
+				<exclude name="common/conf/*.real.properties"></exclude>
+			</fileset>
+		</scp>
+	</target>	
+	
+	<target name="send_bo_mpo" if="${isProws1}">
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${stopover.dir}/${deploy.id}" trust="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}">
+				<include name="bo/APP-INF/lib/*.jar"></include>
+				<include name="mpo/APP-INF/lib/*.jar"></include>
+				<include name="common/conf/**/*"></include>
+				<exclude name="common/conf/*.dev.properties"></exclude>
+				<exclude name="common/conf/*.real.properties"></exclude>
+			</fileset>
+		</scp>
+	</target>
+	
+	<target name="send_ba" depends="check_host" if="${isLottebatch}"><!-- 배치는 직접 배포하는 방식으로 처리할 예정 hudson 별도 job 필요, 롤백도 필요 -->
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${svrDocRoot}" trust="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}">
+				<include name="JAVA_APP/lib/*.jar"></include>
+			</fileset>
+		</scp>		
+	</target>
+	
+		
+<!-- **************************************************************** -->
+<!-- ROLLBACK FOR TEST SERVER 미확정 -->
+<!-- **************************************************************** -->
+	<target name="run_fo_rollback">
+		<echo>♠ FRONT ROLLBACK ${deploy.id}</echo>
+		<antcall target="rollback_fo" />
+	</target>
+		
+	<target name="run_bo_rollback">
+		<echo>♠ BACKOFFICE ROLLBACK ${deploy.id}</echo>
+		<antcall target="rollback_bo" />
+		<antcall target="rollback_cc" />
+		<antcall target="rollback_po" />
+		<antcall target="rollback_oa" />
+	</target>
+	
+	<target name="run_mp_rollback">
+		<echo>♠ MOBILE PARTNER ROLLBACK ${deploy.id}</echo>
+		<antcall target="rollback_mp" />
+	</target>
+	
+	<target name="run_ba_rollback">
+		<echo>♠ BATCH ROLLBACK ${deploy.id}</echo>
+		<antcall target="rollback_ba" />
+	</target>
+			
+	<target name="rollback_fo">
+		<ftp server="${was.ip}" userid="${user.id}" password="${user.pwd}" passive="yes"
+		     remotedir="/h2010"
+		     action="put">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}_backup">
+				<include name="fo/APP-INF/lib/*"></include>
+				<include name="common/**/*"></include>
+			</fileset>
+		</ftp>
+	</target>	
+	<target name="rollback_bo">
+		<ftp server="${was.ip}" userid="${user.id}" password="${user.pwd}" passive="yes"
+		     remotedir="/h2010"
+		     action="put">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}_backup">
+				<include name="bo/APP-INF/lib/*"></include>
+				<include name="common/**/*"></include>
+			</fileset>
+		</ftp>
+	</target>
+	<target name="rollback_cc">
+		<ftp server="${was.ip}" userid="${user.id}" password="${user.pwd}" passive="yes"
+		     remotedir="/h2010/cc/APP-INF/lib"
+		     action="put">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}_backup">
+				<include name="*.*"></include>
+			</fileset>
+		</ftp>
+	</target>	
+	<target name="rollback_po">
+		<ftp server="${was.ip}" userid="${user.id}" password="${user.pwd}" passive="yes"
+		     remotedir="/h2010/po/APP-INF/lib"
+		     action="put">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}_backup/bo/APP-INF/lib">
+				<include name="*.*"></include>
+			</fileset>
+		</ftp>
+	</target>	
+	<target name="rollback_oa">
+		<ftp server="${was.ip}" userid="${user.id}" password="${user.pwd}" passive="yes"
+		     remotedir="/h2010/oa/APP-INF/lib"
+		     action="put">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}_backup/bo/APP-INF/lib">
+				<include name="*.*"></include>
+			</fileset>
+		</ftp>
+	</target>
+	<target name="rollback_mp">
+		<ftp server="${was.ip}" userid="${user.id}" password="${user.pwd}" passive="yes"
+		     remotedir="/h2010/mpo/APP-INF/lib"
+		     action="put">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}_backup/mpo/APP-INF/lib">
+				<include name="*.*"></include>
+			</fileset>
+		</ftp>
+	</target>	
+	<target name="rollback_ba">
+		<ftp server="${was.ip}" userid="${user.id}" password="${user.pwd}" passive="yes"
+		     remotedir="/usr1/home/xclass/EC_BATCH/JAVA_APP/lib"
+		     action="put">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}_backup/JAVA_APP/lib">
+				<include name="*.*"></include>
+			</fileset>
+		</ftp>
+	</target>	
+</project>

@@ -1,0 +1,513 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<project name="lotte-super-front" xmlns:artifact="antlib:org.apache.maven.artifact.ant">
+	<path id="maven-ant-tasks.classpath" path="${ant.home}/lib/maven-ant-tasks-2.1.3.jar"/>
+	<typedef resource="org/apache/maven/artifact/ant/antlib.xml"
+	         uri="antlib:org.apache.maven.artifact.ant" classpathref="maven-ant-tasks.classpath"/>
+		
+	<!-- ################## 참고사항 ################## -->
+	<!--
+				Request Url :   svn://vcs2.lotte.com/lottesuper2011/branches/REQUEST/front/FD_XXX_XXX/lotte-super-front
+				Release Url  :   svn://vcs2.lotte.com/lottesuper2011/tag/RELEASE/lotte-super-front
+	 -->				
+	<!-- ########################################## -->
+	<!-- param -->
+	<property name="deploy.id" value="${DEPLOY_ID}"/>
+	<!-- properties -->
+	<property name="java16.home"     value="C:/Program Files (x86)/Java/jdk1.6.0_25"/>
+	<property name="java15.home"     value="C:/Program Files (x86)/Java/jdk1.5.0_12"/>
+	<property name="deployer.home"   value="D:/deployer"/>
+	
+	<property file="${deployer.home}/scripts/lottesuper2011_dev_front.properties"/>	
+	
+	<property name="user.id"   value="jeus"/>
+	<property name="user.pwd"  value="w&uch6raDa*r"/>
+	
+	<!-- workspace     = E:/sudev/lottesuper2011 -->
+	<!-- requestPath  =  /branches/REQUEST/front -->
+	<!-- req.dir             =  E:/sudev/lottesuper2011/branches/REQUEST/front/deploy.id -->
+	<property name="req.dir"         value="${workspace}${requestPath}/${deploy.id}"/>
+	
+	
+	<!-- releasePath=/tags/RELEASE -->
+	<!-- src.home = E:/sudev/lottesuper2011/tags/RELEASE -->
+	<property name="src.home"        value="${workspace}${releasePath}"/>
+	
+	
+	<!--java.src.dir = E:/sudev/lottesuper2011/tags/RELEASE/lotte-super-front/src -->
+	<property name="java.src.dir"    value="${src.home}${srcPath}"/>
+	
+	<!-- libPath=/lotte-super-front/WebContent/WEB-INF/lib -->
+	<!-- java.lib.dir = E:/sudev/tags/RELEASE/lotte-super-front/WebContent/WEB-INF/lib-->
+	<property name="java.lib.dir"    value="${src.home}${libPath}"/>
+	
+	<!-- packPath=/packs -->
+	<!-- packPath = -->
+	<!-- pack.dir = E:/sudev/lottesuper2011/packs/${deploy.id}-->
+	<property name="pack.dir"        value="${workspace}${packPath}/${deploy.id}"/>
+	
+	<!--<property name="dst.class.dir"   value="${src.home}/${svrClassPath}"/>-->
+	<!-- svrClassPath=/WebContent/WEB-INF/classes -->
+	<!-- dst.class.dir = E:/sudev/lottesuper2011/tags/RELEASE/lotte-super-front/WebContent/WEB-INF/classes-->
+	<property name="dst.class.dir"   value="${src.home}/${ant.project.name}${svrClassPath}"/>
+	
+	
+	<!-- svrLibPath=/lotte-super-front/WebContent/WEB-INF/lib -->
+	<!-- dst.lib.dir = E:/sudev/lottesuper2011/tags/RELEASE/lotte-super-front/WebContent/WEB-INF/lib-->
+	<property name="dst.lib.dir"     value="${src.home}/${ant.project.name}${svrLibPath}"/>
+	
+	<!-- java.dyna.src.dir = E:/sudev/lottesuper2011/tags/RELEASE/lotte-super-front/src_dynamic -->
+	<!-- property name="java.dyna.src.dir"    value="${src.home}${srcDynaPath}"/> -->
+	<!-- srcDynaPath=/lotte-super-front/src_dynamic -->
+	<!-- java.dyna.src.dir = E:/sudev/lottesuper2011/tags/RELEASE/lotte-super-front/src_dynamic -->	
+	<!-- svrDynaClassPath=/WebContent/WEB-INF/dynamic_classes -->
+	<!-- dst.dyna.class.dir = E:/sudev/lottesuper2011/tags/RELEASE/lotte-super-front/WebContent/WEB-INF/dynamic_classes -->
+	<!--<property name="dst.dyna.class.dir"   value="${src.home}${svrDynaClassPath}"/>-->
+	<property name="dst.dyna.class.dir"   value="${src.home}/${ant.project.name}${svrDynaClassPath}"/>
+		
+	
+	<!-- remote.home.dir = /ec/site/foundation -->
+	<!-- remote.home.dir = /esuper/project -->
+	
+	<property name="remote.home.dir" value="${docRoot}"/>
+	
+	<property name="org.springframework-version" value="3.1.1.RELEASE" />
+	<property name="org.aspectj-version" value="1.6.10" />
+	<property name="org.slf4j-version" value="1.6.6" />
+	
+	<!-- validation -->
+	<!-- req.dir   =  E:/sudev/lottesuper2011/branches/REQUEST/front/deploy.id -->
+	<target name="param_check">
+		<condition property="isValid">
+			<and>
+			    <contains string="${deploy.id}" substring="FD_" casesensitive="true" />
+				<length string="${deploy.id}" when="greater" length="12"/>
+				<resourceexists>
+					<file file="${req.dir}"/>
+				</resourceexists>
+			</and>
+		</condition>
+	</target>
+
+	<!-- req.dir   =  E:/sudev/lottesuper2011/branches/REQUEST/front/deploy.id -->
+	<target name="param_check_fail" unless="isValid">
+		<echo>${req.dir}</echo>
+		<fail message="DEPLOY_ID가 유효하지 않습니다."/>
+	</target>
+	
+	<!-- merge -->
+	<!-- deployer.home = D:/deployer -->
+	<!-- fileset dir = deployer.home = D:/deployer/lib -->
+	<path id="deployerclasspath">
+		<fileset dir="${deployer.home}/lib">
+			<include name="*.jar" />
+		</fileset>
+	</path>	
+	
+	<target name="merge" depends="param_check">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="param_check_fail"/>
+		<antcall target="exec_merge"/>
+	</target>
+		
+	<!-- 
+	    ★  Parameters ★
+		      ant.project.name   =    lotte-super-front 
+			  deploy.id                   =    FD_XXX_XXX
+		      merge                          
+	-->
+	
+	<!-- deployer.home = D:/deployer -->
+	<target name="exec_merge" if="isValid">
+		<java jar="${deployer.home}/bin/deployer1.1.3.jar"
+		      fork="true" failonerror="true" >
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="merge"/>			
+		</java> 
+	</target>
+	
+	<!-- build -->	
+	<artifact:dependencies pathId="dependency.classpath">
+		<dependency groupId="org.springframework" artifactId="spring-context" version="${org.springframework-version}"/>
+		<dependency groupId="org.springframework" artifactId="spring-webmvc" version="${org.springframework-version}"/>
+		<dependency groupId="org.aspectj" artifactId="aspectjrt" version="${org.aspectj-version}"/>
+		<dependency groupId="servlets.com" artifactId="cos" version="05Nov2002"/>
+		<dependency groupId="org.slf4j" artifactId="slf4j-api" version="${org.slf4j-version}"/>
+		<dependency groupId="org.slf4j" artifactId="jcl-over-slf4j" version="${org.slf4j-version}"/>
+		<dependency groupId="org.slf4j" artifactId="slf4j-log4j12" version="${org.slf4j-version}"/>
+		<dependency groupId="log4j" artifactId="log4j" version="1.2.15" >
+			<exclusion groupId="javax.mail" artifactId="mail" />
+			<exclusion groupId="javax.jms" artifactId="jms" />
+			<exclusion groupId="com.sun.jdmk" artifactId="jmxtools" />
+			<exclusion groupId="com.sun.jmx" artifactId="jmxri" />
+		</dependency>
+		<dependency groupId="javax.inject" artifactId="javax.inject" version="1"/>
+		<dependency groupId="javax.servlet" artifactId="servlet-api" version="2.5"/>
+		<dependency groupId="javax.servlet.jsp" artifactId="jsp-api" version="2.1"/>
+		<dependency groupId="javax.servlet" artifactId="jstl" version="1.2"/>
+		<dependency groupId="junit" artifactId="junit" version="4.7"/>
+		<dependency groupId="com.oracle" artifactId="ojdbc14" version="10.2.0.4.0"/>
+		<dependency groupId="org.apache.maven.plugins" artifactId="maven-compiler-plugin" version="2.5.1"/>
+		<dependency groupId="org.codehaus.mojo" artifactId="exec-maven-plugin" version="1.2.1"/>
+		
+		
+		<remoteRepository id="remote.repos" url="http://mesir.googlecode.com/svn/trunk/mavenrepo" />
+	</artifact:dependencies>
+	
+	
+	<!-- ################# Foundation ################## -->
+	<!-- dst.lib.dir = E:/hudson-hosting/teams/smb/jobs/smb.FOUNDATION2014_BUILD_AND_PACK/workspace/foundation2014/tags/RELEASE/lottefoundation/src/main/webapp/WEB-INF/lib -->
+	<!-- dst.class.dir = E:/hudson-hosting/teams/smb/jobs/smb.FOUNDATION2014_BUILD_AND_PACK/workspace/foundation2014/tags/RELEASE/lottefoundation/src/main/webapp/WEB-INF/classes-->
+	<!-- dst.dyna.class.dir = E:/hudson-hosting/teams/smb/jobs/smb.FOUNDATION2014_BUILD_AND_PACK/workspace/foundation2014/tags/RELEASE/lottefoundation/src/main/webapp/WEB-INF/classes -->
+
+	<!--##################### 롯데슈퍼 ################# -->
+	<!-- dst.lib.dir                    =    E:/sudev/lottesuper2011/branches/tags/RELEASE/lotte-super-front/WebContent/WEB-INF/lib -->
+	<!-- dst.class.dir               =    E:/sudev/lottesuper2011/branches/tags/RELEASE/lotte-super-front/WebContent/WEB-INF/classes -->
+	<!-- dst.dyna.class.dir   =    E:/sudev/lottesuper2011/branches/tags/RELEASE/lotte-super-front/WebContent/WEB-INF/dynamic_classes --> 
+	
+	<!--
+	<path id="classpath.ref">
+		<path refid="dependency.classpath"/>
+		
+		<fileset dir="${java.lib.dir}">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="${java15.home}/jre/lib">
+			<include name="rt.jar" />
+		</fileset>
+		<fileset dir="C:/TmaxSoft/JEUS5.0/lib">
+			<include name="**/*.jar" />
+		</fileset>
+
+		<fileset dir="${dst.lib.dir}">
+			<include name="*.jar"/>
+		</fileset>
+		<dirset dir="${dst.class.dir}" />
+		<dirset dir="${dst.dyna.class.dir}" />
+	</path>
+	
+	<target name="build">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="compile"/>
+	</target>
+	-->
+	
+	<!-- ◆ 공통라이브러리를 어떻게 할것인지 점검이 필요함 ◆ -->
+	<path id="classpath.ref">
+		<fileset dir="${java.home.dir}/jre/lib">
+			<include name="rt.jar" />
+		</fileset>
+		<fileset dir="${jeus.home.dir}/lib/datasource">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="${jeus.home.dir}/lib/system">
+			<include name="*.jar" />
+		</fileset>
+		<!-- E:/sudev/lottesuper2011/tag/RELEASE/lotte-super-commons/lib/*.jar --> <!-- 공통라이브러리 lib 파일들 -->
+		 <fileset dir="E:/sudev/lottesuper2011/tag/RELEASE/lotte-super-commons/lib">
+			<include name="*.jar" />
+		</fileset>
+		<!-- E:/sudev/lottesuper2011/tag/RELEASE/lotte-super-commons/dist/*.jar --> <!-- 공통라이브러리 class 로 묶인 Jar -->
+			<fileset dir="E:/sudev/lottesuper2011/tag/RELEASE/lotte-super-commons/dist">
+			<include name="*.jar" />
+		</fileset>
+		<!-- E:/sudev/lottesuper2011/tag/RELEASE/lotte-super-front/WebContent/WEB-INF/lib/*.jar -->
+		<fileset dir="E:/sudev/lottesuper2011/tag/RELEASE/lotte-super-front/WebContent/WEB-INF/lib">
+			<include name="*.jar" />
+		</fileset>
+		<!-- E:/sudev/lottesuper2011/tag/RELEASE/lotte-super-front/WebContent/WEB-INF/classes --><!-- FO static class 파일들-->
+		<dirset dir="E:/sudev/lottesuper2011/tag/RELEASE/lotte-super-front/WebContent/WEB-INF/classes" />
+	    <!-- E:/sudev/lottesuper2011/tag/RELEASE/lotte-super-front/WebContent/WEB-INF/dynamic_classes --><!-- FO dynamic class 파일들 -->
+		<dirset dir="E:/sudev/lottesuper2011/tag/RELEASE/lotte-super-front/WebContent/WEB-INF/dynamic_classes" />
+	</path>
+	
+	<!-- #################### Foundation Reference Start ##################### -->
+	<!-- javac srcdir : java.src.dir = E:/hudson-hosting/teams/smb/jobs/smb.FOUNDATION2014_BUILD_AND_PACK/workspace/foundation2014/tags/RELEASE/lottefoundation/src/main/java -->	
+	<!-- destdir : dst.class.dir = E:/hudson-hosting/teams/smb/jobs/smb.FOUNDATION2014_BUILD_AND_PACK/workspace/foundation2014/tags/RELEASE/lottefoundation/src/main/webapp/WEB-INF/classes-->
+
+	<!-- copy todir : dst.class.dir = E:/hudson-hosting/teams/smb/jobs/smb.FOUNDATION2014_BUILD_AND_PACK/workspace/foundation2014/tags/RELEASE/lottefoundation/src/main/webapp/WEB-INF/classes  -->
+	<!-- fileset dir : java.src.dir = E:/hudson-hosting/teams/smb/jobs/smb.FOUNDATION2014_BUILD_AND_PACK/workspace/foundation2014/tags/RELEASE/lottefoundation/src/main/java -->
+	
+	<!-- copy todir : dst.class.dir = E:/hudson-hosting/teams/smb/jobs/smb.FOUNDATION2014_BUILD_AND_PACK/workspace/foundation2014/tags/RELEASE/lottefoundation/src/main/webapp/WEB-INF/classes  -->
+	<!-- fileset dir : java.dyna.src.dir = E:/hudson-hosting/teams/smb/jobs/smb.FOUNDATION2014_BUILD_AND_PACK/workspace/foundation2014/tags/RELEASE/lottefoundation/src/main/resources -->
+	<!-- #################### Foundation Reference End ##################### -->
+	
+	
+	<!-- javac srcdir : java.src.dir              =      E:/sudev/lottesuper2011/branches/tags/RELEASE/lotte-super-front/src -->	
+	<!-- destdir : dst.class.dir                      =      E:/sudev/lottesuper2011/branches/tags/RELEASE/lotte-super-front/WebContent/WEB-INF/classes -->
+
+	<!-- 아래 코드는 java 외에 xml 파일들을 복사하기 위한 코드 -->
+	<!-- copy todir : dst.class.dir               =      E:/sudev/lottesuper2011/branches/tags/RELEASE/lotte-super-front/WebContent/WEB-INF/classes -->
+	<!-- fileset dir : java.src.dir                   =     E:/sudev/lottesuper2011/branches/tags/RELEASE/lotte-super-front/src/**/*   ,   E:/sudev/lottesuper2011/tags/RELEASE/lotte-super-front/src/**/*.java -->
+
+	<!-- 아래 코드는 Foundation 에서는 resource 를 복사하기 위한 코드인데 롯데슈퍼는 dynamic_classes 를 복사하기 위한 코드로 생성함 -->
+	<!-- copy todir : dst.dyna.class.dir    =     E:/sudev/lottesuper2011/branches/tags/RELEASE/lotte-super-front/WebContent/WEB-INF/dynamic_classes -->
+	<!-- fileset dir : java.dyna.src.dir        =     E:/sudev/lottesuper2011/branches/tags/RELEASE/lotte-super-front/src_dynamic/**/* -->
+	
+
+		<!--
+				[static]
+				 srcStaticJavaPath = E:/jenkins-lottesuper/jobs/LOTTESUPER_FRONT_1_TEST_BUILD/workspace/lottesuper2011/FO_20160624_1330/branches/REAL/lotte-super-front/src
+				 srcStaticClassesPath = E:/jenkins-lottesuper/jobs/LOTTESUPER_FRONT_1_TEST_BUILD/workspace/lottesuper2011/FO_20160624_1330/branches/REAL/lotte-super-front/WebContent/WEB-INF/classes
+				[dynamic]		
+				srcDynamicJavaPath    = E:/jenkins-lottesuper/jobs/LOTTESUPER_FRONT_1_TEST_BUILD/workspace/lottesuper2011/FO_20160624_1330/branches/REAL/lotte-super-front/src_dynamic
+				srcDynamicClassesPath = E:/jenkins-lottesuper/jobs/LOTTESUPER_FRONT_1_TEST_BUILD/workspace/lottesuper2011/FO_20160624_1330/branches/REAL/lotte-super-front/WebContent/WEB-INF/dynamic_classes
+		 
+			    <mkdir dir="${srcStaticClassesPath}" />
+				<mkdir dir="${srcDynamicClassesPath}" />
+		-->
+		<!-- ▶ 처음에는 무조건 tag/RELEASE 에는 운영소스를 동기화하여야하는가 ◀ -->
+		<mkdir dir="E:/sudev/lottesuper2011/tag/RELEASE/lotte-super-front/WebContent/WEB-INF/classes" />
+		<mkdir dir="E:/sudev/lottesuper2011/tag/RELEASE/lotte-super-front/WebContent/WEB-INF/dynamic_classes" />
+
+		<!-- Static / Dynamic Java Compile -->
+		<!-- static -->	
+		<javac source="1.6" 
+			target="1.6" 
+			srcdir="E:/sudev/lottesuper2011/tag/RELEASE/lotte-super-front/src"
+			classpathref="classpath"
+			destdir="E:/sudev/lottesuper2011/tag/RELEASE/lotte-super-front/WebContent/WEB-INF/classes"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			fork="true" 
+			memoryMaximumSize="256m"
+			includeantruntime="false"/>
+			
+		<javac source="1.6"
+			target="1.6"
+			srcdir="E:/sudev/lottesuper2011/tag/RELEASE/lotte-super-front/src_dynamic"
+			classpathref="classpath"
+			destdir="E:/sudev/lottesuper2011/tag/RELEASE/lotte-super-front/WebContent/WEB-INF/dynamic_classes"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			fork="true"
+			memoryMaximumSize="256m"
+			includeantruntime="false"/>  
+
+		<!-- dynamic 폴더로 XML 파일들 전송 -->
+		<!-- srcDynamicJavaPath    = E:/jenkins-lottesuper/jobs/LOTTESUPER_FRONT_1_TEST_BUILD/workspace/lottesuper2011/FO_20160624_1330/branches/REAL/lotte-super-front/src_dynamic -->
+		<!-- srcDynamicClassesPath = E:/jenkins-lottesuper/jobs/LOTTESUPER_FRONT_1_TEST_BUILD/workspace/lottesuper2011/FO_20160624_1330/branches/REAL/lotte-super-front/WebContent/WEB-INF/dynamic_classes -->
+		<copy todir="E:/sudev/lottesuper2011/tag/RELEASE/lotte-super-front/WebContent/WEB-INF/dynamic_classes">
+			<fileset dir="E:/sudev/lottesuper2011/tag/RELEASE/lotte-super-front/src_dynamic">
+				<include name="**/**/*.xml"/>
+		    </fileset>
+		</copy>
+
+<!-- Foundation 에서 사용하는것으로 롯데슈퍼에서 쓰기는 부적합함 -->
+<!--
+	<target name="compile">
+		
+		<javac source="1.6" 
+			target="1.6" 
+			srcdir="${srcStaticJavaPath}"
+			classpathref="classpath"
+			destdir="${srcStaticClassesPath}"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			fork="true" 
+			memoryMaximumSize="256m"
+			includeantruntime="false"/>
+
+				
+				
+		<javac srcdir="${java.src.dir}"
+		       destdir="${dst.class.dir}"
+		       fork="no"
+		       classpathref="classpath.ref"
+		       nowarn="yes"
+		       source="1.5"
+		       target="1.5"
+		       compiler="javac1.5"
+			   encoding="utf-8" />
+		<copy todir="${dst.class.dir}">
+			<fileset dir="${java.src.dir}">
+				<include name="**/*"/>
+				<exclude name="**/*.java"/>
+			</fileset>
+		</copy>
+		<copy todir="${dst.dyna.class.dir}">
+			<fileset dir="${java.dyna.src.dir}">
+				<include name="**/*"/>
+			</fileset>
+		</copy>
+	</target>
+-->
+
+	
+	<!-- pack -->
+	<!-- #################### Foundation Reference Start ################## -->
+	<!-- pack.dir       = E:/hudson-hosting/teams/smb/jobs/smb.FOUNDATION2014_BUILD_AND_PACK/workspace/packs/${deploy.id}-->
+	
+	<!-- move todir = E:/hudson-hosting/teams/smb/jobs/smb.FOUNDATION2014_BUILD_AND_PACK/workspace/packs/${deploy.id}/lottefoundation -->
+	<!-- fileset dir     = E:/hudson-hosting/teams/smb/jobs/smb.FOUNDATION2014_BUILD_AND_PACK/workspace/packs/${deploy.id}/lottefoundation/src/main  -->
+	
+	<!-- rename dest=E:/hudson-hosting/teams/smb/jobs/smb.FOUNDATION2014_BUILD_AND_PACK/workspace/packs/${deploy.id}/lottefoundation/doc
+	                                     src=E:/hudson-hosting/teams/smb/jobs/smb.FOUNDATION2014_BUILD_AND_PACK/workspace/packs/${deploy.id}/lottefoundation/webapp 
+	-->
+	<!-- delete dir = E:/hudson-hosting/teams/smb/jobs/smb.FOUNDATION2014_BUILD_AND_PACK/workspace/packs/${deploy.id}/lottefoundation/src -->
+		<!-- #################### Foundation Reference End ################## -->
+	
+			
+			
+	<target name="pack" depends="param_check">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="param_check_fail"/>
+		<antcall target="exec_pack"/>
+	</target>
+
+		<!-- ############ Annotation  Start ############ -->
+		<!--
+		<move todir="E:/sudev/lottesuper2011/packs/FD_XXX_XXX/lotte-super-front">
+				<fileset dir="E:/sudev/lottesuper2011/packs/FD_XXX_XXX/lotte-super-front/WebContent">
+					<include name="**/*"/>
+				</fileset>
+		</move>
+			<rename dest="${pack.dir}/${ant.project.name}/doc" src="${pack.dir}/${ant.project.name}/webapp"/>
+		<delete dir="${pack.dir}/${ant.project.name}/src" >
+		</delete>
+		-->
+	<!-- ############# Annotation  End# ############ -->
+
+	<!-- pack.dir = E:/sudev/lottesuper2011/packs/${deploy.id}-->
+	<!-- <rename dest="E:/sudev/lottesuper2011/packs/${deploy.id}/lotte-super-front/doc" src="${pack.dir}/${ant.project.name}/webapp"/> -->
+
+	<!--  #######  Foundation Code Start ####### -->
+	<!--
+	<target name="exec_pack" if="isValid">
+		<delete dir="${pack.dir}" />
+		<java jar="${deployer.home}/bin/deployer1.1.3.jar"
+		      fork="true" failonerror="true" >
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="pack"/>
+		</java>
+		<move todir="${pack.dir}/${ant.project.name}">
+			<fileset dir="${pack.dir}/${ant.project.name}/src/main">
+				<include name="webapp/**/*"/>
+			</fileset>
+		</move>
+		<rename dest="${pack.dir}/${ant.project.name}/doc" src="${pack.dir}/${ant.project.name}/webapp"/>
+		<delete dir="${pack.dir}/${ant.project.name}/src" >
+		</delete>
+	</target>
+	-->
+	<!--  #######  Foundation Code End ####### -->
+
+	<!-- ############# Code Annotation Start ############## -->
+	<!-- move todir="E:/sudev/lottesuper2011/packs/FD_XXX_XXX/lotte-super-front -->
+	<!--
+	<target name="exec_pack" if="isValid">
+		<delete dir="${pack.dir}" />
+		<java jar="${deployer.home}/bin/deployer1.1.3.jar"
+		      fork="true" failonerror="true" >
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="pack"/>
+		</java>
+		<move todir="${pack.dir}/${ant.project.name}">
+			<fileset dir="${pack.dir}/${ant.project.name}">
+				<include name="WebContent/**/*"/>
+			</fileset>
+		</move>
+		<rename dest="${pack.dir}/${ant.project.name}/front" src="${pack.dir}/${ant.project.name}/WebContent"/>
+		<delete dir="${pack.dir}/${ant.project.name}/WebContent" >
+		</delete>
+	</target>
+	-->
+	<!-- ############# Code Annotation End ############## -->
+
+
+	<target name="exec_pack" if="isValid">
+		<delete dir="${pack.dir}" />
+		<java jar="${deployer.home}/bin/deployer1.1.3.jar"
+		      fork="true" failonerror="true" >
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="pack"/>
+		</java>
+
+		<move todir="${pack.dir}/${ant.project.name}">
+			<fileset dir="${pack.dir}/${ant.project.name}">
+				<include name="WebContent/**/*"/>
+			</fileset>
+		</move>
+		<rename dest="${pack.dir}/${ant.project.name}/front" src="${pack.dir}/${ant.project.name}/WebContent"/>
+		<delete dir="${pack.dir}/${ant.project.name}/WebContent" >
+		</delete>
+	</target>
+
+	
+	<!-- backup -->
+	<target name="backup" depends="param_check">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="param_check_fail"/>
+		<antcall target="exec_backup"/>
+	</target>
+	<target name="exec_backup" if="isValid">
+		<java jar="${deployer.home}/bin/deployer1.1.3.jar"
+		      fork="true" failonerror="true" >
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="backup"/>
+			<arg value="${host.ip}"/>
+			<arg value="${user.id}"/>
+			<arg value="${user.pwd}"/>
+		</java>
+	</target>
+
+	<!-- deploy -->
+	<target name="deploy" depends="param_check">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="param_check_fail"/>
+		<antcall target="exec_scp"/>
+	</target>
+	
+	<target name="exec_scp" if="isValid">
+		<!--<ftp server="${host.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${remote.home.dir}/doc" passive="yes"
+		     action="put">
+			<fileset dir="${pack.dir}/${ant.project.name}/doc" 
+			         includes="**/*"/>
+		</ftp>-->
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${remote.home.dir}/doc" trust="true">
+			<fileset dir="${pack.dir}/${ant.project.name}/doc" 
+       	  	  includes="**/*"/>
+		</scp>
+	</target>
+	
+	<!-- rollback -->
+	<!-- remote.home.dir = /ec/site/foundation -->
+	<!-- pack.dir = E:/hudson-hosting/teams/smb/jobs/smb.FOUNDATION2014_BUILD_AND_PACK/workspace/packs/${deploy.id} -->
+	<target name="rollback" depends="param_check">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="param_check_fail"/>
+		<antcall target="exec_rollback"/>
+	</target>
+
+	<!-- remote.home.dir = /esuper/project -->
+	<!-- fileset dir                 = ${pack.dir}_backup/lotte-super-front/WebContent/**/* -->
+	<target name="exec_rollback" if="isValid">
+		<!--<ftp server="${host.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${remote.home.dir}/doc" passive="yes"
+		     action="put">
+			<fileset dir="${pack.dir}_backup/${ant.project.name}/doc" 
+			         includes="**/*"/>
+		</ftp>-->
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${remote.home.dir}/front" trust="true">
+			<fileset dir="${pack.dir}_backup/${ant.project.name}/WebContent" 
+	      	   includes="**/*"/>
+		</scp>
+	</target>
+</project>

@@ -1,0 +1,94 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+		classpath gradleApi() // $GRADLE_HOME/lib 에 있는 라이브러리들중 .guava.jar 를 사용하기 위
+ 		classpath group:'org.apache.poi', name:'poi', version:'3.7'
+		classpath group:'org.apache.poi', name:'poi-ooxml', version:'3.7'
+   }
+}
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CreationHelper;
+import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+
+loadExcelFile =  {  file ->
+	println file
+ 	return WorkbookFactory.create(new FileInputStream(file));
+}
+
+decideValues = { cell ->
+	if (cell == null) {
+		return null;
+	}
+	switch (cell.getCellType()) {
+	case Cell.CELL_TYPE_NUMERIC:
+		return cell.getNumericCellValue();
+
+	case Cell.CELL_TYPE_STRING:
+		return cell.getStringCellValue();
+
+	}
+	return null;
+}
+
+
+getRowCellsData = {row, maxCellCount ->
+	def values  = new Object[maxCellCount]
+	if (row == null){
+		return values
+	}
+	
+	for ( i in 0..maxCellCount){
+		Cell cell = row.getCell(i);
+		if (cell == null) {
+			continue;
+		}
+		values[i] = decideValues(cell);
+	}
+	return values
+	
+}
+
+countMaxCellCount = { sheet, rowCount ->
+	int max = 0;
+	for (int i = 0; i < rowCount; i++) {
+		if (sheet.getRow(i) == null) {
+			continue;
+		}
+		max = Math.max(max, sheet.getRow(i).getPhysicalNumberOfCells());
+	}
+	return max;
+}
+
+execlExecute = { file, headerLinesToSkip, closure ->
+	def sheet = loadExcelFile(file).getSheetAt(0)
+	rowCount = sheet.getPhysicalNumberOfRows()
+	maxCellCount = countMaxCellCount(sheet, rowCount)
+	
+	for (i in headerLinesToSkip..(rowCount+100)){
+		Row row = sheet.getRow(i);
+		if (row == null) {
+			continue;
+		}
+		Object[] values = getRowCellsData(row, maxCellCount);
+		closure(i, values);
+	}	
+}
+
+task excelTest << {
+	src='/work/LECS/LECS-Build/src/request/tst/20111024-0957/반영요청서_안지성_20111021_01.xlsx'
+	execlExecute (file(src), 0, {row, value -> println "$row: $value"})
+}
+
+
+

@@ -1,0 +1,541 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottesuper2011lb_jenkins">
+    <!-- **************************************************************** -->
+	<!-- PROPERTY -->
+	<!-- **************************************************************** -->
+	<property name="deploy.id" value="${DEPLOY_ID}"/>
+	
+	<property file="${deployer.home.dir}/scripts/${ant.project.name}.${deploy.phase}.properties"/>
+	<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_LOTTEBATCH_1_TEST_BUILD/workspace/lottesuper2011/pack/REAL/LB_20160509_1330/BIN/shell -->
+	<property name="pack.real.path" value="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/${svrWebappPath}" />
+	<property name="dist.path" value="lotte-super-lottebatch/dist" />
+	
+	<property name="init.build.log" value="../logs/${ant.project.name}/${deploy.id}_BUILD.log" />
+	<property name="init.was.log" value="../logs/${ant.project.name}/${deploy.id}_INIT.log" />
+	<property name="dep.was.log" value="../logs/${ant.project.name}/${deploy.id}_DEP.log" />
+	<property name="dep.test.was.log" value="../logs/${ant.project.name}/${deploy.id}_DEP_TEST.log" />
+	<property name="rollback.was.log" value="../logs/${ant.project.name}/${deploy.id}_ROLLBACK_WAS.log" />
+		
+	<property name="user.id" value="${svrUserId}"/>
+	<property name="user.pwd" value="${svrUserPassword}"/>
+	
+	<property name="ssh.init.cmd" value="ssh_lbinit" /><!-- 2017/01/25 19:20 ssh lbinit 추가 -->
+	<property name="ssh.dep.cmd" value="ssh_lbdeploy" /><!-- 2017/01/25 19:20 ssh lbdeploy 추가 -->
+	<property name="ssh.dep.test.cmd" value="ssh_lbdeploytest" /><!-- 2017/01/25 19:20 ssh lbdeploy 추가 -->
+	<property name="ssh.rollback.cmd" value="ssh_lbrollback" /><!-- 2017/01/26 21:46 ssh lbRollback 추가 -->
+	<property name="ssh.rollback.test.cmd" value="ssh_lbrollbacktest" /><!-- 2017/01/26 21:46 ssh lbRollback 추가 -->
+
+	
+	<!-- 시험배포 자동화용 -->
+	<tstamp><format property="deploy.date" pattern="yyyyMMdd"/></tstamp>
+	<property name="rglr.dep.id" value="LB_${deploy.date}_1330"/>
+
+	<!-- 첫 접수시 0건이면, 다음 접수시 지각한 건 접수하지 않도록 하기위함 -->
+	<property name="lock.workspace" value="E:/jenkins-lottesuper/jobs/LOTTESUPER_LOTTEBATCH_0_TEST_LOCK/workspace" />
+
+	<!-- properties -->
+	<!-- hudson setting properties
+		deployer.home.dir
+		java.home.dir
+		jeus.home.dir
+		deploy.phase
+	-->
+
+        <target name="run" depends="set_params">
+		<!-- deploy.id = LB_20160427_1330 -->
+		<echo>♠ BUILD ${deploy.id}</echo>
+		<antcall target="update" />
+		<antcall target="merge" />
+		<antcall target="build" />
+		<antcall target="pack" />
+	</target>
+	
+	<target name="run_build">
+		<antcall target="merge" />
+		<antcall target="build" />
+		<antcall target="pack" />
+	</target>
+	
+	<target name="run_deploy">
+		<antcall target="backup" />
+		<antcall target="deploy" />
+	</target>
+	
+	<target name="ssh_deploy_lottebatch1_was">
+		<antcall target="ssh_init_was" />
+		<antcall target="ssh_send_was" />
+		<!--<antcall target="ssh_copy_test_was" />-->
+		<antcall target="ssh_copy_was" />
+		
+	</target>
+
+	<target name="ssh_deploy_lottebatch2_was">
+			<antcall target="ssh_init_was" />
+			<antcall target="ssh_send_was" />
+		<!--<antcall target="ssh_copy_test_was" />-->
+		<antcall target="ssh_copy_was" />
+	</target>
+	
+	<target name="ssh_deploy_lottebatch3_was">
+			<antcall target="ssh_init_was" />
+			<antcall target="ssh_send_was" />
+		<!--<antcall target="ssh_copy_test_was" />-->
+		<antcall target="ssh_copy_was" />
+	</target>
+
+	<target name="ssh_deploy_lottebatch7_was">
+			<antcall target="ssh_init_was" />
+			<antcall target="ssh_send_was" />
+		<!--<antcall target="ssh_copy_test_was" />-->
+		<antcall target="ssh_copy_was" />
+	</target>
+
+	<target name="ssh_deploy_lottebatch8_was">
+					<antcall target="ssh_init_was" />
+					<antcall target="ssh_send_was" />
+				<!--<antcall target="ssh_copy_test_was" />-->
+				<antcall target="ssh_copy_was" />
+	</target>
+
+	
+	<target name="check_remote_work" unless="isSuccess">
+		<fail message="원격지 작업이 실패하였습니다..." />
+	</target>
+
+			
+	<!-- ##### SSH INIT ##### -->
+	<target name="ssh_init_was">
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${init.was.log}"
+			command="cd deploy;./${ssh.init.cmd} ${deploy.id}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${init.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+	</target>
+
+	<!-- ##### SSH SEND ##### -->
+	<!-- 1. SCP (from nas to docroot) -->
+	<!--
+	was.ip=211.172.253.250
+	nas.dir=/usr1/home/xclass/deploy/src_super
+	-->
+	<!--
+	<scp todir="xclass:s7uxEDRe#8R=@$211.172.253.250:/usr1/home/xclass/deploy/src_super/LB_20170125_1330" trust="true">
+	<scp todir="xclass:s7uxEDRe#8R=@$211.172.253.251:/usr1/home/xclass/deploy/src_super/LB_20170125_1330" trust="true">
+	<scp todir="xclass:s7uxEDRe#8R=@$211.172.253.252:/usr1/home/xclass/deploy/src_super/LB_20170125_1330" trust="true">
+	<fileset dir="E:/jenkins-lottesuper/jobs/LOTTESUPER_BATCH_1_TEST_BUILD/workspace/lottesuper2011/pack/REAL/LB_20161205_1330">
+	
+	테스트 :  nas.dir=/usr1/home/xclass/deploy/src
+	운영    :  nas.dir=/usr1/home/xclass/deploy/src_super
+	-->
+	<target name="ssh_send_was">
+		<echo message="SSH_SEND_WAS 입니다."/>
+		<echo message="user.id 는 ${user.id} , user.pwd 는 ${user.pwd} 입니다."/>
+		<echo message="${user.id}:${user.pwd}@${was.ip}:${nas.dir}/${deploy.id}"/>
+		<scp todir="${user.id}:${user.pwd}@${was.ip}:${nas.dir}/${deploy.id}" trust="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}">
+				<exclude name="classes/**/*"></exclude>
+			</fileset>
+		</scp>
+	</target>	
+
+	<!-- ##### SSH COPY ##### -->
+	<target name="ssh_copy_was">
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" output="${dep.was.log}"
+			command="cd deploy;./${ssh.dep.cmd} ${deploy.id}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${dep.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />		
+	</target>
+
+	
+	<target name="ssh_copy_test_was">
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" output="${dep.test.was.log}"
+			command="cd deploy;./${ssh.dep.test.cmd} ${deploy.id}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${dep.test.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />		
+	</target>
+
+			
+	<!-- **************************************************************** -->
+	<!-- CHECK -->
+	<!-- **************************************************************** -->
+	<target name="set_params">
+		<echo>♠ 배포ID를 세팅합니다.</echo>
+		<condition property="deploy.id" value="${main.deploy.id}">
+			<and>
+				<contains string="${main.deploy.id}" substring="CM_" casesensitive="true" />
+				<length string="${main.deploy.id}" when="greater" length="15"/>
+			</and>
+		</condition>
+		<condition property="deploy.id" value="${comm.deploy.id}">
+			<and>
+				<contains string="${comm.deploy.id}" substring="CM_" casesensitive="true" />
+				<length string="${comm.deploy.id}" when="greater" length="15"/>
+			</and>
+		</condition>
+		<condition property="isValid">
+			<and>
+				<contains string="${deploy.id}" substring="CM_" casesensitive="true" />
+				<length string="${deploy.id}" when="greater" length="15"/>
+			</and>
+		</condition>
+	</target>
+	
+	<target name="check_jar"><!-- 여기서는 사용하지 않는것으로 보임 -->
+		<echo>♠ common jar가 있는지 확인합니다.</echo>
+		<condition property="existJar">
+			<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_LOTTEBATCH_1_TEST_BUILD/workspace/lottesuper2011/branches/REAL/-->
+			<!-- src.jar.path(?) -->
+			<!-- comm.jar.nm(?) -->
+			<resourceexists><file file="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${src.jar.path}/${comm.jar.nm}" /></resourceexists>
+		</condition>
+	</target>
+	
+	<target name="check_lock_prop">
+		<condition property="existLockProp">
+			<resourceexists>
+				<file file="${lock.workspace}/${rglr.dep.id}_lock.properties"/>
+			</resourceexists>
+		</condition>
+	</target>
+	
+	<!-- **************************************************************** -->	
+	<!-- UPDATE -->
+	<!-- **************************************************************** -->
+	<target name="update" if="isValid">
+		<echo>♠ trunk, branches를 update합니다.</echo>
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="update"/>
+		</java>
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- LOCK, 접수 : 정기배포, 자동접수 시에만 사용 -->
+	<!-- **************************************************************** -->
+	<target name="set_prop" unless="existLockProp">
+		<propertyfile file="${lock.workspace}/${rglr.dep.id}_lock.properties">
+			<entry key="deploy_count" type="int" value="0" />
+			<entry key="first_error" value="false" />
+		</propertyfile>
+	</target>
+		
+	<target name="exec_app">
+		<property file="${lock.workspace}/${rglr.dep.id}_lock.properties" />
+		
+		<condition property="isStop">
+			<equals arg1="${first_error}" arg2="true" trim="true" />
+		</condition>
+		<fail if="${isStop}" message="당일 접수한 배포 건이 없습니다." />		
+		
+		<java jvm="${java.home.dir}/bin/java" fork="yes"
+		      failonerror="false"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar"
+			  errorproperty="error">
+			<arg value="${ant.project.name}"/>
+			<arg value="${rglr.dep.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="accept"/>
+		</java>
+		<condition property="isError">
+			<length string="${error}" when="greater" length="0" />
+		</condition>
+		
+		<condition property="isFirstError">
+			<and>
+				<istrue value="${isError}" />
+				<equals arg1="0" arg2="${deploy_count}" trim="true" />
+			</and>
+		</condition>
+		
+		<propertyfile file="${lock.workspace}/${rglr.dep.id}_lock.properties">
+			<entry key="deploy_count" default="0" type="int" operation="+" />
+			<entry key="first_error" value="${isFirstError}" />
+		</propertyfile>
+		
+		<fail if="${isError}" message="." />
+		
+		<record name="${ant.project.name}_param.properties" emacsmode="true" action="start" />
+		<echo>DEPLOY_ID=${rglr.dep.id}</echo>
+		<record name="${ant.project.name}_param.properties" emacsmode="true" action="stop" />
+	</target>
+	
+	<target name="accept" depends="check_lock_prop">
+		<antcall target="set_prop" />
+		<antcall target="exec_app" />
+	</target>
+	
+	
+	<!-- **************************************************************** -->	
+	<!-- MERGE -->
+	<!-- **************************************************************** -->
+	<target name="merge">
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="merge"/>
+		</java> 
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- BUILD -->
+	<!-- **************************************************************** -->
+	<target name="build">
+		<record name="${init.build.log}" action="start"/>
+		<!-- 빌드에 필요한 추가정보 획득  -->
+		<!-- 파일로 저장 -->
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="build"/>
+		</java>		
+				
+		<path id="classpath">
+			<fileset dir="${java.home.dir}/jre/lib">
+				<include name="rt.jar" />
+			</fileset>
+			
+			<!-- lib 폴더 Jar 참조 -->
+			<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_LOTTEBATCH_1_TEST_BUILD/workspace/lottesuper2011/branches/REAL/lotte-super-lottebatch/lib/*.jar -->
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcLibPath}">
+				<include name="*.jar" />
+			</fileset>
+		</path>
+		
+	    <!-- static -->
+		<!-- 
+			## 폴더 삭제후 생성 ##
+			E:/jenkins-lottesuper/jobs/LOTTESUPER_LOTTEBATCH_1_TEST_BUILD/workspace/lottesuper2011/branches/REAL/lotte-super-lottebatch/build 
+		-->
+		<!-- srcdir  = E:/jenkins-lottesuper/jobs/LOTTESUPER_LOTTEBATCH_1_TEST_BUILD/workspace/lottesuper2011/branches/REAL/lotte-super-lottebatch/src -->
+	    <!-- destdir = E:/jenkins-lottesuper/jobs/LOTTESUPER_LOTTEBATCH_1_TEST_BUILD/workspace/lottesuper2011/branches/REAL/lotte-super-lottebatch/build -->
+		<delete dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}" />
+	    <mkdir dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}" />
+		<javac source="1.6"
+			target="1.6"
+			srcdir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcJavaPath}"
+			classpathref="classpath"
+			destdir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			fork="true" 
+			memoryMaximumSize="256m"
+			includeantruntime="false"/>	
+		
+		<record name="${init.build.log}" action="stop"/>
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- PACK -->
+	<!-- **************************************************************** -->
+	<target name="pack">
+        <!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_LOTTEBATCH_1_TEST_BUILD/workspace/lottesuper2011/pack/REAL/LB_20160509_1330/BIN/shell -->
+		<delete dir="${pack.real.path}" /> <!-- 2013-01-02 추가 -->
+		<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_LOTTEBATCH_1_TEST_BUILD/workspace/lottesuper2011/pack/REAL/LB_20160509_1330/BIN/shell -->
+		<mkdir dir="${pack.real.path}" />  <!-- 2013-01-02 추가 -->
+
+
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="pack"/>
+		</java>
+		<antcall target="pack_jar" />
+	</target>
+	
+	<target name="pack_jar">		
+		<delete includeemptydirs="true">
+			<!-- Jar 생성 폴더 삭제 -->
+			<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_LOTTEBATCH_1_TEST_BUILD/workspace/lottesuper2011/branches/REAL/lotte-super-lottebatch/dist/**/* -->
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${dist.path}" includes="**/*" />
+    	</delete>
+		
+		<!-- Jar 생성 -->
+		<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_LOTTEBATCH_1_TEST_BUILD/workspace/lottesuper2011/branches/REAL/lotte-super-lottebatch/dist/lottesuper-batch.jar -->
+		<jar encoding="UTF-8" destfile="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${dist.path}/lottesuper-batch.jar">
+			<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_LOTTEBATCH_1_TEST_BUILD/workspace/lottesuper2011/branches/REAL/lotte-super-lottebatch/build -->
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}" />
+		</jar>
+
+		<!-- branches 에 있는 Jar 파일을 서버 경로로 복사 -->
+		<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_LOTTEBATCH_1_TEST_BUILD/workspace/lottesuper2011/pack/REAL/LB_20160509_1330/BIN/lib -->
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/${svrLibPath}">
+			<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_LOTTEBATCH_1_TEST_BUILD/workspace/lottesuper2011/branches/REAL/lotte-super-lottebatch/dist/lottesuper-batch.jar -->
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${dist.path}">
+				<include name="lottesuper-batch.jar"/>
+		    </fileset>
+		</copy>
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- BACKUP -->
+	<!-- **************************************************************** -->
+	<target name="backup">
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="deploy"/>
+			<arg value="${was.ip}" />
+			<arg value="21" />
+			<arg value="${user.id}" />
+			<arg value="${user.pwd}" />
+		</java> 
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- DEPLOY -->
+	<!-- **************************************************************** -->	
+	
+	<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_LOTTEBATCH_1_TEST_BUILD/workspace/lottesuper2011/pack/REAL/LB_20160509_1330/BIN/lib -->
+	<!-- nas.dir=/usr1/home/xclass/deploy/src -->
+	<target name="deploy">
+		<!-- 1. FTP (from local to nas) -->
+		<ftp server="${was.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${nas.dir}"
+		     action="put"
+			 passive="yes">
+			<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_LOTTEBATCH_1_TEST_BUILD/workspace/lottesuper2011/pack/REAL/LB_20160509_1330 -->
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}">
+				<!-- classes/**/* 파일들 제외 -->
+				<exclude name="classes/**/*"></exclude>
+			</fileset>
+		</ftp>
+	</target>
+
+        <!-- **************************************************************** -->
+	<!-- 시험배포 -->
+	<!-- **************************************************************** -->	
+	<target name="record">
+		<java jvm="${java.home.dir}/bin/java" fork="yes"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="record"/>
+		</java>
+	</target>	
+
+        <!-- **************************************************************** -->
+	<!-- NOTICE -->
+	<!-- **************************************************************** -->	
+	<target name="notice_fail">
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="notice"/>
+			<arg value="FAIL"/>
+		</java> 
+	</target>
+	
+	<target name="notice_success">
+		<java jvm="${java.home.dir}/bin/java" fork="true"
+		      failonerror="true"
+		      jar="${deployer.home.dir}/bin/deploy-deployer.jar">
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="${deploy.phase}"/>
+			<arg value="notice"/>
+			<arg value="SUCCESS"/>
+		</java> 
+	</target>	
+	
+	<!-- **************************************************************** -->
+	<!-- ROLLBACK FOR TEST SERVER -->
+	<!-- **************************************************************** -->
+	<target name="rollback_was">
+		<antcall target="rollback_start_time" />
+		<antcall target="rollback" />
+		<antcall target="rollback_end_time" />
+	</target>
+	
+	<target name="rollback_start_time">
+		<tstamp>
+			<format property="DSTAMP" pattern="yyyy.MM.dd"/>
+			<format property="TSTAMP" pattern="HH:mm"/>
+		</tstamp>
+		<echo message="Rollback Start ==> ${DSTAMP}-${TSTAMP}"/>
+	</target>
+	
+	<target name="rollback_end_time">
+		<tstamp>
+			<format property="DSTAMP" pattern="yyyy.MM.dd"/>
+			<format property="TSTAMP" pattern="HH:mm"/>
+		</tstamp>
+		<echo message="Rollback End ==> ${DSTAMP}-${TSTAMP}"/>
+	</target>
+	
+	<!-- 2. FTP (from local to nas) -->
+	<target name="rollback">
+		<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_LOTTEBATCH_1_TEST_BUILD/workspace/lottesuper2011/pack/REAL/LB_20160626_1330_backup/classes/esuper/**/* -->
+		<ftp server="${was.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${svrDocRoot}"
+		     action="put"
+			 verbose="yes"
+			 passive="yes">
+			<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_LOTTEBATCH_1_TEST_BUILD/workspace/lottesuper2011/pack/REAL/LB_20160509_1330_backup -->
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}_backup">
+				<!-- <include name="classes/esuper/**/*"></include> --><!-- 기존에 있던 코드인데 왜 이렇게 해놓았는지 모르겠음 -->
+				<!-- classes/**/* 파일들 제외 -->
+				<exclude name="classes/**/*"></exclude>
+
+			</fileset>
+		</ftp>
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- ROLLBACK FOR SSH -->
+	<!-- 2. SSH (from nas to docroot) -->
+	<!-- **************************************************************** -->
+	<!-- ssh.rollback.cmd = ssh_lbrollback -->
+		
+    <target name="ssh_rollback_was">
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" output="${rollback.was.log}"
+			command="cd deploy;./${ssh.rollback.cmd} ${deploy.id}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${rollback.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />		
+	</target>
+
+	<!--  TEST -->
+    <target name="ssh_rollback_test_was">
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" output="${rollback.was.log}"
+			command="cd deploy;./${ssh.rollback.test.cmd} ${deploy.id}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${rollback.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />		
+	</target>
+
+	
+</project>

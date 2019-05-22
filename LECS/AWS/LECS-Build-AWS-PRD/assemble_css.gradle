@@ -1,0 +1,111 @@
+CSS링크수정 = {  TARGET ->
+	dir = 컨텐츠_목적_위치(TARGET)
+	cssCfg = CSSImageUrlPrefix[TARGET][DEPLOY]
+	
+	println "CSS 이미지 링크 수정을 시작합니다."
+	targetDir = dir
+	if (new File(targetDir).exists()==false){
+		new File(targetDir).mkdirs()
+	}
+	
+
+	//println "/rule/conect_recycle.gif".replaceAll(/^\//, prefix)
+	//println "'../image/customer/bg_snbS.gif'".replaceAll(/\.\.\/image\//,  prefix)
+	//return
+	convert = { url, prefix -> 
+		orig = url
+		if(url.startsWith("http") == false) {
+		url = url.replaceAll("'",  "")
+		url = url.replaceAll(/\.\.\/image\//,  "/")
+		url = url.replaceAll(/\.\.\/images\//,  "/")
+		url = url.replaceAll(/\/image\//,  "/")
+		url = url.replaceAll(/\/images\//,  "/")
+		url = url.replaceAll(/\.\.\/img\//,  "/")
+		url = url.replaceAll(/\.\.\/\.\.\/img\//,  "/")
+		url = url.replaceAll(/\.\.\/\.\.\/\.\.\/img\//,  "/")
+		url = url.replaceAll(/\/\//,  "/")
+		url = url.replaceAll(/\.\.\//,  "")
+		url = url.replaceAll(/\.\.\//,  "")
+		url = url.replaceAll(/\.\.\//,  "")
+		url = url.replaceAll(/\.\.\//,  "")
+		url = url.replaceAll(/\.\.\//,  "")
+		url = url.replaceAll(/\.\.\//,  "")
+		url = url.replaceAll(/MJ001/,  "")
+		url = url.replaceAll(/http:\/\/[^\/]+/, prefix)
+		}
+
+		if (url.startsWith("http") == false && url.startsWith("/") ==false){
+			url = prefix+"/"+url
+		}
+
+		url = url.replaceAll(/^\//, prefix)
+
+		url = url.replaceAll(/\/\//, "/")
+		if (prefix.contains("http")){
+			url = url.replaceAll(/http:\//, "http://")		
+		}
+
+
+
+		logger.debug "Convert: $orig  -->  $url"
+		return url
+	}
+	
+	
+	
+	logFile = new File("css_convert.log")
+	logFile.setText("")
+	convertCount = 0
+
+	new File(dir).eachFileRecurse {  cssFile ->
+		if (cssFile.isDirectory() || cssFile.name.endsWith(".css") == false || cssFile.name.equals("screen.css") ) {
+			return;
+		}
+		
+		
+		def cfg = cssCfg['desktop']
+		def relativePath = cssFile.absolutePath.substring(new File(dir).absolutePath.length())
+		if (relativePath.contains("mobile/")){
+			cfg = cssCfg['mobile']
+		}
+		else if (relativePath.contains("mobile\\")){
+			cfg = cssCfg['mobile']
+			println "cfg mobile ~~!!!! = ${cfg}"
+		}
+		
+		logFile << "Source CSS: $cssFile.absolutePath\n"
+		
+		txt = cssFile.getText();
+		res = ""
+		txt.split("\n").each { line ->
+			// GIF, JPG, PNG only
+			m = line  =~ /([a-zA-Z0-9-:\/_\.]+\.([gG][iI][fF]|[jJ][pP][gG]|[pP][nN][gG]))[^a-zA-Z0-9]+/
+			if ( m.find()){
+				convertCount ++
+				logFile << "\t${line}\n"
+				imageUrl = m.group(1)
+				res += line.substring(0, m.start(1))
+				res += convert(imageUrl, cfg['http'])
+				res += line.substring(m.end(1))+"\n"
+			}
+			else {
+				res += line+"\n"
+			}
+		}
+		f = new File(targetDir+"/"+relativePath);
+		if (f.getParentFile().exists()==false){
+			f.getParentFile().mkdirs();
+		}
+		f.write(res,"UTF-8")
+		logger.debug "Target Path: $f.absolutePath"
+		//		cssFile.write(res, "UTF-8")			
+		
+	}
+	
+	println "CSS Image Link Convert Count: ${convertCount}"
+}
+
+task cssTest << {
+	CSS링크수정("temp", CSSImageUrlPrefix[Nike]['tst'])
+}
+

@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<project name="tomcat_lottesuper2011lb_jenkins_1.6">
+
+	<!-- **************************************************************** -->
+	<!-- PROPERTY -->
+	<!-- **************************************************************** -->
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties" />
+	<property file="${deployer.home.dir}/scripts/${ant.project.name}.${deploy.phase}.properties"/>
+	<property name="user.id" value="${svrUserId}"/>
+	<property name="user.pwd" value="${svrUserPassword}"/>
+	
+	<!-- **************************************************************** -->
+	<!-- BUILD -->
+	<!-- **************************************************************** -->
+	<target name="build">
+		<path id="classpath">
+			<fileset dir="${java.home.dir}/jre/lib">
+				<include name="rt.jar" />
+			</fileset>
+			
+			<!-- lib 폴더 Jar 참조 -->
+			<fileset dir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_LOTTEBATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-lottebatch/lib">
+				<include name="*.jar" />
+			</fileset>
+		</path>
+		
+	    <!-- static -->
+		<!-- 
+			## 폴더 삭제후 생성 ##
+			E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_LOTTEBATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-lottebatch/build 
+		-->
+		<delete dir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_LOTTEBATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-lottebatch/build" />
+	    <mkdir dir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_LOTTEBATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-lottebatch/build" />
+		<javac source="1.6"
+			target="1.6"
+			srcdir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_LOTTEBATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-lottebatch/src"
+			classpathref="classpath"
+			destdir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_LOTTEBATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-lottebatch/build"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			fork="true" 
+			memoryMaximumSize="256m"
+			includeantruntime="false"/>	
+		<antcall target="pack_jar"/>
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- PACK -->
+	<!-- **************************************************************** -->
+	<target name="pack_jar">
+		<mkdir dir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_LOTTEBATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-lottebatch/dist"/>
+		<delete includeemptydirs="true">
+			<!-- Jar 생성 폴더 삭제 -->
+			<fileset dir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_LOTTEBATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-lottebatch/dist" includes="**/*" />
+    	</delete>
+		
+		<!-- Jar 생성 -->
+		<jar encoding="UTF-8" destfile="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_LOTTEBATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-lottebatch/dist/lottesuper-batch.jar">
+			<fileset dir="E:/jenkins-lottesuper/jobs/TOMCAT_LOTTESUPER_LOTTEBATCH_1_${deploy.phase}_BUILD_${target}_${seq}_1.6/workspace/lottesuper2011/branches/PROJECT/tomcatProject/lotte-super-lottebatch/build" />
+		</jar>
+	</target>
+	
+</project>

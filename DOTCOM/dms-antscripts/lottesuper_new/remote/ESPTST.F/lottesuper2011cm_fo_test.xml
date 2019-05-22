@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottesuper2011cm_fo_test">
+	<property name="deploy.id" value="${DEPLOY_ID}"/>
+	<property name="deploy.dir" value="/usr1/home/jeus/deploy"/>
+	<property name="app.dir" value="project/back"/>
+
+	<!-- /usr1/home/jeus/deploy/CM_20161216_1330 -->
+	<!-- /usr1/home/jeus/deploy/ -->
+	<property name="source.dir" value="${deploy.dir}/${deploy.id}"/>
+	
+	<property name="cm_fo.dir" value="/esuper/project/front"/>
+	<property name="cm_mo.dir" value="/esuper/project/mobile"/>
+	<property name="cm_win.dir" value="/esuper/project/winwin"/>
+	<property name="cm_cp.dir" value="/esuper/project/company"/>
+	
+	<!-- deploy id ( for test only ) -->
+	<property name="prefix.dep.id" value="CM_" />
+	<property name="infix.dep.id" value="_TEST_" />
+	
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->		
+	<target name="check_test_deploy_id">
+		<condition property="isTestOnly">
+		  <and>
+			<length string="${deploy.id}" when="greater" length="10"/>
+			<contains string="${deploy.id}" substring="${prefix.dep.id}" casesensitive="true"/>
+			<contains string="${deploy.id}" substring="${infix.dep.id}" casesensitive="true"/>
+		  </and>
+		</condition>
+		<echo>TEST DEPLOY ID ${deploy.id} / Valid ${isTestOnly}</echo>
+	</target>
+
+	<target name="check_host">
+		<condition property="isHost">
+			<contains string="${hostname}" substring="esptstf"/>
+		</condition>
+		<echo>hostname is `${hostname}`</echo>
+	</target>
+			
+	<target name="check_valid" depends="check_host" unless="isHost">
+		<fail message="배포 대상 서버가 아닙니다."/>
+	</target>
+	
+	
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->
+	<!-- source.dir = /usr1/home/jeus/deploy/CM_20170209_1330 -->
+	<target name="check_exist">
+		<condition property="isExistCM_FO">
+			<resourceexists>
+				<!-- /usr1/home/xclass/deploy/src/CM_20170209_1330 -->
+				<file file="${source.dir}"/>
+			</resourceexists>
+		</condition>
+		<echo>isExistCM_FO / Valid ${isExistCM_FO}</echo>
+	</target>
+
+			
+	<!-- ================================================== -->
+	<!-- only test deploy -->
+	<!-- ================================================== -->	
+	<target name="test_deploy_was" depends="check_test_deploy_id">
+		<antcall target="rename_was" />
+		<antcall target="copy_was" />
+	</target>
+
+	<!-- ================================================== -->
+		<!-- only test deploy -->
+		<!-- ================================================== -->	
+		<target name="ssh_test_deploy_was" depends="check_test_deploy_id">
+			<!--<antcall target="ssh_rename_was" />-->
+			<antcall target="ssh_backup_was" />
+			<antcall target="ssh_copy_was" />
+		</target>
+	
+	<!-- ================================================== -->
+	<!-- init -->
+	<!-- ================================================== -->
+	<target name="init">
+		<antcall target="check_valid" />
+		<antcall target="delete_sources" />
+		<antcall target="make_directory" />
+	</target>
+	
+	
+	<!-- ================================================== -->
+		<!-- ssh init -->
+		<!-- ================================================== -->
+		<target name="ssh_init">
+			<antcall target="check_valid" />
+			<antcall target="delete_sources" />
+			<antcall target="make_directory" />
+		</target>
+	
+	<!-- delete dir = /usr1/home/jeus/deploy/CM_20161216_1330/project -->
+	<target name="delete_sources">
+		<echo>Target directory `${source.dir}/project`...</echo>
+		<delete dir="${source.dir}/project" />
+	</target>
+	
+	<!-- mkdir dir = /usr1/home/jeus/deploy/CM_20161216_1330/project/back/WEB-INF/lib -->
+	<!-- mkdir dir = /usr1/home/jeus/deploy/CM_20170105_TEST_SHPARK104/project/back/WEB-INF/lib -->
+	<target name="make_directory">
+		<echo>Target directory `${source.dir}/project/back/WEB-INF/lib`...</echo>
+		<mkdir dir="${source.dir}/project/back/WEB-INF/lib" />
+		
+	</target>
+	
+	<!-- ================================================== -->
+	<!-- rename (for test only) -->
+	<!-- ================================================== -->	
+	<target name="rename_was" if="isTestOnly">
+		<echo>change lotte-super-front to project</echo>
+		<exec executable="mv" dir="${source.dir}">
+			<arg value="lotte-super-front" />
+			<arg value="project" />
+		</exec>
+		<echo>change WebContent to front</echo>
+		<exec executable="mv" dir="${source.dir}/project">
+			<arg line="WebContent front" />
+		</exec>
+	</target>
+
+
+	<!-- ★ 다시 확인해야함 ★ -->
+	<!-- ================================================== -->
+	<!-- ssh rename (for test only) -->
+	<!-- ================================================== -->	
+	<target name="ssh_rename_was" if="isTestOnly">
+		<echo>change lotte-super-commons to project</echo>
+		<exec executable="mv" dir="${source.dir}">
+			<arg value="lotte-super-commons" />
+			<arg value="project" />
+		</exec>
+		<echo>change WebContent to front</echo>
+		<exec executable="mv" dir="${source.dir}/project">
+			<arg line="lib back/WEB-INF/lib" />
+		</exec>
+	</target>
+
+	<!-- ================================================== -->
+	<!-- ssh backup -->
+	<!-- ================================================== -->	
+
+	<!-- source.dir/app.dir                               =         /usr1/home/jeus/deploy/CM_20161212_1330/project/back -->
+	<!-- cm_fo.dir                                          =         /esuper/project/front -->
+	<!-- cm_mo.dir                                         =         /esuper/project/mobile -->
+	<!-- cm_win.dir                                        =         /esuper/project/winwin -->
+	<!-- cm_cp.dir                                         =         /esuper/project/company -->
+	<!-- source.dir_backup/project/front            =         /usr1/home/jeus/deploy/CM_20161212_1330_backup/project/front -->
+	<!-- source.dir_backup/project/mobile          =         /usr1/home/jeus/deploy/CM_20161212_1330_backup/project/mobile -->
+	<!-- source.dir_backup/project/winwin          =         /usr1/home/jeus/deploy/CM_20161212_1330_backup/project/winwin -->
+	<!-- source.dir_backup/project/company       =         /usr1/home/jeus/deploy/CM_20161212_1330_backup/project/company -->
+
+		<!-- front Backup -->
+		<target name="ssh_backup_was">
+			<echo>Backup ${source.dir}</echo>
+			<java jvm="${java.home}/bin/java" fork="yes"
+			      failonerror="yes"
+			      jar="${ant.home}/bin/lotte.jar">
+				<arg value="${source.dir}/${app.dir}"/>
+				<arg value="${cm_fo.dir}"/>
+				<arg value="${source.dir}_backup/project/front"/>
+			</java>
+			<antcall target="ssh_backup_mo_was" />
+		</target>
+		<!-- Mobile Backup -->
+		<target name="ssh_backup_mo_was">
+			<echo>Backup ${source.dir}</echo>
+			<java jvm="${java.home}/bin/java" fork="yes"
+			      failonerror="yes"
+			      jar="${ant.home}/bin/lotte.jar">
+				<arg value="${source.dir}/${app.dir}"/>
+				<arg value="${cm_mo.dir}"/>
+				<arg value="${source.dir}_backup/project/mobile"/>
+			</java>
+			<antcall target="ssh_backup_win_was" />
+		</target>
+		<!-- WinWin Backup-->
+		<target name="ssh_backup_win_was">
+			<echo>Backup ${source.dir}</echo>
+			<java jvm="${java.home}/bin/java" fork="yes"
+			      failonerror="yes"
+			      jar="${ant.home}/bin/lotte.jar">
+				<arg value="${source.dir}/${app.dir}"/>
+				<arg value="${cm_win.dir}"/>
+				<arg value="${source.dir}_backup/project/winwin"/>
+			</java>
+			<antcall target="ssh_backup_cp_was" />
+		</target>
+		<!-- Company Backup-->
+		<target name="ssh_backup_cp_was">
+			<echo>Backup ${source.dir}</echo>
+			<java jvm="${java.home}/bin/java" fork="yes"
+			      failonerror="yes"
+			      jar="${ant.home}/bin/lotte.jar">
+				<arg value="${source.dir}/${app.dir}"/>
+				<arg value="${cm_cp.dir}"/>
+				<arg value="${source.dir}_backup/project/company"/>
+			</java>
+		</target>
+	
+		      	
+	<!-- ================================================== -->
+	<!-- copy -->
+	<!-- ================================================== -->	
+	<target name="copy_was">
+		<copy todir="${base.dir}" overwrite="true" verbose="true">
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="**/*"/>
+		    </fileset>
+		</copy>
+	</target>	
+
+	
+	<!-- ================================================== -->
+	<!-- ssh 공통라이브러리 copy : 2016-12-20 -->
+	<!-- front, mobile, winwin, company 배포 -->
+	<!-- ================================================== -->
+	<!-- source.dir = /usr1/home/jeus/deploy/CM_20161216_1330 -->
+	<!-- app.dir = project/back -->
+	<!-- ${source.dir}/${app.dir} = /usr1/home/jeus/deploy/CM_20161216_1330/project/back -->
+	
+	<!-- 테스트 용도 -->
+	<!--
+	<target name="ssh_copy_was">
+		<copy todir="/esuper/project/deploytest/front" overwrite="true" verbose="true">
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="**/*"/>
+		    </fileset>
+		</copy>
+		<copy todir="/esuper/project/deploytest/mobile" overwrite="true" verbose="true">
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="**/*"/>
+		    </fileset>
+		</copy>
+		<copy todir="/esuper/project/deploytest/winwin" overwrite="true" verbose="true">
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="**/*"/>
+		    </fileset>
+		</copy>
+		<copy todir="/esuper/project/deploytest/company" overwrite="true" verbose="true">
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="**/*"/>
+		    </fileset>
+		</copy>
+	</target>	
+	-->
+	
+	<target name="ssh_copy_was">
+		<copy todir="/esuper/project/front" overwrite="true" verbose="true">
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="**/*"/>
+		    </fileset>
+		</copy>
+		<copy todir="/esuper/project/mobile" overwrite="true" verbose="true">
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="**/*"/>
+		    </fileset>
+		</copy>
+		<copy todir="/esuper/project/winwin" overwrite="true" verbose="true">
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="**/*"/>
+		    </fileset>
+		</copy>
+		<copy todir="/esuper/project/company" overwrite="true" verbose="true">
+			<fileset dir="${source.dir}/${app.dir}">
+				<include name="**/*"/>
+		    </fileset>
+		</copy>
+	</target>	
+
+	
+	<target name="ssh_rollback" depends="check_exist">
+		<antcall target="check_valid"/>
+		<echo message="Rollback FO Java Applications"/>
+		<antcall target="rollbackfo"/>
+	</target>	
+
+	
+	<target name="ssh_rollback_test" depends="check_exist">
+		<antcall target="check_valid"/>
+		<echo message="Rollback FO Java Applications"/>
+		<antcall target="rollbackfotest"/>
+	</target>	
+
+	<!-- SSH Rollback -->
+	<!-- source.dir = /usr1/home/jeus/deploy/CM_20161215_1330 -->
+	<!-- 경로가 back  밑에 있는 파일들 전체 롤백 -->
+	<!-- 테스트 용도 -->
+	<!--
+	<target name="rollbackfotest" if="isExistCM_FO">        
+        <copy todir="/esuper/project/rollbacktest/front" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/project/front"
+                     includes="**/*"/>
+        </copy>
+        <copy todir="/esuper/project/rollbacktest/mobile" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/project/mobile"
+                     includes="**/*"/>
+        </copy>
+        <copy todir="/esuper/project/rollbacktest/winwin" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/project/winwin"
+                     includes="**/*"/>
+        </copy>
+        <copy todir="/esuper/project/rollbacktest/company" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/project/company"
+                     includes="**/*"/>
+        </copy>
+    </target>		
+	-->
+
+		<target name="rollbackfo" if="isExistCM_FO">        
+        <copy todir="/esuper/project/front" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/project/front"
+                     includes="**/*"/>
+        </copy>
+        <copy todir="/esuper/project/mobile" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/project/mobile"
+                     includes="**/*"/>
+        </copy>
+        <copy todir="/esuper/project/winwin" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/project/winwin"
+                     includes="**/*"/>
+        </copy>
+        <copy todir="/esuper/project/company" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/project/company"
+                     includes="**/*"/>
+        </copy>
+    </target>		
+
+
+	<target name="rollbackfotest" if="isExistCM_FO">        
+    <copy todir="/esuper/project/rollbacktest/front" overwrite="yes" verbose="true">
+        <fileset dir="${source.dir}_backup/project/front"
+                 includes="**/*"/>
+    </copy>
+    <copy todir="/esuper/project/rollbacktest/mobile" overwrite="yes" verbose="true">
+        <fileset dir="${source.dir}_backup/project/mobile"
+                 includes="**/*"/>
+    </copy>
+    <copy todir="/esuper/project/rollbacktest/winwin" overwrite="yes" verbose="true">
+        <fileset dir="${source.dir}_backup/project/winwin"
+                 includes="**/*"/>
+    </copy>
+    <copy todir="/esuper/project/rollbacktest/company" overwrite="yes" verbose="true">
+        <fileset dir="${source.dir}_backup/project/company"
+                 includes="**/*"/>
+    </copy>
+</target>		
+
+</project>

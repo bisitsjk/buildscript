@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="fo_ssl_script">
+<!-- ================================================== -->
+<!-- 공통 -->
+<!-- ================================================== -->
+	<property name="dep.id" value="${DEPLOY_ID}" />	
+	<property name="source.dir" value="/ncontents/src/${dep.id}" />
+	<property name="java5.home"  value="/usr/java1.5" />
+	<property name="java.home"  value="/usr/java1.6" />
+	<property name="ant.home"   value="/ncontents/src/apache-ant-1.8.2" />
+	<property name="deployer.home" value="/ncontents/src/deployer" />
+	<property name="user.id"    value="jeus" />
+	<property file="user_pwd.properties" />
+
+	
+<!-- ================================================== -->
+<!-- secure(secure.lotte.com)  -->
+<!-- ================================================== -->
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->
+	<target name="target.sslCheck"><!-- ssl check -->
+		<condition property="target.isSecure" value="true" else="false"> <!-- secure -->
+				<contains string="${dep.id}" substring="SSL_SECURE_" casesensitive="true" />
+		</condition>
+		<echo>SSL Secure is ${target.isSecure}</echo>
+			
+		<condition property="target.isElsecure" value="true" else="false"> <!-- elsecure-->
+				<contains string="${dep.id}" substring="SSL_ELSECURE_" casesensitive="true" />
+		</condition>
+		<echo>SSL Elsecure is ${target.isElsecure}</echo>
+			
+		<condition property="target.isGsecure" value="true" else="false"> <!-- gsecure-->
+				<contains string="${dep.id}" substring="SSL_GSECURE_" casesensitive="true" />
+		</condition>
+		<echo>SSL Gsecure is ${target.isGsecure}</echo>
+	
+		<condition property="target.isSecureM" value="true" else="false"> <!-- securem -->
+				<contains string="${dep.id}" substring="SSL_SECUREM_" casesensitive="true" />
+		</condition>
+		<echo>SSL SecureM is ${target.isSecureM}</echo>
+					
+		<condition property="target.isElsecureM" value="true" else="false"> <!-- elsecurem -->
+				<contains string="${dep.id}" substring="SSL_ELSECUREM_" casesensitive="true" />
+		</condition>
+		<echo>SSL ElecureM is ${target.isElsecureM}</echo>
+	
+		<condition property="target.isClsecureM" value="true" else="false"> <!-- clsecurem -->
+				<contains string="${dep.id}" substring="SSL_CLSECUREM_" casesensitive="true" />
+		</condition>
+		<echo>SSL ClsecureM is ${target.isClsecureM}</echo>
+	
+		<condition property="target.isB2bsecureM" value="true" else="false"> <!-- b2bsecurem -->
+				<contains string="${dep.id}" substring="SSL_B2BSECUREM_" casesensitive="true" />
+		</condition>
+		<echo>SSL B2bsecureM is ${target.isB2bsecureM}</echo>
+	</target>
+	
+	<target name="ssl.check">
+		<condition property="ssl.isExist" value="true" else="false">
+					<not>
+						<resourceexists>
+							<file file="${source.dir}_backup/ssl"/>
+						</resourceexists>
+					</not>
+		</condition>
+	</target>
+
+
+	<!-- ================================================== -->
+	<!-- ssl backup -->
+	<!-- ================================================== -->
+	<target name="ssl.secure.backup" if="${target.isSecure}">
+		<mkdir dir="${source.dir}_backup/ssl"/>
+		<copy todir="${source.dir}_backup/ssl" overwrite="yes" verbose="true">
+            <fileset dir="/usr2/webtob/ssl"
+                     includes="secure.pem,
+            				   secureCA.pem"/>
+        </copy>
+	</target>
+
+	<target name="ssl.elsecure.backup" if="${target.isElsecure}">
+		<mkdir dir="${source.dir}_backup/ssl"/>
+		<copy todir="${source.dir}_backup/ssl" overwrite="yes" verbose="true">
+            <fileset dir="/usr2/webtob/ssl"
+                     includes="ellotte.pem,
+            				   ellotteCA.pem"/>
+        </copy>
+	</target>
+
+	<target name="ssl.gsecure.backup" if="${target.isGsecure}">
+		<mkdir dir="${source.dir}_backup/ssl"/>
+		<copy todir="${source.dir}_backup/ssl" overwrite="yes" verbose="true">
+            <fileset dir="/usr2/webtob/ssl"
+                     includes="gsecure.pem,
+            				   gsecureCA.pem"/>
+        </copy>
+	</target>
+
+	<target name="ssl.securem.backup" if="${target.isSecureM}">
+		<mkdir dir="${source.dir}_backup/ssl"/>
+		<copy todir="${source.dir}_backup/ssl" overwrite="yes" verbose="true">
+            <fileset dir="/usr2/webtob/ssl"
+                     includes="mobile.pem,
+            				   m-CA.pem"/>
+        </copy>
+	</target>
+
+	<target name="ssl.elsecurem.backup" if="${target.isElsecureM}">
+		<mkdir dir="${source.dir}_backup/ssl"/>
+		<copy todir="${source.dir}_backup/ssl" overwrite="yes" verbose="true">
+            <fileset dir="/usr2/webtob/ssl"
+                     includes="MELLOTTE.pem,
+            				   MELLOTTECA.pem"/>
+        </copy>
+	</target>
+
+	<target name="ssl.clsecurem.backup" if="${target.isClsecureM}">
+		<mkdir dir="${source.dir}_backup/ssl"/>
+		<copy todir="${source.dir}_backup/ssl" overwrite="yes" verbose="true">
+            <fileset dir="/usr2/webtob/ssl"
+                     includes="MCHINALOTTE.pem,
+            				   MCHINALOTTECA.pem"/>
+        </copy>
+	</target>
+
+	<target name="ssl.b2bsecurem.backup" if="${target.isB2bsecureM}">
+		<mkdir dir="${source.dir}_backup/ssl"/>
+		<copy todir="${source.dir}_backup/ssl" overwrite="yes" verbose="true">
+            <fileset dir="/usr2/webtob/ssl"
+                     includes="b2bmobile.pem,
+            				   b2bsecureCA-mo.pem"/>
+        </copy>
+	</target>
+	
+	<target name="ssl.backup" depends="ssl.check, target.sslCheck" if="${ssl.isExist}">
+		<antcall target="ssl.secure.backup"/>
+		<antcall target="ssl.elsecure.backup"/>
+		<antcall target="ssl.gsecure.backup"/>
+		<antcall target="ssl.securem.backup"/>
+		<antcall target="ssl.elsecurem.backup"/>
+		<antcall target="ssl.clsecurem.backup"/>
+		<antcall target="ssl.b2bsecurem.backup"/>
+	</target>
+	
+	
+	<!-- ================================================== -->
+	<!-- ssl deploy -->
+	<!-- ================================================== -->
+	<target name="ssl.deploy" >
+		<tstamp><format property="secure.ssl.time1" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${secure.ssl.time1}] ==========</echo>
+		<antcall target="ssl.copy"/>
+		<tstamp><format property="secure.ssl.time2" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${secure.ssl.time2}] ==========</echo>
+	</target>
+
+	<target name="ssl.copy" >
+        <echo message=""/>
+        <copy todir="/usr2/webtob/ssl" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/ssl"
+                     includes="*.pem"/>
+        </copy>
+	</target>
+	
+	
+	<!-- ================================================== -->
+	<!-- ssl rollback -->
+	<!-- ================================================== -->
+	<target name="ssl.rollback" >
+		<tstamp><format property="secure.ssl.time4" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${secure.ssl.time4}] ==========</echo>
+       <echo message="rollback ssl"/>
+        <copy todir="/usr2/webtob/ssl" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}_backup/ssl"
+                     includes="**/*"/>
+        </copy>
+		<tstamp><format property="secure.ssl.time5" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${dep.id} [${secure.ssl.time5}] ==========</echo>
+	</target>
+</project>

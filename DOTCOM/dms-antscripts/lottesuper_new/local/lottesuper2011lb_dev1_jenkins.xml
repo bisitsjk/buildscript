@@ -1,0 +1,644 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<project name="lotte-super-lottebatch" xmlns:artifact="antlib:org.apache.maven.artifact.ant">
+	<path id="maven-ant-tasks.classpath" path="${ant.home}/lib/maven-ant-tasks-2.1.3.jar"/>
+	<typedef resource="org/apache/maven/artifact/ant/antlib.xml"
+	         uri="antlib:org.apache.maven.artifact.ant" classpathref="maven-ant-tasks.classpath"/>
+		
+	<!-- ################## 참고사항 ################## -->
+	<!--
+				Request Url :   svn://vcs2.lotte.com/lottesuper2011/branches/REQUEST/lottebatch/LB_20170329_DEV_HSLIM/lotte-super-lottebatch
+				Release Url  :   svn://vcs2.lotte.com/lottesuper2011/tag/RELEASE/lotte-super-lottebatch
+	 -->				
+	<!-- ########################################## -->
+	<!-- param -->
+	<!--
+		DEPLOY_ID 형식 = LB_20170329_DEV_HSLIM
+	-->
+	<property name="deploy.id" value="${DEPLOY_ID}"/>
+	<!-- properties -->
+	<property name="java16.home"     value="C:/Program Files (x86)/Java/jdk1.6.0_25"/>
+	<property name="java15.home"     value="C:/Program Files (x86)/Java/jdk1.5.0_12"/>
+	<property name="deployer.home"   value="D:/deployer"/>
+	
+	<property name="java.home.dir"   value="C:/Program Files (x86)/Java/jdk1.6.0_25"/>
+	<property name="jeus.home.dir"   value="C:/TmaxSoft/JEUS6.0"/>
+
+	<property file="${deployer.home}/scripts/lotte-super-lottebatch.properties"/>	
+	
+	<property name="user.id"   value="jeus"/>
+	<property name="user.pwd"  value="w&uch6raDa*r"/>
+	
+	<!-- requestPath  =  /branches/REQUEST/lottebatch -->
+	<!-- workspace =  E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011 -->
+	<!-- req.dir       =  E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/branches/REQUEST/lottebatch/LB_20170329_DEV_HSLIM -->
+	<property name="req.dir"         value="${workspace}${requestPath}/${deploy.id}"/>
+	
+	<!-- releasePath = /tags/RELEASE -->
+	<!-- src.home = E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/tags/RELEASE -->
+	<property name="src.home"        value="${workspace}${releasePath}"/>
+	
+	
+	<!-- java.src.dir = E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/tags/RELEASE/lotte-super-lottebatch/src -->
+	<!-- srcPath=/lotte-super-lottebatch/src -->
+	<property name="java.src.dir"    value="${src.home}${srcPath}"/>
+	
+	<!-- libPath=/lotte-super-lottebatch/WebContent/WEB-INF/lib -->
+	<!-- java.lib.dir = E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/tags/RELEASE/lotte-super-lottebatch/WebContent/WEB-INF/lib -->
+	<property name="java.lib.dir"    value="${src.home}${libPath}"/>
+	
+	<!-- pack.dir = E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/packs/LB_20170329_DEV_HSLIM-->
+	<property name="pack.dir"        value="${workspace}${packPath}/${deploy.id}"/>
+	
+	<!--<property name="dst.class.dir"   value="${src.home}/${svrClassPath}"/>-->
+	<!-- svrClassPath=/WebContent/WEB-INF/classes -->
+	<!-- dst.class.dir = E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/branches/tags/RELEASE/lotte-super-lottebatch/WebContent/WEB-INF/classes-->
+	<property name="dst.class.dir"   value="${src.home}/${ant.project.name}${svrClassPath}"/>
+	
+	
+	<!-- svrLibPath=/lotte-super-lottebatch/WebContent/WEB-INF/lib -->
+	<!-- dst.lib.dir = E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/tags/RELEASE/lotte-super-lottebatch/WebContent/WEB-INF/lib-->
+	<property name="dst.lib.dir"     value="${src.home}/${ant.project.name}${svrLibPath}"/>
+	
+	<!--<property name="dst.dyna.class.dir"   value="${src.home}${svrDynaClassPath}"/>-->
+	<!-- property name="java.dyna.src.dir"    value="${src.home}${srcDynaPath}"/> -->
+	
+	<!-- java.dyna.src.dir = E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/branches/tags/RELEASE/lotte-super-lottebatch/src_dynamic -->
+	<!-- srcDynaPath=/lotte-super-lottebatch/src_dynamic -->
+	<!-- java.dyna.src.dir = E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/branches/tags/RELEASE/lotte-super-lottebatch/src_dynamic -->	
+	<!-- svrDynaClassPath=/WebContent/WEB-INF/dynamic_classes -->
+	<!-- dst.dyna.class.dir = E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/branches/tags/RELEASE/lotte-super-lottebatch/WebContent/WEB-INF/dynamic_classes -->
+	<property name="dst.dyna.class.dir"   value="${src.home}/${ant.project.name}${svrDynaClassPath}"/>
+		
+	
+	<!-- remote.home.dir = /ec/site/foundation -->
+	<!-- remote.home.dir = /esuper/project -->
+	
+	<property name="remote.home.dir" value="${docRoot}"/>
+	
+	<property name="org.springframework-version" value="3.1.1.RELEASE" />
+	<property name="org.aspectj-version" value="1.6.10" />
+	<property name="org.slf4j-version" value="1.6.6" />
+	
+	<!-- validation -->
+	<!-- req.dir   =  E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/branches/REQUEST/lottebatch/LB_20170329_DEV_HSLIM -->
+	<target name="param_check">
+		<condition property="isValid">
+			<and>
+			    <contains string="${deploy.id}" substring="LB_" casesensitive="true" />
+				<length string="${deploy.id}" when="greater" length="12"/>
+				<resourceexists>
+					<file file="${req.dir}"/>
+				</resourceexists>
+			</and>
+		</condition>
+	</target>
+
+	<!-- req.dir   =  E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/branches/REQUEST/lottebatch/LB_20170329_DEV_HSLIM -->
+	<target name="param_check_fail" unless="isValid">
+		<echo>${req.dir}</echo>
+		<fail message="DEPLOY_ID가 유효하지 않습니다."/>
+	</target>
+	
+	<!-- merge -->
+	<!-- deployer.home = D:/deployer -->
+	<!-- fileset dir = deployer.home = D:/deployer/lib -->
+	<path id="deployerclasspath">
+		<fileset dir="${deployer.home}/lib">
+			<include name="*.jar" />
+		</fileset>
+	</path>	
+	
+	<target name="merge" depends="param_check">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="param_check_fail"/>
+		<antcall target="exec_merge"/>
+	</target>
+		
+	<!-- 
+	    ★  Parameters ★
+		      ant.project.name   =    lotte-super-lottebatch 
+			  deploy.id                   =    FD_XXX_XXX
+		      merge                          
+	-->
+	
+	<!-- deployer.home = D:/deployer -->
+	<target name="exec_merge" if="isValid">
+		<java jar="${deployer.home}/bin/deployer1.1.3.jar"
+		      fork="true" failonerror="true" >
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="merge"/>			
+		</java> 
+	</target>
+	
+	<!-- build -->
+	<!--
+	<artifact:dependencies pathId="dependency.classpath">
+		<dependency groupId="org.springframework" artifactId="spring-context" version="${org.springframework-version}"/>
+		<dependency groupId="org.springframework" artifactId="spring-webmvc" version="${org.springframework-version}"/>
+		<dependency groupId="org.aspectj" artifactId="aspectjrt" version="${org.aspectj-version}"/>
+		<dependency groupId="servlets.com" artifactId="cos" version="05Nov2002"/>
+		<dependency groupId="org.slf4j" artifactId="slf4j-api" version="${org.slf4j-version}"/>
+		<dependency groupId="org.slf4j" artifactId="jcl-over-slf4j" version="${org.slf4j-version}"/>
+		<dependency groupId="org.slf4j" artifactId="slf4j-log4j12" version="${org.slf4j-version}"/>
+		<dependency groupId="log4j" artifactId="log4j" version="1.2.15" >
+			<exclusion groupId="javax.mail" artifactId="mail" />
+			<exclusion groupId="javax.jms" artifactId="jms" />
+			<exclusion groupId="com.sun.jdmk" artifactId="jmxtools" />
+			<exclusion groupId="com.sun.jmx" artifactId="jmxri" />
+		</dependency>
+		<dependency groupId="javax.inject" artifactId="javax.inject" version="1"/>
+		<dependency groupId="javax.servlet" artifactId="servlet-api" version="2.5"/>
+		<dependency groupId="javax.servlet.jsp" artifactId="jsp-api" version="2.1"/>
+		<dependency groupId="javax.servlet" artifactId="jstl" version="1.2"/>
+		<dependency groupId="junit" artifactId="junit" version="4.7"/>
+		<dependency groupId="com.oracle" artifactId="ojdbc14" version="10.2.0.4.0"/>
+		<dependency groupId="org.apache.maven.plugins" artifactId="maven-compiler-plugin" version="2.5.1"/>
+		<dependency groupId="org.codehaus.mojo" artifactId="exec-maven-plugin" version="1.2.1"/>
+		
+		
+		<remoteRepository id="remote.repos" url="http://mesir.googlecode.com/svn/trunk/mavenrepo" />
+	</artifact:dependencies>
+	-->
+	
+	
+	<!-- ################# Foundation ################## -->
+	<!-- dst.lib.dir = E:/hudson-hosting/teams/smb/jobs/smb.FOUNDATION2014_BUILD_AND_PACK/workspace/foundation2014/tags/RELEASE/lottefoundation/src/main/webapp/WEB-INF/lib -->
+	<!-- dst.class.dir = E:/hudson-hosting/teams/smb/jobs/smb.FOUNDATION2014_BUILD_AND_PACK/workspace/foundation2014/tags/RELEASE/lottefoundation/src/main/webapp/WEB-INF/classes-->
+	<!-- dst.dyna.class.dir = E:/hudson-hosting/teams/smb/jobs/smb.FOUNDATION2014_BUILD_AND_PACK/workspace/foundation2014/tags/RELEASE/lottefoundation/src/main/webapp/WEB-INF/classes -->
+
+	<!--##################### 롯데슈퍼 ################# -->
+	<!-- dst.lib.dir                    =    E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/branches/tags/RELEASE/lotte-super-lottebatch/WebContent/WEB-INF/lib -->
+	<!-- dst.class.dir               =    E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/branches/tags/RELEASE/lotte-super-lottebatch/WebContent/WEB-INF/classes -->
+	<!-- dst.dyna.class.dir   =    E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/branches/tags/RELEASE/lotte-super-lottebatch/WebContent/WEB-INF/dynamic_classes --> 
+	
+	<!--
+	<path id="classpath.ref">
+		<path refid="dependency.classpath"/>
+		
+		<fileset dir="${java.lib.dir}">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="${java15.home}/jre/lib">
+			<include name="rt.jar" />
+		</fileset>
+		<fileset dir="C:/TmaxSoft/JEUS5.0/lib">
+			<include name="**/*.jar" />
+		</fileset>
+
+		<fileset dir="${dst.lib.dir}">
+			<include name="*.jar"/>
+		</fileset>
+		<dirset dir="${dst.class.dir}" />
+		<dirset dir="${dst.dyna.class.dir}" />
+	</path>
+	
+	<target name="build">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="compile"/>
+	</target>
+	-->
+	
+	<!-- ◆ 공통라이브러리를 어떻게 할것인지 점검이 필요함 ◆ -->
+	<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/tag/RELEASE/lotte-super-commons/lib/*.jar --> <!-- 공통라이브러리 lib 파일들 -->
+	<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/tag/RELEASE/lotte-super-commons/dist/*.jar --> <!-- 공통라이브러리 class 로 묶인 Jar -->
+	<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/tag/RELEASE/lotte-super-lottebatch/WebContent/WEB-INF/classes --><!-- FO static class 파일들-->
+	<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/tag/RELEASE/lotte-super-lottebatch/WebContent/WEB-INF/lib/*.jar -->
+	<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/tag/RELEASE/lotte-super-lottebatch/WebContent/WEB-INF/dynamic_classes --><!-- FO dynamic class 파일들 -->
+	<!--
+	<path id="classpath.ref">
+		<fileset dir="${java.home.dir}/jre/lib">
+			<include name="rt.jar" />
+		</fileset>
+		<fileset dir="${jeus.home.dir}/lib/datasource">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="${jeus.home.dir}/lib/system">
+			<include name="*.jar" />
+		</fileset>
+		
+		 <fileset dir="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/branches/tag/RELEASE/lotte-super-commons/lib">
+			<include name="*.jar" />
+		</fileset>
+
+			<fileset dir="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/branches/tag/RELEASE/lotte-super-commons/dist">
+			<include name="*.jar" />
+		</fileset>
+		
+		<fileset dir="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/branches/tag/RELEASE/lotte-super-lottebatch/WebContent/WEB-INF/lib">
+			<include name="*.jar" />
+		</fileset>
+
+		<dirset dir="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/branches/tag/RELEASE/lotte-super-lottebatch/WebContent/WEB-INF/classes" />
+	    
+		<dirset dir="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/branches/tag/RELEASE/lotte-super-lottebatch/WebContent/WEB-INF/dynamic_classes" />
+	</path>
+	-->
+	
+	<!-- #################### Foundation Reference Start ##################### -->
+	
+	<!-- javac srcdir : java.src.dir = E:/hudson-hosting/teams/smb/jobs/smb.FOUNDATION2014_BUILD_AND_PACK/workspace/foundation2014/tags/RELEASE/lottefoundation/src/main/java -->	
+	<!-- destdir : dst.class.dir = E:/hudson-hosting/teams/smb/jobs/smb.FOUNDATION2014_BUILD_AND_PACK/workspace/foundation2014/tags/RELEASE/lottefoundation/src/main/webapp/WEB-INF/classes-->
+
+	<!-- copy todir : dst.class.dir = E:/hudson-hosting/teams/smb/jobs/smb.FOUNDATION2014_BUILD_AND_PACK/workspace/foundation2014/tags/RELEASE/lottefoundation/src/main/webapp/WEB-INF/classes  -->
+	<!-- fileset dir : java.src.dir = E:/hudson-hosting/teams/smb/jobs/smb.FOUNDATION2014_BUILD_AND_PACK/workspace/foundation2014/tags/RELEASE/lottefoundation/src/main/java -->
+	
+	<!-- copy todir : dst.class.dir = E:/hudson-hosting/teams/smb/jobs/smb.FOUNDATION2014_BUILD_AND_PACK/workspace/foundation2014/tags/RELEASE/lottefoundation/src/main/webapp/WEB-INF/classes  -->
+	<!-- fileset dir : java.dyna.src.dir = E:/hudson-hosting/teams/smb/jobs/smb.FOUNDATION2014_BUILD_AND_PACK/workspace/foundation2014/tags/RELEASE/lottefoundation/src/main/resources -->
+	
+	<!-- #################### Foundation Reference End ##################### -->
+	
+	<!-- #################### Foundation Reference Start ##################### -->
+	
+	
+	<!-- #################### Annotation  Start ######################## -->
+	
+	<!-- javac srcdir : java.src.dir              =      E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/branches/tags/RELEASE/lotte-super-lottebatch/src -->	
+	<!-- destdir : dst.class.dir                      =      E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/branches/tags/RELEASE/lotte-super-lottebatch/WebContent/WEB-INF/classes -->
+
+	<!-- 아래 코드는 java 외에 xml 파일들을 복사하기 위한 코드 -->
+	<!-- copy todir : dst.class.dir               =      E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/branches/tags/RELEASE/lotte-super-lottebatch/WebContent/WEB-INF/classes -->
+	<!-- fileset dir : java.src.dir                   =     E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/branches/tags/RELEASE/lotte-super-lottebatch/src/**/*   ,   E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/tags/RELEASE/lotte-super-lottebatch/src/**/*.java -->
+
+	<!-- 아래 코드는 Foundation 에서는 resource 를 복사하기 위한 코드인데 롯데슈퍼는 dynamic_classes 를 복사하기 위한 코드로 생성함 -->
+	<!-- copy todir : dst.dyna.class.dir    =     E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/branches/tags/RELEASE/lotte-super-lottebatch/WebContent/WEB-INF/dynamic_classes -->
+	<!-- fileset dir : java.dyna.src.dir        =     E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/branches/tags/RELEASE/lotte-super-lottebatch/src_dynamic/**/* -->
+	
+	
+	<!--
+				[static]
+				 srcStaticJavaPath = E:/jenkins-lottesuper/jobs/LOTTESUPER_lottebatch_1_TEST_BUILD/workspace/lottesuper2011/LB_20160624_1330/branches/REAL/lotte-super-lottebatch/src
+				 srcStaticClassesPath = E:/jenkins-lottesuper/jobs/LOTTESUPER_lottebatch_1_TEST_BUILD/workspace/lottesuper2011/LB_20160624_1330/branches/REAL/lotte-super-lottebatch/WebContent/WEB-INF/classes
+				[dynamic]		
+				srcDynamicJavaPath    = E:/jenkins-lottesuper/jobs/LOTTESUPER_lottebatch_1_TEST_BUILD/workspace/lottesuper2011/LB_20160624_1330/branches/REAL/lotte-super-lottebatch/src_dynamic
+				srcDynamicClassesPath = E:/jenkins-lottesuper/jobs/LOTTESUPER_lottebatch_1_TEST_BUILD/workspace/lottesuper2011/LB_20160624_1330/branches/REAL/lotte-super-lottebatch/WebContent/WEB-INF/dynamic_classes
+		 
+			    <mkdir dir="${srcStaticClassesPath}" />
+				<mkdir dir="${srcDynamicClassesPath}" />
+	-->
+	<!-- #################### Annotation  End ######################## -->
+	
+		<!-- ▶ 처음에는 무조건 tag/RELEASE 에는 운영소스를 동기화하여야하는가 ◀ -->
+
+	<!-- Static / Dynamic Java Compile -->
+	<!-- static -->
+	<!-- dynamic 폴더로 XML 파일들 전송 -->
+	<!-- srcDynamicJavaPath    = E:/jenkins-lottesuper/jobs/LOTTESUPER_lottebatch_1_TEST_BUILD/workspace/lottesuper2011/LB_20160624_1330/branches/REAL/lotte-super-lottebatch/src_dynamic -->
+	<!-- srcDynamicClassesPath = E:/jenkins-lottesuper/jobs/LOTTESUPER_lottebatch_1_TEST_BUILD/workspace/lottesuper2011/LB_20160624_1330/branches/REAL/lotte-super-lottebatch/WebContent/WEB-INF/dynamic_classes -->
+
+	<!--
+		<mkdir dir="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/branches/tag/RELEASE/lotte-super-lottebatch/WebContent/WEB-INF/classes" />
+		<mkdir dir="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/branches/tag/RELEASE/lotte-super-lottebatch/WebContent/WEB-INF/dynamic_classes" />
+
+		<javac source="1.6" 
+			target="1.6" 
+			srcdir="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/branches/tag/RELEASE/lotte-super-lottebatch/src"
+			classpathref="classpath"
+			destdir="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/branches/tag/RELEASE/lotte-super-lottebatch/WebContent/WEB-INF/classes"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			fork="true" 
+			memoryMaximumSize="256m"
+			includeantruntime="false"/>
+			
+		<javac source="1.6"
+			target="1.6"
+			srcdir="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/branches/tag/RELEASE/lotte-super-lottebatch/src_dynamic"
+			classpathref="classpath"
+			destdir="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/branches/tag/RELEASE/lotte-super-lottebatch/WebContent/WEB-INF/dynamic_classes"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			fork="true"
+			memoryMaximumSize="256m"
+			includeantruntime="false"/>  
+
+
+		<copy todir="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/branches/tag/RELEASE/lotte-super-lottebatch/WebContent/WEB-INF/dynamic_classes">
+			<fileset dir="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/branches/tag/RELEASE/lotte-super-lottebatch/src_dynamic">
+				<include name="**/**/*.xml"/>
+		    </fileset>
+		</copy>
+		-->
+	
+	<!-- **************************************************************** -->
+	<!-- BUILD -->
+	<!-- **************************************************************** -->
+	<target name="build">
+		<!-- <record name="${init.build.log}" action="start"/> -->
+		<path id="classpath">
+			<fileset dir="${java.home.dir}/jre/lib">
+				<include name="rt.jar" />
+			</fileset>
+			
+			<!-- lib 폴더 Jar 참조 -->
+			<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_LOTTEBATCH_BUILD_AND_PACK/workspace/lottesuper2011/tags/RELEASE/lotte-super-lottebatch/lib/*.jar -->
+			<fileset dir="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_LOTTEBATCH_BUILD_AND_PACK/workspace/lottesuper2011/tags/RELEASE/lotte-super-lottebatch/lib">
+				<include name="*.jar" />
+			</fileset>
+		</path>
+		
+	    <!-- static -->
+		<!-- 
+			## 폴더 삭제후 생성 ##
+			E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_LOTTEBATCH_BUILD_AND_PACK/workspace/lottesuper2011/tags/RELEASE/lotte-super-lottebatch/build 
+		-->
+		<!-- srcdir  = E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_LOTTEBATCH_BUILD_AND_PACK/workspace/lottesuper2011/tags/RELEASE/lotte-super-lottebatch/src -->
+	    <!-- destdir = E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_LOTTEBATCH_BUILD_AND_PACK/workspace/lottesuper2011/tags/RELEASE/lotte-super-lottebatch/build -->
+		<delete dir="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_LOTTEBATCH_BUILD_AND_PACK/workspace/lottesuper2011/tags/RELEASE/lotte-super-lottebatch/build" />
+	    <mkdir dir="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_LOTTEBATCH_BUILD_AND_PACK/workspace/lottesuper2011/tags/RELEASE/lotte-super-lottebatch/build" />
+		<javac source="1.6"
+			target="1.6"
+			srcdir="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_LOTTEBATCH_BUILD_AND_PACK/workspace/lottesuper2011/tags/RELEASE/lotte-super-lottebatch/src"
+			classpathref="classpath"
+			destdir="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_LOTTEBATCH_BUILD_AND_PACK/workspace/lottesuper2011/tags/RELEASE/lotte-super-lottebatch/build"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			fork="true" 
+			memoryMaximumSize="256m"
+			includeantruntime="false"/>	
+		
+			<antcall target="pack_jar" />
+		<!-- <record name="${init.build.log}" action="stop"/> -->
+	</target>
+	
+	
+	<target name="pack_jar">		
+		<delete includeemptydirs="true">
+			<!-- Jar 생성 폴더 삭제 -->
+			<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_LOTTEBATCH_BUILD_AND_PACK/workspace/lottesuper2011/tags/RELEASE/lotte-super-lottebatch/dist/**/* -->
+			<fileset dir="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_LOTTEBATCH_BUILD_AND_PACK/workspace/lottesuper2011/tags/RELEASE/lotte-super-lottebatch/dist" includes="**/*" />
+    	</delete>
+		
+		<!-- Jar 생성 -->
+		<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_LOTTEBATCH_BUILD_AND_PACK/workspace/lottesuper2011/tags/RELEASE/lotte-super-lottebatch/dist/lottesuper-batch.jar -->
+		<jar encoding="UTF-8" destfile="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_LOTTEBATCH_BUILD_AND_PACK/workspace/lottesuper2011/tags/RELEASE/lotte-super-lottebatch/dist/lottesuper-batch.jar">
+			<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_LOTTEBATCH_BUILD_AND_PACK/workspace/lottesuper2011/tags/RELEASE/lotte-super-lottebatch/build -->
+			<fileset dir="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_LOTTEBATCH_BUILD_AND_PACK/workspace/lottesuper2011/tags/RELEASE/lotte-super-lottebatch/build" />
+		</jar>
+
+		<!-- branches 에 있는 Jar 파일을 서버 경로로 복사 -->
+		<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_LOTTEBATCH_BUILD_AND_PACK/workspace/lottesuper2011/pack/LB_20160509_DEV_HSLIM/lotte-super-lottebatch/lib -->
+		<copy todir="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_LOTTEBATCH_BUILD_AND_PACK/workspace/lottesuper2011/tags/RELEASE/pack/${deploy.id}/lib">
+			<!-- E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_LOTTEBATCH_BUILD_AND_PACK/workspace/lottesuper2011/tags/RELEASE/lotte-super-lottebatch/dist/lottesuper-batch.jar -->
+			<fileset dir="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_LOTTEBATCH_BUILD_AND_PACK/workspace/lottesuper2011/tags/RELEASE/lotte-super-lottebatch/dist">
+				<include name="lottesuper-batch.jar"/>
+		    </fileset>
+		</copy>
+	</target>
+
+	
+<!-- Foundation 에서 사용하는것으로 롯데슈퍼에서 쓰기는 부적합함 -->
+<!--
+	<target name="compile">
+		
+		<javac source="1.6" 
+			target="1.6" 
+			srcdir="${srcStaticJavaPath}"
+			classpathref="classpath"
+			destdir="${srcStaticClassesPath}"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			fork="true" 
+			memoryMaximumSize="256m"
+			includeantruntime="false"/>
+
+				
+				
+		<javac srcdir="${java.src.dir}"
+		       destdir="${dst.class.dir}"
+		       fork="no"
+		       classpathref="classpath.ref"
+		       nowarn="yes"
+		       source="1.5"
+		       target="1.5"
+		       compiler="javac1.5"
+			   encoding="utf-8" />
+		<copy todir="${dst.class.dir}">
+			<fileset dir="${java.src.dir}">
+				<include name="**/*"/>
+				<exclude name="**/*.java"/>
+			</fileset>
+		</copy>
+		<copy todir="${dst.dyna.class.dir}">
+			<fileset dir="${java.dyna.src.dir}">
+				<include name="**/*"/>
+			</fileset>
+		</copy>
+	</target>
+-->
+	
+	<!-- pack -->
+	<!-- #################### Foundation Reference Start ################## -->
+	<!-- pack.dir       = E:/hudson-hosting/teams/smb/jobs/smb.FOUNDATION2014_BUILD_AND_PACK/workspace/packs/${deploy.id}-->
+	
+	<!-- move todir = E:/hudson-hosting/teams/smb/jobs/smb.FOUNDATION2014_BUILD_AND_PACK/workspace/packs/${deploy.id}/lottefoundation -->
+	<!-- fileset dir     = E:/hudson-hosting/teams/smb/jobs/smb.FOUNDATION2014_BUILD_AND_PACK/workspace/packs/${deploy.id}/lottefoundation/src/main  -->
+	
+	<!-- rename dest=E:/hudson-hosting/teams/smb/jobs/smb.FOUNDATION2014_BUILD_AND_PACK/workspace/packs/${deploy.id}/lottefoundation/doc
+	                                     src=E:/hudson-hosting/teams/smb/jobs/smb.FOUNDATION2014_BUILD_AND_PACK/workspace/packs/${deploy.id}/lottefoundation/webapp 
+	-->
+	<!-- delete dir = E:/hudson-hosting/teams/smb/jobs/smb.FOUNDATION2014_BUILD_AND_PACK/workspace/packs/${deploy.id}/lottefoundation/src -->
+		<!-- #################### Foundation Reference End ################## -->
+	
+			
+			
+	<target name="pack" depends="param_check">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="param_check_fail"/>
+		<antcall target="exec_pack"/>
+	</target>
+
+		<!-- ############ Annotation  Start ############ -->
+		<!--
+		<move todir="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/packs/LB_20170329_DEV_HSLIM/lotte-super-lottebatch">
+				<fileset dir="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/packs/LB_20170329_DEV_HSLIM/lotte-super-lottebatch/WebContent">
+					<include name="**/*"/>
+				</fileset>
+		</move>
+			<rename dest="${pack.dir}/${ant.project.name}/doc" src="${pack.dir}/${ant.project.name}/webapp"/>
+		<delete dir="${pack.dir}/${ant.project.name}/src" >
+		</delete>
+		-->
+	<!-- ############# Annotation  End# ############ -->
+
+	
+	
+	<!--  #######  Foundation Code Start ####### -->
+	
+	<!-- pack.dir = E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/packs/LB_20170329_DEV_HSLIM-->
+	<!-- move todir="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/packs/LB_20170329_DEV_HSLIM/lotte-super-lottebatch" 
+	        rename dest="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/packs/LB_20170329_DEV_HSLIM/lotte-super-lottebatch/doc" src="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/packs/LB_20170329_DEV_HSLIM/lotte-super-lottebatch/WebContent" 
+	-->
+	
+	
+	<!--
+	<target name="exec_pack" if="isValid">
+		<delete dir="${pack.dir}" />
+		<java jar="${deployer.home}/bin/deployer1.1.3.jar"
+		      fork="true" failonerror="true" >
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="pack"/>
+		</java>
+		<move todir="${pack.dir}/${ant.project.name}">
+			<fileset dir="${pack.dir}/${ant.project.name}/src/main">
+				<include name="webapp/**/*"/>
+			</fileset>
+		</move>
+		<rename dest="${pack.dir}/${ant.project.name}/doc" src="${pack.dir}/${ant.project.name}/webapp"/>
+		<delete dir="${pack.dir}/${ant.project.name}/src" >
+		</delete>
+	</target>
+	-->
+	<!--  #######  Foundation Code End ####### -->
+
+	
+	
+	<!-- ############# Code Annotation Start ############## -->
+	
+	<!-- move todir="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/packs/LB_20170329_DEV_HSLIM/lotte-super-lottebatch -->
+	<!--
+	<target name="exec_pack" if="isValid">
+		<delete dir="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/packs/${deploy.id}" />
+		<java jar="D:/deployer/bin/deployer1.1.3.jar"
+		      fork="true" failonerror="true" >
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="pack"/>
+		</java>
+		
+		아래 코드라면 굳이 Move 할 필요가 있을까?
+		<move todir="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/packs/LB_20170329_DEV_HSLIM/lotte-super-lottebatch">
+			<fileset dir="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/packs/LB_20170329_DEV_HSLIM/lotte-super-lottebatch">
+				<include name="WebContent/**/*"/>
+			</fileset>
+		</move>
+		<rename dest="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/packs/LB_20170329_DEV_HSLIM/lotte-super-lottebatch/lottebatch" src="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/packs/LB_20170329_DEV_HSLIM/lotte-super-lottebatch/WebContent"/>
+		<delete dir="E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/packs/LB_20170329_DEV_HSLIM/lotte-super-lottebatch/WebContent" >
+		</delete>
+	</target>
+	-->
+	
+	<!-- ############# Code Annotation End ############## -->
+
+	<!-- pack.dir = E:/jenkins-lottesuper/jobs/LOTTESUPER_DEV_lottebatch_BUILD_AND_PACK/workspace/lottesuper2011/packs/LB_20170329_DEV_HSLIM-->
+	<target name="exec_pack" if="isValid">
+		<delete dir="${pack.dir}" />
+		<java jar="${deployer.home}/bin/deployer1.1.3.jar"
+		      fork="true" failonerror="true" >
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="pack"/>
+		</java>
+
+		<!--		
+		<move todir="${pack.dir}/${ant.project.name}">
+			<fileset dir="${pack.dir}/${ant.project.name}">
+				<include name="WebContent/**/*"/>
+			</fileset>
+		</move>
+		<rename dest="${pack.dir}/${ant.project.name}/lottebatch" src="${pack.dir}/${ant.project.name}/WebContent"/>
+		-->
+		<!--
+		<delete dir="${pack.dir}/${ant.project.name}/WebContent" >
+		</delete>
+		-->
+	</target>
+	
+	
+	
+	<target name="check_remote_work" unless="isSuccess">
+		<fail message="원격지 작업이 실패하였습니다..." />
+	</target>
+	
+	<target name="check_lock_prop">
+		<condition property="existLockProp">
+			<resourceexists>
+				<file file="${lock.workspace}/${rglr.dep.id}_lock.properties"/>
+			</resourceexists>
+		</condition>
+	</target>
+	
+	<!-- backup -->
+	<target name="backup" depends="param_check">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="param_check_fail"/>
+		<antcall target="exec_backup"/>
+	</target>
+	<target name="exec_backup" if="isValid">
+		<java jar="${deployer.home}/bin/deployer1.1.3.jar"
+		      fork="true" failonerror="true" >
+			<arg value="${ant.project.name}"/>
+			<arg value="${deploy.id}"/>
+			<arg value="backup"/>
+			<arg value="${host.ip}"/>
+			<arg value="${user.id}"/>
+			<arg value="${user.pwd}"/>
+		</java>
+	</target>
+
+	<!-- deploy -->
+	<target name="deploy" depends="param_check">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="param_check_fail"/>
+		<antcall target="exec_scp"/>
+	</target>
+	
+	
+	<!-- 
+	<scp todir="jeus:w&uch6raDa*r@${host.ip}:${remote.home.dir}/doc" trust="true">
+			<fileset dir="${pack.dir}/${ant.project.name}/doc" 
+       	  	  includes="**/*"/>
+	</scp>
+	-->
+	<target name="exec_scp" if="isValid">
+		<!--<ftp server="${host.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${remote.home.dir}/doc" passive="yes"
+		     action="put">
+			<fileset dir="${pack.dir}/${ant.project.name}/doc" 
+			         includes="**/*"/>
+		</ftp>-->
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${remote.home.dir}/doc" trust="true">
+			<fileset dir="${pack.dir}/${ant.project.name}/doc" 
+       	  	  includes="**/*"/>
+		</scp>
+	</target>
+	
+	<!-- rollback -->
+	<!-- remote.home.dir = /ec/site/foundation -->
+	<!-- pack.dir = E:/hudson-hosting/teams/smb/jobs/smb.FOUNDATION2014_BUILD_AND_PACK/workspace/packs/${deploy.id} -->
+	<target name="rollback" depends="param_check">
+		<tstamp><format property="time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>[${time}]======================================================================</echo>
+		<antcall target="param_check_fail"/>
+		<antcall target="exec_rollback"/>
+	</target>
+
+	<!-- remote.home.dir = /esuper/project -->
+	<!-- fileset dir                 = ${pack.dir}_backup/lotte-super-lottebatch/WebContent/**/* -->
+	<target name="exec_rollback" if="isValid">
+		<!--<ftp server="${host.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${remote.home.dir}/doc" passive="yes"
+		     action="put">
+			<fileset dir="${pack.dir}_backup/${ant.project.name}/doc" 
+			         includes="**/*"/>
+		</ftp>-->
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${remote.home.dir}/lottebatch" trust="true">
+			<fileset dir="${pack.dir}_backup/${ant.project.name}/WebContent" 
+	      	   includes="**/*"/>
+		</scp>
+	</target>
+</project>

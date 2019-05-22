@@ -1,0 +1,8 @@
+#!/bin/sh
+
+export JAVA_HOME=/usr/java1.6
+export ANT_HOME=/usr1/home/jeus/deploy/apache-ant-1.8.2
+
+$ANT_HOME/bin/ant -f /usr1/home/jeus/deploy/script/foprj.xml -listener org.apache.tools.ant.listener.Log4jListener -lib $ANT_HOME/lib -DDEPLOY_ID=$1 -Dhostname=`hostname` del_mo2_tar 
+$ANT_HOME/bin/ant -f /usr1/home/jeus/deploy/script/foprj.xml -listener org.apache.tools.ant.listener.Log4jListener -lib $ANT_HOME/lib -DDEPLOY_ID=$1 -Dhostname=`hostname` del_mo2_tar
+

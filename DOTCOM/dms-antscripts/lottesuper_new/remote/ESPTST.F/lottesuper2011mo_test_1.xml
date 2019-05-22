@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottesuper2011mo_test_1">
+	<property name="Ant.home" value="/usr1/home/xclass/downloads/apache-ant-1.8.3" />
+	
+	<target name="Ant_Java_Path_Test">
+		<echo>isExistMoAnt : ${ant.home}/bin/lotte.jar</echo>
+		<echo>isExistMoJavaHome : ${java.home}/bin/java</echo>
+	</target>
+</project>

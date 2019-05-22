@@ -1,0 +1,17 @@
+version: 0.0
+os: linux
+files:
+- source: /contents.tar
+  destination: /lotte/lecs/nuniqlo/web
+
+permissions:
+- object: /lotte/lecs/nuniqlo/web
+  pattern: "**"
+  owner: jeus
+  group: www
+  mode: 644
+
+hooks:
+  ApplicationStart:
+   - location: scripts/ApplicationStart.sh
+     timeout: 60

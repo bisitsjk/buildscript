@@ -1,0 +1,209 @@
+<?xml version="1.0"?>
+<ruleset name="Custom ruleset" xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 http://pmd.sourceforge.net/ruleset_2_0_0.xsd"
+	xsi:noNamespaceSchemaLocation="http://pmd.sourceforge.net/ruleset_2_0_0.xsd">
+
+	<description>
+  www.lotte.com
+  </description>
+
+	<!-- Basic -->
+	<rule ref="c:/pmd-4.3.0/rulesets/basic.xml">
+		<exclude name="EmptyCatchBlock" />
+		<exclude name="EmptyIfStmt" />
+		<exclude name="EmptyWhileStmt" />
+		<exclude name="EmptyTryBlock" />
+		<exclude name="EmptyFinallyBlock" />
+		<exclude name="EmptySwitchStatements" />
+		<exclude name="JumbledIncrementer" />
+		<exclude name="ForLoopShouldBeWhileLoop" />
+		<exclude name="UnnecessaryConversionTemporary" />
+		<exclude name="OverrideBothEqualsAndHashcode" />
+		<exclude name="DoubleCheckedLocking" />
+		<exclude name="ReturnFromFinallyBlock" />
+		<exclude name="EmptySynchronizedBlock" />
+		<exclude name="UnnecessaryReturn" />
+		<exclude name="EmptyStaticInitializer" />
+		<exclude name="UnconditionalIfStatement" />
+		<exclude name="EmptyStatementNotInLoop" />
+
+		<exclude name="UnnecessaryFinalModifier" />
+		<exclude name="CollapsibleIfStatements" />
+		<exclude name="UselessOverridingMethod" />
+		<exclude name="ClassCastExceptionWithToArray" />
+		<exclude name="AvoidDecimalLiteralsInBigDecimalConstructor" />
+		<exclude name="UselessOperationOnImmutable" />
+		<exclude name="MisplacedNullCheck" />
+		<exclude name="UnusedNullCheckInEquals" />
+		<exclude name="AvoidThreadGroup" />
+
+		<exclude name="BigIntegerInstantiation" />
+		<exclude name="AvoidUsingOctalValues" />
+		<exclude name="AvoidUsingHardCodedIP" />
+		<exclude name="CheckResultSet" />
+		<exclude name="AvoidMultipleUnaryOperators" />
+		<exclude name="EmptyInitializer" />
+		<exclude name="DontCallThreadRun" />
+	</rule>
+
+	<!-- Braces -->
+	<rule ref="c:/pmd-4.3.0/rulesets/braces.xml">
+		<exclude name="IfStmtsMustUseBraces" />
+		<exclude name="WhileLoopsMustUseBraces" />
+		<exclude name="IfElseStmtsMustUseBraces" />
+	</rule>
+
+	<!-- Controversial -->
+	<rule ref="c:/pmd-4.3.0/rulesets/controversial.xml">
+		<exclude name="AssignmentInOperand" />
+		<exclude name="AtLeastOneConstructor" />
+		<exclude name="AvoidAccessibilityAlteration" />
+		<exclude name="AvoidFinalLocalVariable" />
+		<exclude name="AvoidLiteralsInIfCondition" />
+		<exclude name="AvoidPrefixingMethodParameters" />
+		<exclude name="AvoidUsingNativeCode" />
+		<exclude name="AvoidUsingShortType" />
+		<exclude name="AvoidUsingVolatile" />
+		<exclude name="BooleanInversion" />
+		<exclude name="CallSuperInConstructor" />
+		<exclude name="DefaultPackage" />
+		<exclude name="DoNotCallGarbageCollectionExplicitly" />
+		<exclude name="DontImportSun" />
+		<exclude name="NullAssignment" />
+		<exclude name="OneDeclarationPerLine" />
+		<exclude name="OnlyOneReturn" />
+		<exclude name="SuspiciousOctalEscape" />
+		<exclude name="UnnecessaryConstructor" />
+		<exclude name="UnnecessaryParentheses" />
+		<exclude name="UseConcurrentHashMap" />
+		<exclude name="UseObjectForClearerAPI" />
+	</rule>
+
+	<!-- Design -->
+	<rule ref="c:/pmd-4.3.0/rulesets/design.xml">
+		<exclude name="AbstractClassWithoutAbstractMethod" />
+		<exclude name="AbstractClassWithoutAnyMethod" />
+		<exclude name="AccessorClassGeneration" />
+		<exclude name="AssignmentToNonFinalStatic" />
+		<exclude name="AvoidConstantsInterface" />
+		<exclude name="AvoidDeeplyNestedIfStmts" />
+		<exclude name="AvoidInstanceofChecksInCatchClause" />
+		<exclude name="AvoidProtectedFieldInFinalClass" />
+		<exclude name="AvoidReassigningParameters" />
+		<exclude name="AvoidSynchronizedAtMethodLevel" />
+		<exclude name="BadComparison" />
+		<exclude name="ClassWithOnlyPrivateConstructorsShouldBeFinal" />
+		<exclude name="CloseResource" />
+		<exclude name="CompareObjectsWithEquals" />
+		<exclude name="ConfusingTernary" />
+		<exclude name="ConstructorCallsOverridableMethod" />
+		<exclude name="DefaultLabelNotLastInSwitchStmt" />
+		<exclude name="EqualsNull" />
+		<exclude name="FieldDeclarationsShouldBeAtStartOfClass" />
+		<exclude name="FinalFieldCouldBeStatic" />
+		<exclude name="GodClass" />
+		<exclude name="IdempotentOperations" />
+		<exclude name="InstantiationToGetClass" />
+		<exclude name="LogicInversion" />
+		<exclude name="MissingBreakInSwitch" />
+		<exclude name="MissingStaticMethodInNonInstantiatableClass" />
+		<exclude name="NonCaseLabelInSwitchStatement" />
+		<exclude name="NonStaticInitializer" />
+		<exclude name="NonThreadSafeSingleton" />
+		<exclude name="OptimizableToArrayCall" />
+		<exclude name="PositionLiteralsFirstInComparisons" />
+		<exclude name="PreserveStackTrace" />
+		<exclude name="ReturnEmptyArrayRatherThanNull" />
+		<exclude name="SimpleDateFormatNeedsLocale" />
+		<exclude name="SimplifyBooleanReturns" />
+		<exclude name="SimplifyConditional" />
+		<exclude name="SwitchDensity" />
+		<exclude name="SwitchStmtsShouldHaveDefault" />
+		<exclude name="TooFewBranchesForASwitchStatement" />
+		<exclude name="UncommentedEmptyConstructor" />
+		<exclude name="UncommentedEmptyMethod" />
+		<exclude name="UnnecessaryLocalBeforeReturn" />
+		<exclude name="UnsynchronizedStaticDateFormatter" />
+		<exclude name="UseLocaleWithCaseConversions" />
+		<exclude name="UseNotifyAllInsteadOfNotify" />
+		<exclude name="UseVarargs" />
+	</rule>
+
+	<!-- Java Logging -->
+	<rule ref="c:/pmd-4.3.0/rulesets/logging-java.xml">
+		<exclude name="GuardLogStatementJavaUtil" />
+		<exclude name="MoreThanOneLogger" />
+	</rule>
+
+	<!-- Optimization -->
+	<rule ref="c:/pmd-4.3.0/rulesets/optimizations.xml">
+		<exclude name="AddEmptyString" />
+		<exclude name="AvoidInstantiatingObjectsInLoops" />
+		<exclude name="PrematureDeclaration" />
+		<exclude name="RedundantFieldInitializer" />
+		<exclude name="SimplifyStartsWith" />
+		<exclude name="UnnecessaryWrapperObjectCreation" />
+		<exclude name="UseArrayListInsteadOfVector" />
+		<exclude name="UseArraysAsList" />
+		<exclude name="UseStringBufferForStringAppends" />
+	</rule>
+
+	<!-- Security Code Guidelines -->
+	<rule ref="c:/pmd-4.3.0/rulesets/sunsecure.xml">
+
+	</rule>
+
+	<!-- Strict Exception -->
+	<rule ref="c:/pmd-4.3.0/rulesets/strictexception.xml">
+		<exclude name="AvoidCatchingGenericException" />
+		<exclude name="AvoidCatchingNPE" />
+		<exclude name="AvoidCatchingThrowable" />
+		<exclude name="AvoidLosingExceptionInformation" />
+		<exclude name="AvoidRethrowingException" />
+		<exclude name="AvoidThrowingNewInstanceOfSameException" />
+		<exclude name="AvoidThrowingNullPointerException" />
+		<exclude name="DoNotExtendJavaLangError" />
+		<exclude name="DoNotThrowExceptionInFinally" />
+		<exclude name="ExceptionAsFlowControl" />
+		<exclude name="SignatureDeclareThrowsException" />
+	</rule>
+
+	<!-- String and StringBuffer -->
+	<rule ref="c:/pmd-4.3.0/rulesets/strings.xml">
+		<exclude name="AppendCharacterWithChar" />
+		<exclude name="AvoidStringBufferField" />
+		<exclude name="ConsecutiveAppendsShouldReuse" />
+		<exclude name="InefficientEmptyStringCheck" />
+		<exclude name="InefficientStringBuffering" />
+		<exclude name="InsufficientStringBufferDeclaration" />
+		<exclude name="StringBufferInstantiationWithChar" />
+		<exclude name="StringToString" />
+		<exclude name="UnnecessaryCaseChange" />
+		<exclude name="UseEqualsToCompareStrings" />
+		<exclude name="UseIndexOfChar" />
+		<exclude name="UselessStringValueOf" />
+		<exclude name="UseStringBufferLength" />
+	</rule>
+
+	<!-- Type Resolution -->
+	<rule ref="c:/pmd-4.3.0/rulesets/typeresolution.xml">
+		<exclude name="CloneMethodMustImplementCloneable" />
+		<exclude name="LooseCoupling" />
+		<exclude name="SignatureDeclareThrowsException" />
+	</rule>
+
+	<!-- Unused Code Rules -->
+	<rule ref="c:/pmd-4.3.0/rulesets/unusedcode.xml">
+		<exclude name="UnusedFormalParameter" />
+		<exclude name="UnusedModifier" />
+	</rule>
+	
+	<!-- 
+	 -->
+	 <rule ref="c:/pmd-4.3.0/rulesets/GDS/SecureCodingRuleset.xml">
+	 	<exclude name="SqlInjectionDfa" />
+	 </rule>
+	 
+	 
+</ruleset>

@@ -1,0 +1,652 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottesuper_backoffice_jenkins_esptstb(SSH)" basedir=".">
+
+	<!-- ================================================== -->
+	<!-- properties -->
+	<!-- ================================================== -->
+	<!-- test and real server info -->
+	<tstamp>
+		<format property="backup_day" pattern="yyyyMMdd"/>
+	</tstamp>
+	<property name="deploy.id" value="${DEPLOY_ID}"/>
+	<property name="deploy.dir" value="/usr1/home/jeus/deploy"/>
+	<property name="test.web.ip" value="${test.web.ip}"/>
+	<property name="test.was.ip" value="${test.was.ip}"/>
+	<property name="real.web.ip" value="${real.web.ip}"/>
+	<property name="real.was.ip" value="${real.was.ip}"/>
+	<!--
+	<property name="user.id" value="jeus"/>
+	<property name="user.pwd" value="w&uch6raDa*r"/>
+	-->
+	<!-- path -->
+	<property name="con_backoffice"     value="esptstb_prodev" />
+	<property name="con_mpking"     value="esptstb_mpickingdev" />
+	<property name="con_partner"     value="esptstb_partnerdev" />
+	
+	<!-- backup.dir = /usr1/home/jeus/deploy/backup -->
+	<property name="backup.dir" value="${deploy.dir}/backup"/>
+	<property name="ssh.bozipbackup.cmd" value="ssh_bozipbackup" /><!-- 2017/01/19/20:45 backup 추가 -->
+	<property name="ssh.sync.web.cmd" value="ssh_bosync_web" /><!-- 2017/01/19/20:45 sync 추가 -->
+	<property name="ssh.sync.was.cmd" value="ssh_bosync_was" /><!-- 2017/01/19/20:45 sync 추가 -->
+	
+	<!-- TEST Formula 1,2-->
+	<property name="ssh.sync.web.test1.cmd" value="ssh_bosync_web_test1" />
+	<property name="ssh.sync.was.test1.cmd" value="ssh_bosync_was_test1" />
+	<property name="ssh.sync.web.test2.cmd" value="ssh_bosync_web_test2" />
+	<property name="ssh.sync.was.test2.cmd" value="ssh_bosync_was_test2" />
+	
+	<property name="ftp.test.cmd" value="ftp_test" /><!-- 2017/01/21/21:12 ftp test 추가 -->
+	
+	<!-- deploy id -->
+	<property name="prefix.dep.id" value="BO_" />
+	<tstamp><format property="infix.dep.id" pattern="yyyyMMdd"/></tstamp>
+	<property name="suffix.dep.id" value="_SYNC" />
+	<property name="dep.id" value="${prefix.dep.id}${infix.dep.id}${suffix.dep.id}" />		
+	
+	<!-- log file -->
+	<!--
+	<property name="zipbackup.was.log" value="../logs/${dep.id}_BACKUP_WAS.log" />
+	<property name="zipbackup.web.log" value="../logs/${dep.id}_BACKUP_WEB.log" />
+	<property name="sync.was.log"   value="../logs/${dep.id}_SYNC_WAS.log" />
+	<property name="sync.web.log"   value="../logs/${dep.id}_SYNC_WEB.log" />
+	<property name="ftp.test.was.log"   value="../logs/${dep.id}_FTP_TEST_WAS.log" />
+	<property name="sync.was.log"   value="../logs/${dep.id}_SYNC_WAS.log" />
+	<property name="ssh_bo_WEB-INF_static-root_movetest.log"   value="../logs/${dep.id}_ssh_bo_WEB-INF_static-root_movetest.log" />
+	-->
+	<property name="zipbackup.was.log" value="../logs/${backup_day}_BACKUP_WAS.log" />
+	<property name="zipbackup.web.log" value="../logs/${backup_day}_BACKUP_WEB.log" />
+	<property name="sync.was.log"   value="../logs/${backup_day}_SYNC_WAS.log" />
+	<property name="sync.web.log"   value="../logs/${backup_day}_SYNC_WEB.log" />
+	<property name="ftp.test.was.log"   value="../logs/${backup_day}_FTP_TEST_WAS.log" />
+	<property name="ssh_bo_WEB-INF_static-root_movetest.log"   value="../logs/${backup_day}_ssh_bo_WEB-INF_static-root_movetest.log" />
+	<property name="unzip.web.log"   value="../logs/${backup_day}_UNZIP_WEB.log" />
+	<property name="unzip.web.js.log"   value="../logs/${backup_day}_UNZIP_WEB_JS.log" />
+	<property name="unzip.was.log"   value="../logs/${backup_day}_UNZIP_WAS.log" />
+
+	
+		
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->		
+	<target name="check_host">
+		<condition property="isHost">
+			<contains string="${hostname}" substring="esptstb"/>
+		</condition>
+		<echo>hostname is `${hostname}`</echo>
+	</target>
+			
+	<target name="check_valid" depends="check_host" unless="isHost">
+		<fail message="동기화 대상 서버가 아닙니다."/>
+	</target>
+	
+	
+	<target name="check_remote_work" unless="isSuccess">
+		<fail message="원격지 작업이 실패하였습니다..." />
+	</target>
+
+	
+		<!-- **************************************************************** -->
+		<!-- BACKUP FOR SSH TEST SERVER -->
+		<!-- **************************************************************** -->
+		    <target name="ssh_bo_zipbackup_test_was">
+				<sshexec host="${test.was.ip}" username="${test.user.id}" password="${test.user.pwd}"
+					trust="true" verbose="false" output="${zipbackup.was.log}"
+					command="cd deploy;./${ssh.bozipbackup.cmd} ${backup_day}" />
+				<condition property="isSuccess">
+					<resourcecontains resource="${zipbackup.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+				</condition>
+				<antcall target="check_remote_work" />		
+			</target>
+
+
+	<!-- ##### TEST Formula 1 Start ##### -->
+	<!-- 운영 압축은 Formula 1,2 차이가 없다 -->
+
+	<!-- ##### TEST Formula 1 Start ##### -->
+	<target name="ssh_bo_zipbackup_test1">
+		<antcall target="ssh_bo_web_zipbackup_test1"/> 
+		<antcall target="ssh_bo_was_zipbackup_test1"/>
+	</target>
+	
+    <target name="ssh_bo_web_zipbackup_test1"><!-- BO WEB 운영서버 압축 백업 -->
+		<sshexec host="${real.web.ip}" username="${user.id}" password="${user.pwd}"
+				trust="true" verbose="false" output="${zipbackup.web.log}"
+				command="cd deploy;./${ssh.bozipbackup.cmd} ${backup_day}" />
+			<condition property="isSuccess">
+				<resourcecontains resource="${zipbackup.web.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+			</condition>
+			<antcall target="check_remote_work" />		
+	</target>
+
+	
+    <target name="ssh_bo_was_zipbackup_test1"><!-- BO WAS 운영서버 압축 백업 -->
+		<sshexec host="${real.was.ip}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" output="${zipbackup.was.log}"
+			command="cd deploy;./${ssh.bozipbackup.cmd} ${backup_day}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${zipbackup.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />		
+	</target>
+	
+	
+	<target name="ssh_bo_unzip_test1">
+			<antcall target="ssh_bo_web_unzip_test1"/>
+			<antcall target="ssh_bo_web_js_unzip_test1"/>
+			<antcall target="ssh_bo_was_unzip_test1"/>
+	</target>	
+		
+	<!-- ############ Web / Web_js / Was Unzip ############# -->
+		<target name="ssh_bo_web_unzip_test1">
+			<sshexec host="${test.web.ip}" username="${user.id}" password="${user.pwd}"
+				trust="true" verbose="false" output="${unzip.web.log}" command="cd deploy/real_zipreceive;mkdir back_unzip;unzip -o -q ${backup_day}_back_web.zip -d ./back_unzip/static-root;cp -r ./back_unzip/static-root /esuper/project/movetest/back" />
+			<condition property="isSuccess">
+				<resourcecontains resource="${unzip.web.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+			</condition>
+			
+			<sshexec host="${test.web.ip}" username="${user.id}" password="${user.pwd}"
+					trust="true" verbose="false" output="${unzip.web.log}" command="cd deploy/real_zipreceive;mkdir mback_unzip;unzip -o -q ${backup_day}_mback_web.zip -d ./mback_unzip/static-root;cp -r ./mback_unzip/static-root /esuper/project/movetest/mback" />
+				<condition property="isSuccess">
+					<resourcecontains resource="${unzip.web.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+			    </condition>
+				
+				<sshexec host="${test.web.ip}" username="${user.id}" password="${user.pwd}"
+						trust="true" verbose="false" output="${unzip.web.log}" command="cd deploy/real_zipreceive;mkdir partner_unzip;unzip -o -q  ${backup_day}_partner_web.zip -d ./partner_unzip/static-root;cp -r ./partner_unzip/static-root /esuper/project/movetest/partner" />
+					<condition property="isSuccess">
+						<resourcecontains resource="${unzip.web.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+					</condition>
+	  </target>
+
+
+		
+		<target name="ssh_bo_web_js_unzip_test1">
+			<sshexec host="${test.web.ip}" username="${user.id}" password="${user.pwd}"
+				trust="true" verbose="false" output="${unzip.web.js.log}" command="cd deploy/real_zipreceive/back_unzip/static-root;mkdir js;unzip -o -q ~/deploy/real_zipreceive/${backup_day}_back_web_js.zip -d ./js;cp -r ./js /esuper/project/movetest/back/static-root" />
+			<condition property="isSuccess">
+				<resourcecontains resource="${unzip.web.js.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+			</condition>
+			
+			<sshexec host="${test.web.ip}" username="${user.id}" password="${user.pwd}"
+				trust="true" verbose="false" output="${unzip.web.js.log}" command="cd deploy/real_zipreceive/mback_unzip/static-root;mkdir js;unzip -o -q ~/deploy/real_zipreceive/${backup_day}_mback_web_js.zip -d ./js;cp -r ./js /esuper/project/movetest/mback/static-root" />
+			<condition property="isSuccess">
+				<resourcecontains resource="${unzip.web.js.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+			</condition>
+
+				
+		  <sshexec host="${test.web.ip}" username="${user.id}" password="${user.pwd}"
+				trust="true" verbose="false" output="${unzip.web.js.log}" command="cd deploy/real_zipreceive/partner_unzip/static-root;mkdir js;unzip -o -q ~/deploy/real_zipreceive/${backup_day}_partner_web_js.zip -d ./js;cp -r ./js /esuper/project/movetest/partner/static-root" />
+			<condition property="isSuccess">
+			  <resourcecontains resource="${unzip.web.js.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+			 </condition>
+	  </target>
+
+
+
+
+		<target name="ssh_bo_was_unzip_test1">
+			<sshexec host="${test.was.ip}" username="${user.id}" password="${user.pwd}"
+				trust="true" verbose="false" output="${unzip.was.log}" command="cd deploy/real_zipreceive;unzip -o -q ${backup_day}_back_was.zip -d ./back_unzip/WEB-INF;cp -r ./back_unzip/WEB-INF /esuper/project/movetest/back" />
+			<condition property="isSuccess">
+				<resourcecontains resource="${unzip.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+			</condition>
+			<sshexec host="${test.was.ip}" username="${user.id}" password="${user.pwd}"
+				trust="true" verbose="false" output="${unzip.was.log}" command="cd deploy/real_zipreceive;unzip -o -q ${backup_day}_mback_was.zip -d ./mback_unzip/WEB-INF;cp -r ./mback_unzip/WEB-INF /esuper/project/movetest/mback" />
+			<condition property="isSuccess">
+				<resourcecontains resource="${unzip.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+			</condition>
+			<sshexec host="${test.was.ip}" username="${user.id}" password="${user.pwd}"
+				trust="true" verbose="false" output="${unzip.was.log}" command="cd deploy/real_zipreceive;unzip -o -q ${backup_day}_partner_was.zip -d ./partner_unzip/WEB-INF;cp -r ./partner_unzip/WEB-INF /esuper/project/movetest/partner" />
+			<condition property="isSuccess">
+				<resourcecontains resource="${unzip.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+			</condition>
+
+	  </target>
+	
+
+	<!-- ##### TEST Formula 1 End ##### -->
+
+	<!-- ##### TEST Formula 2 Start ##### --> 
+	<target name="ssh_bo_zipbackup_test2">
+		<antcall target="ssh_bo_web_zipbackup_test2"/> 
+		<antcall target="ssh_bo_was_zipbackup_test2"/>
+	</target>
+	
+	    <target name="ssh_bo_web_zipbackup_test2"><!-- BO WEB 운영서버 압축 백업 -->
+			<sshexec host="${real.web.ip}" username="${user.id}" password="${user.pwd}"
+				trust="true" verbose="false" output="${zipbackup.web.log}"
+				command="cd deploy;./${ssh.bozipbackup.cmd} ${backup_day}" />
+			<condition property="isSuccess">
+				<resourcecontains resource="${zipbackup.web.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+			</condition>
+			<antcall target="check_remote_work" />		
+		</target>
+
+	
+    <target name="ssh_bo_was_zipbackup_test2"><!-- BO WAS 운영서버 압축 백업 -->
+		<sshexec host="${real.was.ip}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" output="${zipbackup.was.log}"
+			command="cd deploy;./${ssh.bozipbackup.cmd} ${backup_day}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${zipbackup.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />		
+	</target>
+	
+	
+	<target name="ssh_bo_unzip_test2">
+			<antcall target="ssh_bo_web_unzip_test2"/>
+			<antcall target="ssh_bo_web_js_unzip_test2"/>
+			<antcall target="ssh_bo_was_unzip_test2"/>
+	</target>	
+		
+	<!-- ############ Web / Web_js / Was Unzip ############# -->
+		<target name="ssh_bo_web_unzip_test2">
+			<sshexec host="${test.web.ip}" username="${user.id}" password="${user.pwd}"
+				trust="true" verbose="false" output="${unzip.web.log}" command="cd deploy/real_zipreceive;mkdir back_unzip;unzip -o -q  ${backup_day}_back_web.zip -d ./back_unzip/static-root;cp -r ./back_unzip/static-root /esuper/project/unzipfolder/back" />
+			<condition property="isSuccess">
+				<resourcecontains resource="${unzip.web.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+			</condition>
+			
+			<sshexec host="${test.web.ip}" username="${user.id}" password="${user.pwd}"
+					trust="true" verbose="false" output="${unzip.web.log}" command="cd deploy/real_zipreceive;mkdir mback_unzip;unzip -o -q ${backup_day}_mback_web.zip -d ./mback_unzip/static-root;cp -r ./mback_unzip/static-root /esuper/project/unzipfolder/mback" />
+				<condition property="isSuccess">
+					<resourcecontains resource="${unzip.web.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+				</condition>
+				
+				<sshexec host="${test.web.ip}" username="${user.id}" password="${user.pwd}"
+						trust="true" verbose="false" output="${unzip.web.log}" command="cd deploy/real_zipreceive;mkdir partner_unzip;unzip -o -q ${backup_day}_partner_web.zip -d ./partner_unzip/static-root;cp -r ./partner_unzip/static-root /esuper/project/unzipfolder/partner" />
+					<condition property="isSuccess">
+						<resourcecontains resource="${unzip.web.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+					</condition>
+	  </target>
+
+
+
+		
+		<target name="ssh_bo_web_js_unzip_test2">
+			<sshexec host="${test.web.ip}" username="${user.id}" password="${user.pwd}"
+				trust="true" verbose="false" output="${unzip.web.js.log}" command="cd deploy/real_zipreceive/back_unzip/static-root;mkdir js;unzip -o -q ~/deploy/real_zipreceive/${backup_day}_back_web_js.zip -d ./js;cp -r ./js /esuper/project/unzipfolder/back/static-root" />
+			<condition property="isSuccess">
+				<resourcecontains resource="${unzip.web.js.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+			</condition>
+			
+			<sshexec host="${test.web.ip}" username="${user.id}" password="${user.pwd}"
+				trust="true" verbose="false" output="${unzip.web.js.log}" command="cd deploy/real_zipreceive/mback_unzip/static-root;mkdir js;unzip -o -q ~/deploy/real_zipreceive/${backup_day}_back_mweb_js.zip -d ./js;cp -r ./js /esuper/project/unzipfolder/mback/static-root" />
+			<condition property="isSuccess">
+				<resourcecontains resource="${unzip.web.js.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+			</condition>
+
+				
+		  <sshexec host="${test.web.ip}" username="${user.id}" password="${user.pwd}"
+				trust="true" verbose="false" output="${unzip.web.js.log}" command="cd deploy/real_zipreceive/partner_unzip/static-root;mkdir js;unzip -o -q ~/deploy/real_zipreceive/${backup_day}_partner_web_js.zip -d ./js;cp -r ./js /esuper/project/unzipfolder/partner/static-root" />
+			<condition property="isSuccess">
+			  <resourcecontains resource="${unzip.web.js.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+			 </condition>
+	  </target>
+
+
+
+
+		<target name="ssh_bo_was_unzip_test2">
+			<sshexec host="${test.was.ip}" username="${user.id}" password="${user.pwd}"
+				trust="true" verbose="false" output="${unzip.was.log}" command="cd deploy/real_zipreceive;unzip -o -q ${backup_day}_back_was.zip -d ./back_unzip/WEB-INF;cp -r ./back_unzip/WEB-INF /esuper/project/unzipfolder/back" />
+			<condition property="isSuccess">
+				<resourcecontains resource="${unzip.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+			</condition>
+			<sshexec host="${test.was.ip}" username="${user.id}" password="${user.pwd}"
+				trust="true" verbose="false" output="${unzip.was.log}" command="cd deploy/real_zipreceive;unzip -o -q ${backup_day}_mback_was.zip -d ./mback_unzip/WEB-INF;cp -r ./mback_unzip/WEB-INF /esuper/project/unzipfolder/mback" />
+			<condition property="isSuccess">
+				<resourcecontains resource="${unzip.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+			</condition>
+			<sshexec host="${test.was.ip}" username="${user.id}" password="${user.pwd}"
+				trust="true" verbose="false" output="${unzip.was.log}" command="cd deploy/real_zipreceive;unzip -o -q ${backup_day}_partner_was.zip -d ./partner_unzip/WEB-INF;cp -r ./partner_unzip/WEB-INF /esuper/project/unzipfolder/partner" />
+			<condition property="isSuccess">
+				<resourcecontains resource="${unzip.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+			</condition>
+
+	  </target>
+	<!-- ##### TEST Formula 2 End ##### -->
+
+	
+	<target name="ssh_bo_zipbackup">
+		<!--<antcall target="ssh_bo_web_zipbackup"/>--> 
+		<antcall target="ssh_bo_was_zipbackup"/>
+	</target>
+	
+	    <target name="ssh_bo_web_zipbackup"><!-- BO WEB 운영서버 압축 백업 -->
+			<sshexec host="${real.web.ip}" username="${user.id}" password="${user.pwd}"
+				trust="true" verbose="false" output="${zipbackup.web.log}"
+				command="cd deploy;./${ssh.bozipbackup.cmd} ${backup_day}" />
+			<condition property="isSuccess">
+				<resourcecontains resource="${zipbackup.web.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+			</condition>
+			<antcall target="check_remote_work" />		
+		</target>
+
+	
+    <target name="ssh_bo_was_zipbackup"><!-- BO WAS 운영서버 압축 백업 -->
+		<sshexec host="${real.was.ip}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" output="${zipbackup.was.log}"
+			command="cd deploy;./${ssh.bozipbackup.cmd} ${backup_day}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${zipbackup.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />		
+	</target>
+
+	
+	<target name="ssh_bo_unzip">
+		<antcall target="ssh_bo_web_unzip"/>
+		<antcall target="ssh_bo_web_js_unzip"/>
+		<antcall target="ssh_bo_was_unzip"/>
+	</target>	
+	
+	<!-- ############ Web / Web_js / Was Unzip ############# -->
+	<target name="ssh_bo_web_unzip">
+		<sshexec host="${test.web.ip}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" output="${unzip.web.log}" command="cd deploy/real_zipreceive;mkdir back_unzip;unzip -o -q ${backup_day}_back_web.zip -d ./back_unzip/static-root;cp -r ./back_unzip/static-root /esuper/project/back" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${unzip.web.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		
+		<sshexec host="${test.web.ip}" username="${user.id}" password="${user.pwd}"
+				trust="true" verbose="false" output="${unzip.web.log}" command="cd deploy/real_zipreceive;mkdir mback_unzip;unzip -o -q ${backup_day}_mback_web.zip -d ./mback_unzip/static-root;cp -r ./mback_unzip/static-root /esuper/project/mback" />
+			<condition property="isSuccess">
+				<resourcecontains resource="${unzip.web.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+			</condition>
+			
+			<sshexec host="${test.web.ip}" username="${user.id}" password="${user.pwd}"
+					trust="true" verbose="false" output="${unzip.web.log}" command="cd deploy/real_zipreceive;mkdir partner_unzip;unzip -o -q ${backup_day}_partner_web.zip -d ./partner_unzip/static-root;cp -r ./partner_unzip/static-root /esuper/project/partner" />
+				<condition property="isSuccess">
+					<resourcecontains resource="${unzip.web.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+				</condition>
+  </target>
+	
+	<target name="ssh_bo_web_js_unzip">
+		<sshexec host="${test.web.ip}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" output="${unzip.web.js.log}" command="cd deploy/real_zipreceive/back_unzip/static-root;mkdir js;unzip -o -q ~/deploy/real_zipreceive/${backup_day}_back_web_js.zip -d ./js;cp -r ./js /esuper/project/back/static-root" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${unzip.web.js.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		
+		<sshexec host="${test.web.ip}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" output="${unzip.web.js.log}" command="cd deploy/real_zipreceive/mback_unzip/static-root;mkdir js;unzip -o -q ~/deploy/real_zipreceive/${backup_day}_back_mweb_js.zip -d ./js;cp -r ./js /esuper/project/mback/static-root" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${unzip.web.js.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+
+			
+	  <sshexec host="${test.web.ip}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" output="${unzip.web.js.log}" command="cd deploy/real_zipreceive/partner_unzip/static-root;mkdir js;unzip -o -q ~/deploy/real_zipreceive/${backup_day}_partner_web_js.zip -d ./js;cp -r ./js /esuper/project/partner/static-root" />
+		<condition property="isSuccess">
+		  <resourcecontains resource="${unzip.web.js.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		 </condition>
+  </target>
+
+	<target name="ssh_bo_was_unzip">
+		<sshexec host="${test.was.ip}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" output="${unzip.was.log}" command="cd deploy/real_zipreceive;unzip -o -q ${backup_day}_back_was.zip -d ./back_unzip/WEB-INF;cp -r ./back_unzip/WEB-INF/esuper/project/back" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${unzip.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<sshexec host="${test.was.ip}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" output="${unzip.was.log}" command="cd deploy/real_zipreceive;unzip -o -q ${backup_day}_mback_was.zip -d ./mback_unzip/WEB-INF;cp -r ./mback_unzip/WEB-INF/esuper/project/mback" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${unzip.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<sshexec host="${test.was.ip}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" output="${unzip.was.log}" command="cd deploy/real_zipreceive;unzip -o -q ${backup_day}_partner_was.zip -d ./partner_unzip/WEB-INF;cp -r ./partner_unzip/WEB-INF/esuper/project/partner" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${unzip.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+
+  </target>
+
+	
+	<!-- ESPTST.B 의 static-root(WEB) , WEB-INF(WAS) 하위폴더를 /esuper/project/movetest 폴더로 복사하는 Target  -->
+    <target name="ssh_bo_WEB-INF_static-root_movetest">
+		<sshexec host="${test.was.ip}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" output="${ssh_bo_WEB-INF_static-root_movetest.log}"
+			command="cd deploy;ant -f lottesuper2011_dc.xml doc_forcedel_forcecopy" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${ssh_bo_WEB-INF_static-root_movetest.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />		
+  </target>
+
+	<!-- 적용이 되지 않음 -->
+	<!--
+		<target name="ssh_bo_zipbackup_was">
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${tar.was.log}"
+			command="tar cvf ${backup.dir}/${deploy.id}_Back_WAS.tar -exclude /esuper/project/back/WEB-INF/x2log /esuper/project/back/WEB-INF" />
+	</target>
+	-->
+	
+<!--	
+	<target name="sftp">
+			<ssh host="${test.was.ip}" port="22" username="${test.user.id}" password="${test.user.pwd}" version="2">
+				<sftp action="put" remotedir="/usr1/home/jeus/deploy/backup" verbose="true">
+					<fileset dir="D:\" />
+					<include name="sasldblist.txt" />
+				</sftp>			
+			</ssh>
+	</target>
+-->
+
+<!--
+	<path id="maven-ant-tasks.classpath" path="C:\Ant-1.9.4\lib\maven-ant-tasks-2.1.3.jar" />
+	<typedef resource="org/apache/maven/artifact/ant/antlib.xml" uri="antlib:org.apache.maven.artifact.ant" classpathref="maven-ant-tasks.classpath" />
+	<taskdef name="ssh" classname="com.sshtools.ant.Ssh" />
+-->
+
+     <!--<taskdef name="ssh" classpath="C:\Ant-1.8.2\lib\maverick-ant.jar" classname="com.sshtools.ant.Ssh"	/>-->
+	<!--<taskdef name="ssh" classpath="C:\Ant-1.9.4\lib\maverick-ant.jar" classname="com.sshtools.ant.Ssh"	/>-->
+	<!--<taskdef name="ssh" classpath="lib/maverick-ant.jar" classname="com.sshtools.ant.Ssh"	/>-->
+		
+	<!--
+	<target name="sftp">
+			<ssh host="${test.was.ip}" port="22" username="${test.user.id}" password="${test.user.pwd}" version="2">
+				<sftp action="put" remotedir="/usr1/home/jeus/deploy/backup" verbose="true">
+					<fileset dir="D:\" />
+					<include name="sasldblist.txt" />
+				</sftp>			
+			</ssh>
+	</target>
+	-->
+	
+	
+	<target name="sftp">
+			<ssh host="${test.was.ip}" port="22" username="${test.user.id}" password="${test.user.pwd}" version="2">
+				<sftp action="put" remotedir="/usr1/home/jeus/deploy/backup" verbose="true">
+					<fileset file="D:\sasldblist.txt"  />
+				</sftp>			
+			</ssh>
+	</target>
+	
+	
+	<!--
+	<target name="sftp">
+				<ssh host="${test.was.ip}" port="22" username="${test.user.id}" password="${test.user.pwd}" version="2">
+					<sftp action="put" remotedir="/usr1/home/jeus/deploy/backup" verbose="true">
+					    <fileset dir="D:\">
+					        <include name="sasldblist.txt" />
+					    </fileset>
+					</sftp>			
+				</ssh>
+		</target>
+	-->
+	
+	<!--
+	<target name="sftp">
+	    <ssh host="10.149.199.32" username="jeus" password="w&uch6raDa*r" port="22"  version="2">
+	        <sftp action="get" remotedir="/usr1/home/jeus/deploy/backup" verbose="true">
+	            <fileset dir=".">
+	                <include name="**/*" />
+	            </fileset>
+	        </sftp>
+	    </ssh>
+	</target>
+-->
+	
+	<!-- ##### TEST Start ##### -->
+	<target name="ssh_bo_sync_test1">
+			<antcall target="ssh_bo_sync_web_test1"/>
+			<antcall target="ssh_bo_sync_was_test1"/>
+	</target>
+
+
+	<target name="ssh_bo_sync_web_test1">
+		<echo>=================================================================================== BO WEB sync sources 시작 ==========</echo>
+		<antcall target="get_and_unzip_web_test1"/>
+		<echo>=================================================================================== BO WEB sync sources 종료 ==========</echo>
+	</target>
+
+	<target name="ssh_bo_sync_was_test1">
+		<echo>=================================================================================== BO WEB sync sources 시작 ==========</echo>
+		<antcall target="get_and_unzip_was_test1"/>
+		<echo>=================================================================================== BO WEB sync sources 종료 ==========</echo>
+	</target>
+
+	<target name="ssh_bo_sync_test2">
+			<antcall target="ssh_bo_sync_web_test2"/>
+			<antcall target="ssh_bo_sync_was_test2"/>
+	</target>
+
+
+	<target name="ssh_bo_sync_web_test2">
+		<echo>=================================================================================== BO WEB sync sources 시작 ==========</echo>
+		<antcall target="get_and_unzip_web_test2"/>
+		<echo>=================================================================================== BO WEB sync sources 종료 ==========</echo>
+	</target>
+
+	<target name="ssh_bo_sync_was_test2">
+		<echo>=================================================================================== BO WEB sync sources 시작 ==========</echo>
+		<antcall target="get_and_unzip_was_test2"/>
+		<echo>=================================================================================== BO WEB sync sources 종료 ==========</echo>
+	</target>
+
+	<!-- ##### TEST End #####-->
+
+	<!-- ##### REAL Start ##### -->
+	<target name="ssh_bo_sync">
+		<antcall target="ssh_bo_sync_web"/>
+		<antcall target="ssh_bo_sync_was"/>
+	</target>
+
+	<target name="ssh_bo_sync_web">
+		<echo>=================================================================================== BO WAS sync sources 시작 ==========</echo>
+		<antcall target="get_and_unzip_web"/>
+		<echo>=================================================================================== BO WAS sync sources 종료 ==========</echo>
+	</target>
+
+	<target name="ssh_bo_sync_was">
+		<echo>=================================================================================== BO WAS sync sources 시작 ==========</echo>
+		<antcall target="get_and_unzip_was"/>
+		<echo>=================================================================================== BO WAS sync sources 종료 ==========</echo>
+	</target>
+	
+
+	<!-- test server only -->
+	<!--
+	<target name="get_and_unzip_was">
+		<sshexec host="${test.was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${sync.was.log}"
+			command="cd deploy;./${ssh.sync.cmd} ${deploy.id};ja downcon ${container1};ja startcon ${container1};ja downcon ${container2};ja startcon ${container2};ja downcon ${container3};ja startcon ${container3};ja downcon ${container4};ja startcon ${container4}" />
+		<condition property="isSuccess">
+			<and>
+				<resourcecontains resource="${sync.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+				<resourcecontains resource="${sync.was.log}" substring="Succeeded to start ${container1}" casesensitive="true" />
+				<resourcecontains resource="${sync.was.log}" substring="Succeeded to start ${container2}" casesensitive="true" />
+				<resourcecontains resource="${sync.was.log}" substring="Succeeded to start ${container3}" casesensitive="true" />
+				<resourcecontains resource="${sync.was.log}" substring="Succeeded to start ${container4}" casesensitive="true" />
+			</and>
+		</condition>	
+		<antcall target="check_remote_work" />		
+	</target>
+-->
+
+	<target name="get_and_unzip_web"> <!-- test server -->
+		<sshexec host="${test.web.ip}" username="${user.id}" password="${user.pwd}" 
+ 		   trust="true" verbose="false" output="${sync.web.log}"
+		   command="cd deploy;./${ssh.sync.web.cmd} ${backup_day} ${real.web.ip}" />
+		<condition property="isSuccess">
+			<and>
+				<resourcecontains resource="${sync.web.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+			</and>
+		</condition>	
+		<antcall target="check_remote_work" />		
+	</target>
+
+	<target name="get_and_unzip_was"> <!-- test server -->
+		<sshexec host="${test.was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${sync.was.log}"
+			command="cd deploy;./${ssh.sync.was.cmd} ${backup_day} ${real.was.ip}" />
+		<condition property="isSuccess">
+			<and>
+				<resourcecontains resource="${sync.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+			</and>
+		</condition>	
+		<antcall target="check_remote_work" />		
+	</target>
+
+
+	<!-- ##### TEST Start ##### -->
+	<target name="get_and_unzip_web_test1">
+		<sshexec host="${test.web.ip}" username="${user.id}" password="${user.pwd}" 
+ 		   trust="true" verbose="false" output="${sync.web.log}"
+		   command="cd deploy;./${ssh.sync.web.test1.cmd} ${backup_day} ${real.web.ip}" />
+		<condition property="isSuccess">
+			<and>
+				<resourcecontains resource="${sync.web.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+			</and>
+		</condition>	
+		<antcall target="check_remote_work" />		
+	</target>
+
+	<target name="get_and_unzip_was_test1">
+		<sshexec host="${test.was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${sync.was.log}"
+			command="cd deploy;./${ssh.sync.was.test1.cmd} ${backup_day} ${real.was.ip}" />
+		<condition property="isSuccess">
+			<and>
+				<resourcecontains resource="${sync.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+			</and>
+		</condition>	
+		<antcall target="check_remote_work" />		
+	</target>
+
+	
+	<target name="get_and_unzip_web_test2">
+		<sshexec host="${test.web.ip}" username="${user.id}" password="${user.pwd}" 
+ 		   trust="true" verbose="false" output="${sync.web.log}"
+		   command="cd deploy;./${ssh.sync.web.test2.cmd} ${backup_day} ${real.web.ip}" />
+		<condition property="isSuccess">
+			<and>
+				<resourcecontains resource="${sync.web.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+			</and>
+		</condition>	
+		<antcall target="check_remote_work" />		
+	</target>
+
+	<target name="get_and_unzip_was_test2">
+		<sshexec host="${test.was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${sync.was.log}"
+			command="cd deploy;./${ssh.sync.was.test2.cmd} ${backup_day} ${real.was.ip}" />
+		<condition property="isSuccess">
+			<and>
+				<resourcecontains resource="${sync.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+			</and>
+		</condition>	
+		<antcall target="check_remote_work" />		
+	</target>
+
+	<!-- ##### TEST End ##### -->
+	<target name="ftp_test"> <!-- test server only -->
+		<sshexec host="${test.was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="true" output="${ftp.test.was.log}"
+			command="cd deploy;./${ftp.test.cmd}" />
+	</target>
+
+
+</project>

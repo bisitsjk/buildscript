@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="ant if else " default="job" basedir=".">
+ 
+    <taskdef resource="net/sf/antcontrib/antcontrib.properties" />
+     
+    <target name="contrib" description="Stop web application">
+    	<property name="pack.real.path" value="E:/jenkins-lottesuper/jobs/LOTTESUPER_BACKOFFICE_1_TEST_BUILD/workspace/lottesuper2011/pack/REAL/BO_20170810_1330/project/back" />
+        <property name="status" value="false"/>
+        <echo message="the status is ${status}" />
+        <antcall target="ifelse"/>
+    </target>
+     
+    <target name="ifelse" description="Stop web application">
+    	<if>
+    			<resourceexists><file file="${pack.real.path}/static-root/js"/></resourceexists>
+    		<then>
+    				<echo message="JS 파일이 있습니다." />
+    		</then>
+    		<else>
+    				<echo message="JS 파일이 없습니다." />
+    		</else>
+    	</if>
+    
+        <if> 
+            <equals arg1="${status}" arg2="false" /> 
+            <then> 
+                <echo message="The value of property status is false" /> 
+            </then> 
+            <else> 
+                <echo message="The value of property status is not false" /> 
+            </else> 
+        </if> 
+        <echo message="the status is ${status}" />
+    </target>
+</project>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="javaConv_lottesuper2011ba_jenkins_1.7">
+    <!-- **************************************************************** -->
+	<!-- PROPERTY -->
+	<!-- **************************************************************** -->
+	<!-- parameters -->
+	<tstamp>
+		<!--<format property="back_time" pattern="yyyy-MM-dd_HH-mm-ss-SSS"/>-->
+		<format property="current_time" pattern="yyyyMMdd_HHmmss"/>
+		<!--<format property="back_time" pattern="yyyyMMdd"/>-->
+	</tstamp>
+	 <taskdef resource="net/sf/antcontrib/antcontrib.properties" />
+	<property file="${deployer.home.dir}/scripts/${ant.project.name}.${deploy.phase}.properties"/>
+	<property name="user.id" value="${svrUserId}"/>
+	<property name="user.pwd" value="${svrUserPassword}"/>
+	<!-- **************************************************************** -->
+
+	<!-- ###################### Jar Real Send Start ######################### -->
+
+	<!--
+	<target name="move_real">
+			<echo>move_deploy : move_real</echo>
+			<sshexec host="${host}" username="${user.id}" password="${user.pwd}"
+				trust="true" verbose="false" command="cd /esuper/project/batch/lib;find . -name lotte-super-batch.jar | xargs rm -f " />
+			<antcall target="send_real" />
+	  </target>
+	-->
+	
+	<target name="send_real">
+		<scp todir="${user.id}:${user.pwd}@${host}:/esuper/project/batch/lib" trust="true">
+					<fileset dir="E:/jenkins-lottesuper/jobs/JAVACONV_LOTTESUPER_BATCH_1_REAL_BUILD_${target}_1_1.7/workspace/lottesuper2011/pack/PROJECT">
+						<include name="lotte-super-batch.jar"></include>
+					</fileset>
+		</scp>
+	</target>	
+	<!-- ###################### Jar Real Send End ######################### -->
+	
+</project>

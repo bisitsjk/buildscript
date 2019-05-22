@@ -1,0 +1,85 @@
+<project name="LECS_Build_Modification">
+	<target name="modify-prd-bo">
+		<groovy>
+			<arg value="bo" />
+			<arg value="build/LECS-Platform-BO_webapp/" />
+<![CDATA[
+			
+	TARGET  = args[0]
+	BASEDIR = args[1]
+	JOBS = [
+			common: [
+				[from:"/WEB-INF/classes/config/system/lecs/config_lecs.prd.xml", 					
+				   to:"/WEB-INF/classes/config/system/lecs/config_lecs.xml"],
+
+				[from:"/WEB-INF/classes/config/log4j/log4j.prd.xml", 
+				   to:"/WEB-INF/classes/config/log4j/log4j.xml"],
+
+				[from:"/WEB-INF/classes/config/spring/bean/common.xml.prd", 
+				   to:"/WEB-INF/classes/config/spring/bean/common.xml"],
+
+				[from:"/WEB-INF/classes/interfaces.prd.properties", 
+		   		   to:"/WEB-INF/classes/interfaces.properties"],
+
+				[from:"/WEB-INF/classes/xdsp_pool.prd.properties", 
+				   to:"/WEB-INF/classes/xdsp_pool.properties"],
+			],
+			
+			bo: [
+				[from:"/WEB-INF/classes/config/spring/common/spring_properties.bo.prd.properties", 	
+				   to:"/WEB-INF/classes/config/spring/common/spring_properties.properties"],
+			
+				[from:"/WEB-INF/classes/config/system/bo/config_bo.prd.xml", 
+				   to:"/WEB-INF/classes/config/system/bo/config_bo.xml"],
+			],
+			
+			cc: [
+				[from:"/WEB-INF/classes/config/spring/common/spring_properties.bo.prd.properties", 	
+				   to:"/WEB-INF/classes/config/spring/common/spring_properties.properties"],
+			
+				[from:"/WEB-INF/classes/config/system/bo/config_cc.prd.xml", 
+				   to:"/WEB-INF/classes/config/system/bo/config_cc.xml"],
+			],
+			
+			lps: [
+				[from:"/WEB-INF/classes/config/spring/common/spring_properties.fo.prd.properties", 	
+				   to:"/WEB-INF/classes/config/spring/common/spring_properties.properties"],
+			
+				[from:"/WEB-INF/classes/config/system/lps/config_lps.prd.xml", 
+				   to:"/WEB-INF/classes/config/system/lps/config_lps.xml"],
+			],
+			
+			muji: [
+				[from:"/WEB-INF/classes/config/spring/common/spring_properties.fo.prd.properties", 	
+				   to:"/WEB-INF/classes/config/spring/common/spring_properties.properties"],
+			
+				[from:"/WEB-INF/classes/config/system/muji/config_muji.prd.xml", 
+				   to:"/WEB-INF/classes/config/system/muji/config_muji.xml"],
+			],
+			
+			nike: [
+				[from:"/WEB-INF/classes/config/spring/common/spring_properties.fo.prd.properties", 	
+				   to:"/WEB-INF/classes/config/spring/common/spring_properties.properties"],
+			
+				[from:"/WEB-INF/classes/config/system/nike/config_nike.prd.xml", 
+				   to:"/WEB-INF/classes/config/system/nike/config_nike.xml"],
+			],
+		]
+	copy = { pair ->
+		from = pair.from
+		to = pair.to
+		println "From: ${BASEDIR}${from}"
+		println "To: ${BASEDIR}${to}"
+	}
+			
+	JOBS["common"].each (copy)
+	JOBS["$TARGET"].each (copy)
+	
+	
+			
+]]>		
+		</groovy>
+	</target>
+
+
+</project>

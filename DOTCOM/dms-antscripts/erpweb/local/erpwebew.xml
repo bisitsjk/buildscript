@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="erpwebew">
+	<import file="./erpweb.xml"/>
+    <!-- **************************************************************** -->
+	<!-- PROPERTY -->
+	<!-- **************************************************************** -->	
+	<property name="deploy.id.prefix" 	value="EW"/>
+	<property name="init.cmd"     		value="ewinit"/>
+	<property name="copy.cmd"     		value="ewdeploy"/>
+	<property name="backup.cmd"   		value="ewbackup"/>
+	<property name="rollback.cmd" 		value="ewrollback"/>
+
+	
+	<!-- **************************************************************** -->
+	<!-- CHECK -->
+	<!-- **************************************************************** -->	
+	<target name="check_common">
+		<echo>♠ 공통 배포ID가 있는지 확인합니다. : ${comm.deploy.id}</echo>
+		<substring property="deploy.id.suffix" string="${deploy.id}" start="2" end="16"/>
+		<condition property="existCommon">
+			<and>
+				<contains string="${comm.deploy.id}" substring="CM_" casesensitive="true" />
+				<length   string="${comm.deploy.id}" when="greater" length="15"/>
+				<contains string="${comm.deploy.id}" substring="${deploy.id.suffix}"/>
+			</and>
+		</condition>
+	</target>
+		
+	<target name="check_exist">
+		<condition property="isExistWebapp">
+			<resourcecount when="greater" count="0">
+				<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/ess" casesensitive="yes">
+					<include name="webapp/**"/>
+					<exclude name="webapp/WEB-INF/classes/**"/>
+					<exclude name="webapp/WEB-INF/lib/**"/>
+					<exclude name="webapp/WEB-INF/*.xml"/>
+				</fileset>
+			</resourcecount>
+		</condition>
+		<condition property="isExistWebinf">
+			<resourcecount when="greater" count="0">
+				<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/ess" casesensitive="yes">
+					<include name="webapp/WEB-INF/classes/**"/>
+					<include name="webapp/WEB-INF/lib/**"/>
+					<include name="webapp/WEB-INF/*.xml"/>
+				</fileset>
+			</resourcecount>			
+		</condition>		
+		<condition property="isJspAndClass">
+			<and>
+				<istrue value="${isExistWebapp}"/>
+				<istrue value="${isExistWebinf}"/>
+			</and>
+		</condition>
+		<condition property="isJsp">
+			<and>
+				<istrue value="${isExistWebapp}"/>
+				<isfalse value="${isExistWebinf}"/>
+			</and>
+		</condition>
+		<condition property="isClass">
+			<and>
+				<isfalse value="${isExistWebapp}"/>
+				<istrue value="${isExistWebinf}"/>
+			</and>
+		</condition>
+		<condition property="isWeb">
+			<resourceexists>
+				<file file="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/ess/webroot"/>
+			</resourceexists>
+		</condition>
+		<condition property="isWas">
+			<or>
+				<istrue value="${isExistWebapp}"/>
+				<istrue value="${isExistWebinf}"/>
+			</or>
+		</condition>
+		<condition property="isExist">
+			<or>
+				<istrue value="${isWeb}"/>
+				<istrue value="${isWas}"/>
+			</or>
+		</condition>
+	</target>	
+	
+	<target name="check_host">
+		<condition property="isWeberpdev"> <!-- 사용하는 곳 없음 -->
+			<equals arg1="10.129.100.122" arg2="${host.ip}"/>
+		</condition>
+		<condition property="isSapweb">
+			<equals arg1="121.254.239.82" arg2="${host.ip}"/>
+		</condition>
+	</target>	
+	
+	<target name="check_alive" depends="check_host">
+		<echo>check alive ${host.ip}</echo>
+		<echo>포트가 막혀 있어 체크가 불가함</echo>
+		<!--
+		<waitfor maxwait="120000" checkevery="10000" timeoutproperty="isTimeout">
+			<socket server="${host.ip}" port="8080"/>
+		</waitfor>
+		-->
+	</target>
+	
+	
+<!-- **************************************************************** -->
+<!-- MAIN -->
+<!-- **************************************************************** -->
+	<target name="phase2.1">
+		<echo>================================================================================</echo>
+		<antcall target="accept"/>
+		<antcall target="merge"/>
+		<antcall target="build"/>
+		<antcall target="pack"/>
+		<echo>================================================================================</echo>
+	</target>
+	
+	<target name="phase2.2">
+		<echo>================================================================================</echo>
+		<echo>${MESSAGES}</echo>
+		<property name="deploy.id" value="${main.deploy.id}"/>
+		<property name="user.id"   value="xclass"/>
+		<propertyvalue property="user.pwd" value="${user.id}"/>
+		<antcall target="deploy_web"/>
+		<echo>================================================================================</echo>
+	</target>
+	
+	<target name="phase2.3">
+		<echo>================================================================================</echo>
+		<property name="deploy.id" value="${main.deploy.id}"/>
+		<property name="user.id"   value="xclass"/>
+		<propertyvalue property="user.pwd" value="${user.id}"/>
+		<antcall target="deploy_was"/>
+		<echo>================================================================================</echo>
+	</target>
+	
+	<target name="phase2.4">
+		<echo>================================================================================</echo>
+		<property name="deploy.id" value="${main.deploy.id}"/>
+		<antcall target="notice_success"/>
+		<antcall target="record"/>
+		<echo>================================================================================</echo>
+	</target>
+	
+	<target name="phase3.1">
+		<echo>================================================================================</echo>
+		<antcall target="accept_real"/>
+		<antcall target="merge"/>
+		<antcall target="build"/>
+		<antcall target="pack"/>
+		<echo>================================================================================</echo>
+	</target>	
+	
+	<target name="phase3.2">
+		<echo>================================================================================</echo>
+		<property name="deploy.id" value="${main.deploy.id}"/>
+		<property name="user.id"   value="xclass"/>
+		<propertyvalue property="user.pwd" value="${user.id}"/>
+		<antcall target="deploy"/>
+		<echo>================================================================================</echo>
+	</target>
+	
+	<target name="phase3.3">
+		<echo>================================================================================</echo>
+		<property name="deploy.id" value="${main.deploy.id}"/>
+		<antcall target="record"/>
+		<echo>================================================================================</echo>
+	</target>	
+	
+		
+	<!-- **************************************************************** -->
+	<!-- BUILD -->
+	<!-- build -->
+	<!-- javac 전에 <record name="${log.path}/${deploy.id}_BUILD.log" action="start"/> 구문 삽입         -->
+	<!-- javac 안에 failonerror="false" errorProperty="isBuildError" 구문 삽입 -->
+	<!-- javac 후에 <record name="${log.path}/${deploy.id}_BUILD.log" action="stop"/> 구문 삽입           -->
+	<!-- fail task 앞에 <antcall target="notice_fail"/> 구문 삽입 -->
+	<!-- 마지막에 <fail if="${isBuildError}" message="컴파일 오류가 발생했습니다." /> 구문 삽입 -->
+	<!-- errorProerty 이름과 fail task의 if attribute에 사용되는 property 이름은 동일해야 함 -->
+	<!-- **************************************************************** -->
+	<target name="clean">
+	    <mkdir dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}" />
+		
+		<delete includeemptydirs="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}" includes="**/*"/>
+    	</delete>
+	</target>
+	
+	<target name="build" depends="set_id">
+		<path id="classpath">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcLibPath}">
+				<include name="*.jar" />
+			</fileset>
+			<fileset dir="${java.home.dir}/jre/lib">
+				<include name="rt.jar" />
+			</fileset>
+			<fileset dir="${tomc.home.dir}/lib">
+				<include name="*.jar" />
+			</fileset>
+		</path>
+		<record name="${log.path}/${deploy.id}_BUILD.log" action="start"/>
+		<javac classpathref="classpath"  
+			srcdir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcJavaPath}"			
+			destdir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}"
+			failonerror="false" errorProperty="isBuildError"
+			encoding="utf-8"
+			source="1.5"
+			target="1.5"
+			nowarn="on" />		
+		<record name="${log.path}/${deploy.id}_BUILD.log" action="stop"/>
+		<antcall target="notice_fail"/>
+		<fail if="${isBuildError}" message="컴파일 오류가 발생했습니다." />
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcClassesPath}">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcJavaPath}">
+				<include name="*.properties"/>
+				<include name="*.xml"/>
+		    </fileset>
+		</copy>		
+	</target>			
+	
+	
+	<!-- **************************************************************** -->
+	<!-- PACK -->
+	<!-- **************************************************************** -->
+		
+	
+	<!-- **************************************************************** -->
+	<!-- BACKUP -->
+	<!-- **************************************************************** -->
+	
+
+	<!-- **************************************************************** -->
+	<!-- SEND  -->
+	<!-- **************************************************************** -->	
+	<target name="send_web">
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${stopover.dir}/${deploy.id}" trust="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}">
+				<include name="ess/webroot/**/*"></include>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</scp>
+	</target>
+						
+	<target name="send_was">
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${stopover.dir}/${deploy.id}" trust="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}">
+				<include name="ess/webapp/**/*"></include>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</scp>
+	</target>	
+	
+	<target name="send" depends="check_host"> <!--  if="${isSapweb}" -->
+		<scp todir="${user.id}:${user.pwd}@${host.ip}:${stopover.dir}/${deploy.id}" trust="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}">
+				<include name="ess/webapp/**/*"></include>
+				<include name="ess/webroot/**/*"></include>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</scp>
+	</target>	
+	
+	
+	<!-- **************************************************************** -->
+	<!-- DEPLOY -->
+	<!-- **************************************************************** -->	
+	
+		
+	<!-- **************************************************************** -->
+	<!-- ROLLBACK -->
+	<!-- **************************************************************** -->
+
+</project>

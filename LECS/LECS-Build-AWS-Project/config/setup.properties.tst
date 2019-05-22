@@ -1,0 +1,12 @@
+jdbc.driverClassName=oracle.jdbc.driver.OracleDriver
+jdbc.url=jdbc:oracle:thin:@210.93.129.197:dev2prj
+jdbc.username=lecs_dapp
+jdbc.password=lecs#dapp
+jdbc.pool.initialSize=5
+jdbc.pool.maxActive=10
+lps.lecs.com=210.93.129.162:8080
+img.lecs.com=210.93.129.162:8080
+bo.lecs.com=210.93.129.162:8081
+cc.lecs.com=210.93.129.162:8082
+muji.lecs.com=210.93.129.163:8083
+nike.lecs.com=210.93.129.163:8084

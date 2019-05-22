@@ -1,0 +1,458 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottesuper2017bo_renewal_jenkins">
+    <!-- **************************************************************** -->
+	<!-- PROPERTY -->
+	<!-- **************************************************************** -->
+	<property name="deploy.id" value="lotte-super-bos"/>
+	<property name="comm.deploy.id" value="lotte-super-commons"/>
+	<!-- deployer.home.dir=D:/deployer/scripts/lottesuper2017bo_renewal_jenkins.prj.properties -->
+	<property file="${deployer.home.dir}/scripts/${ant.project.name}.${deploy.phase}.properties"/>
+	
+	<!--  pack.real 에서 deploy.id 제거  -->
+	<!-- pack.real.path = E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL/workspace/lottesuper2011/pack/PROJECT/lotte-super-bos/project/back -->
+	<property name="pack.real.path" value="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/${svrWebappPath}" />
+	
+	<property name="comm.wrksp.path" value="E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL/workspace" />
+	<property name="comm.lib.path" value="lotte-super-commons/lib" />
+	<property name="comm.jar.path" value="lotte-super-commons/dist" />
+	<property name="comm.pack.lib.path" value="project/back/WEB-INF/lib" />
+	<property name="user.id" value="${svrUserId}"/>
+	<property name="user.pwd" value="${svrUserPassword}"/>
+
+  	<target name="run_build">
+		<antcall target="build" />
+		<antcall target="pack" />
+		<antcall target="zip" />
+		<antcall target="ssh_send_source" />
+		<antcall target="ssh_unzip" />
+		<antcall target="ssh_restart_jeus" />
+	</target>
+	
+	<target name="run_deploy">
+		<antcall target="backup_was" />
+		<antcall target="deploy_was" />
+		<antcall target="copy_was" />
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- CHECK -->
+	<!-- **************************************************************** -->
+	<target name="ip_check">
+	<echo>echo ${was.ip}</echo>
+	  <condition property="con_pro" value="esptstb_prodev">
+	   		<equals arg1="${was.ip}" arg2="10.149.199.32" />
+	  </condition>
+		  <condition property="con_partner" value="esptstb_partnerdev">
+		   	<equals arg1="${was.ip}" arg2="10.149.199.32" />
+		  </condition>
+		  <condition property="con_mpick" value="esptstb_mpickingdev">
+		   	<equals arg1="${was.ip}" arg2="10.149.199.32" />
+		  </condition>
+
+	  <condition property="con_pro" value="esptstb2_prodev">
+		   <equals arg1="${was.ip}" arg2="10.149.199.47" />
+	  </condition>
+		  <condition property="con_partner" value="esptstb2_partnerdev">
+			<equals arg1="${was.ip}" arg2="10.149.199.47" />
+		  </condition>
+		  <condition property="con_mpick" value="esptstb2_mpickingdev">
+			 <equals arg1="${was.ip}" arg2="10.149.199.47" />
+		  </condition>
+	</target>
+
+	
+	<!-- 2013-01-02 변경 -->
+	<!-- file= E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL/workspace/lottesuper2011/pack/REAL/lotte-super-bos/project/back/WEB-INF/config-test.xml" -->
+	<target name="check_rename1">
+		<condition property="existFile1">
+			<resourceexists><file file="${pack.real.path}/WEB-INF/config-${deploy.phase}.xml" /></resourceexists>
+		</condition>
+		<echo>config-${deploy.phase}.xml : ${existFile1}</echo>
+	</target>
+	
+	
+	<!-- file= E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL/workspace/lottesuper2011/pack/PROJECT/lotte-super-bos/project/back/WEB-INF/config-test.xml" -->
+	<target name="check_rename2">
+		<condition property="existFile2">
+			<resourceexists><file file="${pack.real.path}/WEB-INF/jeus-web-dd-${deploy.phase}.xml" /></resourceexists>
+		</condition>
+		<echo>jeus-web-dd-${deploy.phase}.xml : ${existFile2}</echo>
+	</target>
+	
+	
+	<!-- file file=E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL/workspace/lottesuper2011/pack/PROJECT/lotte-super-bos/project/back/WEB-INF/x2config/x2config-test.xml -->
+	<target name="check_rename3">
+		<condition property="existFile3">
+			<resourceexists><file file="${pack.real.path}/WEB-INF/x2config/x2config-${deploy.phase}.xml" /></resourceexists>
+		</condition>
+		<echo>x2config-${deploy.phase}.xml : ${existFile3}</echo>
+	</target>
+	
+	<!-- <file file=E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL/workspace/lottesuper2011/pack/PROJECT/lotte-super-bos/project/back/WEB-INF/x2config/log4jconfig-test.xml -->
+	<target name="check_rename4">
+		<condition property="existFile4">
+			<resourceexists><file file="${pack.real.path}/WEB-INF/x2config/log4jconfig-${deploy.phase}.xml" /></resourceexists>
+		</condition>
+		<echo>log4jconfig-${deploy.phase}.xml : ${existFile4}</echo>
+	</target>
+	
+	<!-- file file=E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL/workspace/lottesuper2011/pack/PROJECT/lotte-super-bos/project/back/WEB-INF/lib/report-test.info-->
+	<target name="check_rename5">
+		<condition property="existFile5">
+			<resourceexists><file file="${pack.real.path}/WEB-INF/lib/report-${deploy.phase}.info" /></resourceexists>
+		</condition>
+		<echo>report-${deploy.phase}.info : ${existFile5}</echo>
+	</target>
+	
+	
+	<!-- file file="E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL/workspace/lottesuper2011/pack/PROJECT/lotte-super-bos/project/back/WEB-INF/lib/ubigateway-test.property -->
+	<target name="check_rename6">
+		<condition property="existFile6">
+				<resourceexists><file file="${pack.real.path}/WEB-INF/lib/ubigateway-${deploy.phase}.property" /></resourceexists>
+		</condition>
+		<echo>ubigateway-${deploy.phase}.property : ${existFile6}</echo>
+	</target>
+	
+	<!-- 2014-10-28 ADD start-->
+	<!-- file file=E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL/workspace/lottesuper2011/pack/PROJECT/lotte-super-bos/project/back/WEB-INF/x2config/x2config-mpicking-test.xml -->
+	<target name="check_rename7">
+		<condition property="existFile7">
+			<resourceexists><file file="${pack.real.path}/WEB-INF/x2config/x2config-mpicking-${deploy.phase}.xml" /></resourceexists>
+		</condition>
+		<echo>x2config-mpicking-${deploy.phase}.xml : ${existFile7}</echo>
+	</target>
+	
+	<!-- file file=E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL/workspace/lottesuper2011/pack/PROJECT/lotte-super-bos/project/back/WEB-INF/x2config/log4jconfig-mpicking-test.xml -->
+	<target name="check_rename8">
+		<condition property="existFile8">
+			<resourceexists><file file="${pack.real.path}/WEB-INF/x2config/log4jconfig-mpicking-${deploy.phase}.xml" /></resourceexists>
+		</condition>
+		<echo>log4jconfig-mpicking-${deploy.phase}.xml : ${existFile8}</echo>
+	</target>	
+	
+	
+	<!-- file file=E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL/workspace/lottesuper2011/pack/PROJECT/lotte-super-bos/project/back/WEB-INF/x2config/x2config-partner-test.xml -->
+	<target name="check_rename9">
+		<condition property="existFile9">
+			<resourceexists><file file="${pack.real.path}/WEB-INF/x2config/x2config-partner-${deploy.phase}.xml" /></resourceexists>
+		</condition>
+		<echo>x2config-partner-${deploy.phase}.xml : ${existFile9}</echo>
+	</target>
+	
+	
+	<!-- file file=E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL/workspace/lottesuper2011/pack/PROJECT/lotte-super-bos/project/back/WEB-INF/x2config/log4jconfig-partner-test.xml -->
+	<target name="check_rename10">
+		<condition property="existFile10">
+			<resourceexists><file file="${pack.real.path}/WEB-INF/x2config/log4jconfig-partner-${deploy.phase}.xml" /></resourceexists>
+		</condition>
+		<echo>log4jconfig-partner-${deploy.phase}.xml : ${existFile10}</echo>
+	</target>	
+	<!-- 2014-10-28 end -->
+	
+	<target name="check_remote_work" unless="isSuccess">
+		<fail message="원격지 작업이 실패하였습니다..." />
+	</target>	
+		
+	<target name="check_lock_prop">
+		<condition property="existLockProp">
+			<resourceexists>
+				<file file="${lock.workspace}/${rglr.dep.id}_lock.properties"/>
+			</resourceexists>
+		</condition>
+	</target>
+	
+	
+	<!-- hdsnWrkSpPath=E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL/workspace/lottesuper2011/pack/PROJECT/project/back/WEB-INF/dynamic_classes -->
+	<target name="check_exist"> 	<!--source type check-->
+		<condition property="isExistClass">
+			<or>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/back/WEB-INF/dynamic_classes"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/back/WEB-INF/classes"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/back/WEB-INF/lib"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/back/WEB-INF/x2config/x2config"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/back/WEB-INF/x2config/x2configParnter.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/back/WEB-INF/x2config/x2configMpicking.xml"/></resourceexists>				
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/back/WEB-INF/x2config/log4jconfigMpicking.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/back/WEB-INF/x2config/log4jconfigPartner.xml"/></resourceexists>				
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/back/WEB-INF/x2scenario"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/back/WEB-INF/config.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/back/WEB-INF/config-dev.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/back/WEB-INF/config-test.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/back/WEB-INF/config-real.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/back/WEB-INF/jeus-web-dd.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/back/WEB-INF/jeus-web-dd-dev.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/back/WEB-INF/jeus-web-dd-test.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/back/WEB-INF/jeus-web-dd-real.xml"/></resourceexists>
+			<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/back/WEB-INF/web.xml"/></resourceexists>
+			</or>
+		</condition>
+		<condition property="isExistJsp">
+			<or>
+				<resourceexists><file file="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/back/WEB-INF/jsp"/></resourceexists>
+				<resourcecount when="greater" count="0">
+					<filelist dir="${hdsnWrkSpPath}/lottesuper2011/${hdsnPackPath}/${deploy.id}/project/back" files="*.jsp,*.html"/>
+				</resourcecount>				
+			</or>
+		</condition>
+		
+		<condition property="isJspAndClass">
+			<and>
+				<istrue value="${isExistClass}"/>
+				<istrue value="${isExistJsp}"/>
+			</and>
+		</condition>
+		<condition property="isJsp">
+			<and>
+				<isfalse value="${isExistClass}"/>
+				<istrue value="${isExistJsp}"/>
+			</and>
+		</condition>
+		<condition property="isClass">
+			<and>
+				<istrue value="${isExistClass}"/>
+				<isfalse value="${isExistJsp}"/>
+			</and>
+		</condition>
+		<condition property="isExist">
+			<or>
+				<istrue value="${isExistClass}"/>
+				<istrue value="${isExistJsp}"/>
+			</or>
+		</condition>		
+		<condition property="isRestart">
+			<or>
+				<istrue value="${isJspAndClass}"/>
+				<istrue value="${isClass}"/>
+			</or>
+		</condition>
+		<echo>isJsp : ${isJsp} </echo>
+		<echo>isClass : ${isClass} </echo>
+		<echo>isJspAndClass : ${isJspAndClass} </echo>
+		<echo>jeus restart - >> ${isRestart}</echo>
+	</target>
+	
+
+	<!-- **************************************************************** -->
+	<!-- BUILD -->
+	<!-- **************************************************************** -->
+	<target name="build">
+		<path id="classpath">
+			<!-- C:/Program Files (x86)/Java/jdk1.6.0_25/jre/lib -->
+			<fileset dir="${java.home.dir}/jre/lib">
+				<include name="rt.jar" />
+			</fileset>
+
+			<!-- C:/TmaxSoft/JEUS6.0/lib/datasource -->
+			<fileset dir="${jeus.home.dir}/lib/datasource">
+				<include name="*.jar" />
+			</fileset>
+
+			<!-- C:/TmaxSoft/JEUS6.0/lib/system -->
+			<fileset dir="${jeus.home.dir}/lib/system">
+				<include name="*.jar" />
+			</fileset>
+
+			<!-- E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-commons/lib -->			
+			<fileset dir="${comm.wrksp.path}/${svnReposNm}/${hdsnBranchPath}/${comm.lib.path}">
+				<include name="*.jar" />
+			</fileset>
+
+			<!-- E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-commons/dist -->
+			<fileset dir="${comm.wrksp.path}/${svnReposNm}/${hdsnBranchPath}/${comm.jar.path}">
+				<include name="*.jar" />
+			</fileset>
+
+			<!-- E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-bos/WebContent/WEB-INF/lib -->
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnBranchPath}/${srcLibPath}">
+				<include name="*.jar" />
+			</fileset>
+
+			<!-- E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-bos/WebContent/WEB-INF/classes -->
+			<dirset dir="${srcStaticClassesPath}" />
+
+			<!-- E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-bos/WebContent/WEB-INF/dynamic_classes -->
+			<dirset dir="${srcDynamicClassesPath}" />
+		</path>
+
+		<mkdir dir="${srcStaticClassesPath}" />
+		<mkdir dir="${srcDynamicClassesPath}" />
+
+	    <!-- static -->
+		<!-- E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-bos/WebContent/WEB-INF/classes -->
+		<!-- E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-bos/src -->
+		<!-- memoryMaximumSize="256m" 을  memoryMaximumSize="1G" 로 수정 -->
+	    <!--<mkdir dir="${srcStaticClassesPath}" />-->
+		<javac source="1.6" 
+			target="1.6" 
+			srcdir="${srcStaticJavaPath}"
+			classpathref="classpath"
+			destdir="${srcStaticClassesPath}"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			memoryMaximumSize="1G"
+			includeantruntime="false"/>
+			
+		<!-- dynamic -->
+		<!-- E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-bos/WebContent/WEB-INF/dynamic_classes -->
+		<!-- E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-bos/src_dynamic -->
+		<!-- memoryMaximumSize="256m" 을  memoryMaximumSize="1G" 로 수정 -->
+		<!--<mkdir dir="${srcDynamicClassesPath}" />-->
+		<javac source="1.6"
+			target="1.6"
+			srcdir="${srcDynamicJavaPath}"
+			classpathref="classpath"
+			destdir="${srcDynamicClassesPath}"
+			failonerror="on" 
+			debug="on"
+			encoding="utf-8"
+			compiler="modern"
+			memoryMaximumSize="1G"
+			includeantruntime="false"/>
+
+
+		<!-- E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-bos/WebContent/WEB-INF/dynamic_classes -->
+		<copy todir="${srcDynamicClassesPath}">
+			<!-- E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-bos/src -->
+			<fileset dir="${srcDynamicJavaPath}">
+				<include name="**/**/*.xml"/>
+		    </fileset>
+		</copy>
+	</target>
+	
+	<!-- **************************************************************** -->
+	<!-- PACK -->
+	<!-- **************************************************************** -->
+	<target name="pack">
+		<delete dir="${pack.real.path}" /> <!-- 2013-01-02 추가 -->
+		<mkdir dir="${pack.real.path}" />  <!-- 2013-01-02 추가 -->
+		
+		<!-- E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL/workspace/lottesuper2011/pack/PROJECT/lotte-super-bos/project/back -->
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/project/back">
+			<fileset dir="E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL/workspace/lottesuper2011/branches/PROJECT/2017RenewalPj/lotte-super-bos/WebContent">
+				<!--<include name="**/**"/>-->
+				<include name="WEB-INF/classes/**/*"/><!-- Build 되어있는 것들 -->
+				<include name="WEB-INF/dynamic_classes/**/*"/><!-- Build 되어있는 것들 -->
+				<include name="WEB-INF/jsp/**/*"/>
+				<include name="WEB-INF/x2config/messages/**/*"/>
+				<include name="WEB-INF/x2scenario/**/*"/>
+				<include name="WEB-INF/web.xml"/>
+				<include name="static-root/js/**/*"/>
+				<include name="static-root/com/**/*"/>
+				<include name="static-root/common/**/*"/>
+				<include name="static-root/goods/**/*"/>
+		    </fileset>
+		</copy>
+		
+		<antcall target="copy_lottesuper_commons" />
+
+	</target>
+	<!-- rename -->
+	
+	<target name="config.xml" depends="check_rename1" if="existFile1">
+ 		<move file="${pack.real.path}/WEB-INF/config-${deploy.phase}.xml" 
+			  tofile="${pack.real.path}/WEB-INF/config.xml" overwrite="true" verbose="true" />
+	</target>
+	<target name="jeus-web-dd.xml" depends="check_rename2" if="existFile2">
+		<move file="${pack.real.path}/WEB-INF/jeus-web-dd-${deploy.phase}.xml" 
+			  tofile="${pack.real.path}/WEB-INF/jeus-web-dd.xml" overwrite="true" verbose="true" />
+	</target>
+	<target name="x2config.xml" depends="check_rename3" if="existFile3">
+		<move file="${pack.real.path}/WEB-INF/x2config/x2config-${deploy.phase}.xml" 
+			  tofile="${pack.real.path}/WEB-INF/x2config/x2config.xml" overwrite="true" verbose="true" />
+	</target>
+	<target name="log4jconfig.xml" depends="check_rename4" if="existFile4">
+		<move file="${pack.real.path}/WEB-INF/x2config/log4jconfig-${deploy.phase}.xml" 
+			  tofile="${pack.real.path}/WEB-INF/x2config/log4jconfig.xml" overwrite="true" verbose="true" />
+	</target>			  	
+	<target name="report.info" depends="check_rename5" if="existFile5">
+		<move file="${pack.real.path}/WEB-INF/lib/report-${deploy.phase}.info" 
+			tofile="${pack.real.path}/WEB-INF/lib/report.info" overwrite="true" verbose="true" />
+	</target>
+	<target name="ubigateway.property" depends="check_rename6" if="existFile6">
+		<move file="${pack.real.path}/WEB-INF/lib/ubigateway-${deploy.phase}.property" 
+			tofile="${pack.real.path}/WEB-INF/lib/ubigateway.property" overwrite="true" verbose="true" />
+	</target>
+	
+	<!-- 2014.10.28 ADD START-->
+	<target name="x2config-mpicking.xml" depends="check_rename7" if="existFile7">
+		<move file="${pack.real.path}/WEB-INF/x2config/x2config-mpicking-${deploy.phase}.xml" 
+			  tofile="${pack.real.path}/WEB-INF/x2config/x2configMpicking.xml" overwrite="true" verbose="true" />
+	</target>
+	<target name="log4jconfig-mpicking.xml" depends="check_rename8" if="existFile8">
+		<move file="${pack.real.path}/WEB-INF/x2config/log4jconfig-mpicking-${deploy.phase}.xml" 
+			  tofile="${pack.real.path}/WEB-INF/x2config/log4jconfigMpicking.xml" overwrite="true" verbose="true" />
+	</target>
+	<target name="x2config-partner.xml" depends="check_rename9" if="existFile9">
+		<move file="${pack.real.path}/WEB-INF/x2config/x2config-partner-${deploy.phase}.xml" 
+			  tofile="${pack.real.path}/WEB-INF/x2config/x2configPartner.xml" overwrite="true" verbose="true" />
+	</target>
+	<target name="log4jconfig-partner.xml" depends="check_rename10" if="existFile10">
+		<move file="${pack.real.path}/WEB-INF/x2config/log4jconfig-partner-${deploy.phase}.xml" 
+			  tofile="${pack.real.path}/WEB-INF/x2config/log4jconfigPartner.xml" overwrite="true" verbose="true" />
+	</target>			  	
+	
+	<!-- 2014-10-28 ADD END-->
+	
+	<!-- common -->
+	<!--<target name="copy_lottesuper_commons" depends="check_common" if="existCommon">-->
+	<!--copy todir =  E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL/workspace/lottesuper2011/pack/PROJECT/lotte-super-bos/project/back/WEB-INF/lib -->
+	<!-- fileset dir  = E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL/workspace/lottesuper2011/pack/PROJECT/lotte-super-commons/project/back/WEB-INF/lib -->
+	<target name="copy_lottesuper_commons">
+		<copy todir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/${svrLibPath}">
+			<fileset dir="${comm.wrksp.path}/${svnReposNm}/${hdsnPackPath}/${comm.deploy.id}/${comm.pack.lib.path}">
+				<include name="*.*"/>
+		    </fileset>
+		</copy>
+	</target>
+	
+	<!-- zip destfile= E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL/workspace/lottesuper2011/pack/PROJECT/lotte-super-bos/project/back/back_project.zip -->
+	<!-- basedir= E:/jenkins-lottesuper/jobs/BACK_2017_PRJ_RENEWAL/workspace/lottesuper2011/pack/PROJECT/lotte-super-bos/project/back -->
+	<target name="zip">
+	<zip destfile="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/project/back/back_project.zip"
+	    basedir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/project/back"
+		includes="**/**"/>
+	</target>
+
+		
+		
+
+	<!-- ##### SSH SEND ##### -->
+	<!-- 1. SCP (from local to Server) -->
+	<target name="ssh_send_source">
+		<scp todir="${user.id}:${user.pwd}@${was.ip}:/esuper/project/back" trust="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/project/back">
+				<include name="*.zip"></include>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</scp>
+		<scp todir="${user.id}:${user.pwd}@${was.ip}:/esuper/project/partner" trust="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/project/back">
+				<include name="*.zip"></include>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</scp>
+		<scp todir="${user.id}:${user.pwd}@${was.ip}:/esuper/project/mback" trust="true">
+			<fileset dir="${hdsnWrkSpPath}/${svnReposNm}/${hdsnPackPath}/${deploy.id}/project/back">
+				<include name="*.zip"></include>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</scp>
+	</target>	
+		
+	<target name="ssh_unzip">
+			<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+				trust="true" verbose="false" command="cd /esuper/project/back;unzip -o -q back_project.zip;cd /esuper/project/partner;unzip -o -q back_project.zip;cd /esuper/project/mback;unzip -o -q back_project.zip" />
+	</target>
+
+
+	<!-- #### SSH JESU RESTART ####-->
+	<target name="ssh_restart_jeus" depends="check_exist,ip_check" if="isRestart">	 <!-- only test - restart_jeus -->
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${jeus.restart.log}"
+			command="ja downcon ${con_pro};ja startcon ${con_pro};ja downcon ${con_partner};ja startcon ${con_partner};ja downcon ${con_mpick};ja startcon ${con_mpick}" />
+	</target>
+	
+		
+</project>

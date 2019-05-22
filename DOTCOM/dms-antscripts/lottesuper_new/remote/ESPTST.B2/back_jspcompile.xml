@@ -1,0 +1,95 @@
+<project name="Webapp Precompilation" default="all" basedir="."> 
+
+   <property name="appname" value="back21" />  
+   <property name="tomcat.home" value="/usr2/apache-tomcat/instance"/>
+   <property name="tomcat_engine.home" value="/usr2/apache-tomcat/engine/apache-tomcat-8.5.15"/>
+   <!--<property name="tomcat_engine.home" value="/usr2/apache-tomcat/engine/apache-tomcat-6.0.53"/>-->
+   <!--<property name="tomcat_engine.home" value="/usr2/apache-tomcat/engine/apache-tomcat-7.0.77"/>-->
+   <property name="webapp.path" value="/esuper/project/back"/>
+   <!-- /usr2/apache-tomcat/instance/back21/work/Catalina/localhost/ROOT/org/apache/jsp/WEB_002dINF/jsp/main -->
+    <!--<property name="tomcat.work.dir" value="${tomcat.home}/${appname}/work/Catalina/localhost/ROOT" />--> 
+   <property name="tomcat.work.dir" value="${tomcat.home}/${appname}/work/Catalina/localhost/test" />
+		<!--
+		apache-tomcat-7.0.77
+		apache-tomcat-6.0.53
+		-->	
+	
+	<!--
+	 tomcat.home = /usr2/apache-tomcat/engine/apache-tomcat-8.5.15
+	 : /usr2/apache-tomcat/engine/apache-tomcat-8.5.15/bin
+
+	 tomcat_engine.home = /usr2/apache-tomcat/instance/back21/bin
+	 : /usr2/apache-tomcat/instance/back21/bin 
+	-->
+   <import file="${tomcat_engine.home}/bin/catalina-tasks.xml"/>
+   
+   <target name="jspc"> 
+
+    <jasper 
+             validateXml="false" 
+             uriroot="${webapp.path}" 
+             webXmlFragment="${webapp.path}/WEB-INF/generated_web.xml" 
+             outputDir="${webapp.path}/WEB-INF/jspc_src" /> 
+  </target> 
+
+
+  <!--<target name="compile" depends="jspc">-->
+  	<target name="compile">
+	<!--<target name="compile">-->
+  	<!--
+    <mkdir dir="${webapp.path}/WEB-INF/classes"/>
+    <mkdir dir="${webapp.path}/WEB-INF/lib"/>
+      executable="/usr/java1.7/bin/javac"
+ 	  compiler="javac1.7"
+    -->
+  	
+    <javac destdir="${webapp.path}/WEB-INF/jspc_src"
+  	       source="1.7" target="1.7"
+	 	   executable="/usr/java1.7/bin/javac"
+		   compiler="javac1.7"
+           optimize="off"
+  		   encoding="utf-8"
+           debug="on" failonerror="false"
+           srcdir="${webapp.path}/WEB-INF/jspc_src"
+    	   excludes="**/*.smap"
+  	       fork="true" memoryinitialsize="128m"  
+  		   memorymaximumsize="512m" includeantruntime="false">
+      	
+        <classpath>
+          <pathelement location="${webapp.path}/WEB-INF/dyamic_classes"/>
+          <pathelement location="${webapp.path}/WEB-INF/classes"/>
+        	<fileset dir="${webapp.path}/WEB-INF/lib">
+            <include name="*.jar"/>
+          </fileset>
+          <pathelement location="${tomcat_engine.home}/lib"/>
+          <fileset dir="${tomcat_engine.home}/lib">
+            <include name="*.jar"/>
+          </fileset>
+                  <fileset dir="${tomcat_engine.home}/bin"> 
+            <include name="*.jar"/> 
+          </fileset> 
+        </classpath>
+    </javac> 
+  </target>
+
+ <!--<target name="deploy" depends="compile">-->
+  <target name="deploy">
+  		<!--<target name="deploy">-->
+   		   <mkdir dir="${tomcat.work.dir}"/>
+  		   <copy todir="${tomcat.work.dir}">  
+                <fileset dir="${webapp.path}/WEB-INF/jspc_src" includes="**/*.class" />  
+           </copy>   
+  </target>  
+	
+  <!--<target name="all" depends="cleanup,jspc,compile,deploy">-->
+  	<target name="all" depends="cleanup,jspc,compile,deploy">
+     <!--<antcall target="cleanup"/>-->
+  </target>
+
+  <!-- webapp.path = /esuper/project/back -->
+  <target name="cleanup">
+    <!--<delete dir="${webapp.path}/WEB-INF/jspc_src"/>-->
+  	<delete dir="${webapp.path}/WEB-INF/jspc_src"/>
+  </target>
+
+</project>

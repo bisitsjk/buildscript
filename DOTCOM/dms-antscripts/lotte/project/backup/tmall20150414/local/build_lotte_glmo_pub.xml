@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lotte_glmo_pub" basedir=".">
+	<!-- ================================================== -->
+	<!-- properties -->
+	<!-- ================================================== -->
+	<property name="srv" value="${TARGET_SERVER}"/>
+	
+	<property file="build_lotte_glmo_pub_${srv}.properties" />
+		
+	<property name="java.dir" value="C:/Program Files (x86)/Java/jdk1.6.0_25"/>
+	<property name="jeus.dir" value="C:/TmaxSoft/JEUS6.0/lib"/>
+	
+	<property name="project"       value="glmo_pub"/>
+	<property name="branches.dir"          value="branches/PROJECT/tmall_20150414"/>
+	<property name="lotte2010.dir"          value="lotte2010/${branches.dir}/${project}"/>
+	<property name="lotteframework2010.dir" value="lotteframework2010/${branches.dir}"/>
+	<property name="glmo_pub.src.dir"       value="${wrkspc}/${lotte2010.dir}"/>
+	<property name="glmo_pub.src.java.dir"  value="${glmo_pub.src.dir}/src"/>
+	<property name="glmo_pub.src.class.dir" value="${glmo_pub.src.dir}/APP-INF/classes"/>
+	<property name="glmo_pub.cmm.dir"       value="${wrkspc}/${lotteframework2010.dir}"/>	
+	<property name="glmo_pub.pkg.dir"       value="${wrkspc}"/>
+	
+	<property name="tar.name" value="GLMO_PUB_PREOPEN_TEST"/>
+	<property name="web.work.log" value="${wrkspc}/deploy_web.log"/>
+	<property name="was.work.log" value="${wrkspc}/deploy_was.log"/>
+	
+	<!-- server info -->
+	<property name="user.id"  value="jeus"/>
+	<!-- <property name="user.pwd" value="8Yqi4q(1=Z"/> -->
+	
+	<!-- document root -->
+	<property name="docroot"  value="/h2010/glmo_pub"/>
+	<property name="copy.cmd"  value="glmopubprojectdeploy ${tar.name}"/>
+	
+	
+	<!-- **************************************************************** -->
+	<!-- PACKAGING -->
+	<!-- **************************************************************** -->
+	<target name="package">
+		<antcall target="tar.web" />
+	</target>
+	<target name="tar.web">
+		<delete file="${glmo_pub.pkg.dir}/${tar.name}_WEB.tar" />
+		<tar destfile="${glmo_pub.pkg.dir}/${tar.name}_WEB.tar" longfile="gnu">
+			<tarfileset dir="${wrkspc}/${lotte2010.dir}">
+				<include name="/webroot/**"/>
+				<exclude name="**/.svn/**"/>
+			</tarfileset>
+		</tar>
+	</target>
+	
+	
+	<!-- **************************************************************** -->
+	<!-- DEPLOY -->
+	<!-- **************************************************************** -->	
+	<target name="deploy.web">
+		<antcall target="clean.web"/>
+		<antcall target="send.web"/>
+		<antcall target="copy.web"/>
+	</target>
+	
+	<target name="deploy.was">
+		<antcall target="clean.was"/>
+		<antcall target="send.was"/>
+		<antcall target="copy.was"/>
+	</target>
+
+	<!-- ================================================== -->
+	<!-- INIT --> 
+	<!-- ================================================== -->
+	<target name="clean.web">
+		<sshexec host="${web.ip}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" output="${web.work.log}"
+			command="cd deploy;./glmopubprojectwebinit ${tar.name}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${web.work.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />		
+	</target>
+	
+	<target name="clean.was">
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${was.work.log}"
+			command="cd deploy;./glmopubprojectwasinit ${tar.name}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${was.work.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />	
+	</target>
+	
+	<!-- ================================================== -->
+	<!-- SEND --> 
+	<!-- ================================================== -->
+	<target name="send.web">
+		<scp todir="${user.id}:${user.pwd}@${web.ip}:${docroot}" trust="true">
+			<fileset dir="${glmo_pub.pkg.dir}">
+				<include name="${tar.name}_WEB.tar"></include>
+			</fileset>
+		</scp>
+	</target>
+	
+	<target name="send.was">
+		<scp todir="${user.id}:${user.pwd}@${was.ip}:${docroot}" trust="true">
+			<fileset dir="${glmo_pub.pkg.dir}">
+				<include name="${tar.name}_WAS.tar"></include>
+			</fileset>
+		</scp>
+	</target>
+	
+	<!-- ================================================== -->
+	<!-- COPY	 --> 
+	<!-- ================================================== -->	
+	<target name="copy.web">
+		<sshexec host="${web.ip}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" output="${web.work.log}"
+			command="cd deploy;./glmopubprojectwebdeploy ${tar.name}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${web.work.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />	
+	</target>
+	
+	<target name="copy.was">
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${was.work.log}"
+			command="cd deploy;./glmopubprojectwasdeploy ${tar.name}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${was.work.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />		
+	</target>	
+	
+	<target name="check_remote_work" unless="isSuccess">
+		<fail message="원격지 작업이 실패하였습니다..." />
+	</target>	
+</project>

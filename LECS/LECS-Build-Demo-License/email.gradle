@@ -1,0 +1,180 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+		classpath group:'commons-httpclient', name:'commons-httpclient', version:'3.1'		
+   	}
+}
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpException;
+import org.apache.commons.httpclient.NTCredentials;
+import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.commons.httpclient.methods.*;
+
+
+
+sendmail  = { from, to , cc, title, contents -> 
+
+	def client = new HttpClient()
+	def method = new GetMethod("http://mail.uzen.net/")
+	client.executeMethod(method)
+	
+	method = new PostMethod("http://mail.uzen.net/login.php")
+	method.setRequestHeader('Content-Type','application/x-www-form-urlencoded')
+	method.setRequestBody('login_host=uzen.net&template_language=korean&admin_login=&login_id=naru%40uzen.net&login_button.x=7&login_button.y=29&login_passwd=akghdn&login_type=U')
+	
+	client.executeMethod(method)
+	
+	println new String(method.getResponseBody(), "UTF-8");
+	
+	method = new PostMethod("http://mail.uzen.net/mail/mail_send.php")
+	
+	method.setRequestHeader('Content-Type','multipart/form-data; boundary=----WebKitFormBoundaryPBX4BG1mjk9r5lcx')
+	
+	def body = """------WebKitFormBoundaryPBX4BG1mjk9r5lcx
+Content-Disposition: form-data; name="mode"
+
+
+------WebKitFormBoundaryPBX4BG1mjk9r5lcx
+Content-Disposition: form-data; name="mailbox"
+
+
+------WebKitFormBoundaryPBX4BG1mjk9r5lcx
+Content-Disposition: form-data; name="uid"
+
+
+------WebKitFormBoundaryPBX4BG1mjk9r5lcx
+Content-Disposition: form-data; name="sid"
+
+2a8a49e08f3b5cb855dac948e1ccde41
+------WebKitFormBoundaryPBX4BG1mjk9r5lcx
+Content-Disposition: form-data; name="send_max"
+
+400
+------WebKitFormBoundaryPBX4BG1mjk9r5lcx
+Content-Disposition: form-data; name="send_used"
+
+3
+------WebKitFormBoundaryPBX4BG1mjk9r5lcx
+Content-Disposition: form-data; name="file_mode"
+
+text
+------WebKitFormBoundaryPBX4BG1mjk9r5lcx
+Content-Disposition: form-data; name="mail_oversized"
+
+0
+------WebKitFormBoundaryPBX4BG1mjk9r5lcx
+Content-Disposition: form-data; name="my_email"
+
+$from
+------WebKitFormBoundaryPBX4BG1mjk9r5lcx
+Content-Disposition: form-data; name="to"
+
+$to
+------WebKitFormBoundaryPBX4BG1mjk9r5lcx
+Content-Disposition: form-data; name="cc"
+
+$cc
+------WebKitFormBoundaryPBX4BG1mjk9r5lcx
+Content-Disposition: form-data; name="bcc"
+
+
+------WebKitFormBoundaryPBX4BG1mjk9r5lcx
+Content-Disposition: form-data; name="subject"
+
+$title
+------WebKitFormBoundaryPBX4BG1mjk9r5lcx
+Content-Disposition: form-data; name="edit_type"
+
+HTML
+------WebKitFormBoundaryPBX4BG1mjk9r5lcx
+Content-Disposition: form-data; name="autosave_interval"
+
+120000
+------WebKitFormBoundaryPBX4BG1mjk9r5lcx
+Content-Disposition: form-data; name="encoded_content_area"
+
+
+------WebKitFormBoundaryPBX4BG1mjk9r5lcx
+Content-Disposition: form-data; name="decoded_content_area"
+
+
+------WebKitFormBoundaryPBX4BG1mjk9r5lcx
+Content-Disposition: form-data; name="content_html"
+
+<p>$contents</p>
+------WebKitFormBoundaryPBX4BG1mjk9r5lcx
+Content-Disposition: form-data; name="FCKeditor1"
+
+<p>$contents</p>
+------WebKitFormBoundaryPBX4BG1mjk9r5lcx
+Content-Disposition: form-data; name="content_plain"
+
+ $contents 
+------WebKitFormBoundaryPBX4BG1mjk9r5lcx
+Content-Disposition: form-data; name="file"; filename=""
+Content-Type: application/octet-stream
+
+
+------WebKitFormBoundaryPBX4BG1mjk9r5lcx
+Content-Disposition: form-data; name="file_upload_size"
+
+50 MB
+------WebKitFormBoundaryPBX4BG1mjk9r5lcx
+Content-Disposition: form-data; name="charset"
+
+ks_c_5601-1987
+------WebKitFormBoundaryPBX4BG1mjk9r5lcx
+Content-Disposition: form-data; name="save"
+
+Y
+------WebKitFormBoundaryPBX4BG1mjk9r5lcx
+Content-Disposition: form-data; name="reserve"
+
+N
+------WebKitFormBoundaryPBX4BG1mjk9r5lcx
+Content-Disposition: form-data; name="ftp_state"
+
+N
+------WebKitFormBoundaryPBX4BG1mjk9r5lcx--
+
+	
+"""	
+	byte[] data = body.getBytes('UTF-8')
+
+	method.setRequestBody(new ByteArrayInputStream(data))
+	client.executeMethod(method);
+	
+}
+
+mergeResultReport = {
+
+	def report = "\n배포요청목록\n\n"
+	
+	project.전체배포요청목록.each { request ->
+		report += request.toReport() +"\n"
+	}
+	
+	def workDir = file("src/request/${DEPLOY}/${TIMESTAMP}")
+	//def workDir = file("src/request/tst/20111216-1356")
+	
+	report += "\n\n머지 대상 소스 목록\n"
+	report += new File(workDir, "mergeList.txt").text
+	
+	report += "\n\n충돌 소스 목록\n"
+	report += new File(workDir, "conflict.txt").text
+	
+	return report.replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll("\n","<br/>")
+}
+
+task emailMergeReport << {
+	전체배포요청목록Fetch()
+	MergeReportMessage = [
+		'stg':	"스테이징 배포 완료되었습니다.", 
+		'prd':	"운영 배포 완료되었습니다.", 
+	]
+
+	sendmail "<naru@uzen.net>", "<plecs@uzen.net>, <mglee@lotte.com>", "<jykim4@lotte.com>", MergeReportMessage[DEPLOY], mergeResultReport()
+
+}

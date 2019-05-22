@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lotte_local">
+	<target name="build">
+		<copy todir="d:/deployer/scripts" verbose="true">
+			<fileset dir=".">
+				<include name="*.xml"/>
+				<include name="*.properties"/>
+			</fileset>
+		</copy>
+	</target>
+</project>

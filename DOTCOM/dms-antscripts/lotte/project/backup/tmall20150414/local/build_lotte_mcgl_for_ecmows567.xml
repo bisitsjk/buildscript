@@ -1,0 +1,452 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lotte_mcgl" basedir=".">
+<!-- **************************************************************** -->
+<!-- properties -->
+<!-- **************************************************************** -->
+	<property name="java.dir" value="C:/Program Files (x86)/Java/jdk1.6.0_25"/>
+	<property name="jeus.dir" value="C:/TmaxSoft/JEUS6.0/lib"/>
+
+	<!-- source path -->
+	<!-- workspace 경로(이하 wrkspc)는 hudson에서 property로 제공 받음 -->
+	<!-- 공통 라이르버리는 branches 또는 trunk 중 하나를 선택할 수 있어야 함 -->
+	<property name="commons"    	value="${wrkspc}/lotteframework2010/${CHOICE}"/> <!-- trunk or branches/PROJECT/tmall_20150414 -->
+	<property name="application"	value="${wrkspc}/lotte2010/trunk/mcgl"/>
+	<property name="product"		value="${wrkspc}/product"/>
+	
+	<!-- common library path -->
+	<property name="cmm.lib.dir"	value="${commons}/zCommon/common_lib"/>
+	<property name="ref.lib.dir"	value="${commons}/zCommon/reference"/>
+	<property name="cmm.pdk.dir" 	value="${commons}/zPDK"/> <!-- subdir : src, lib, build, dist -->
+	<property name="cmm.ifs.dir" 	value="${commons}/zInterfaces"/> <!-- subdir : src, lib, build, dist, src_app, build_app -->
+	<property name="cmm.prm.dir" 	value="${commons}/zPriceMgr"/> <!-- subdir : src, lib, build, dist -->
+	
+	<!-- web application path -->
+	<property name="mc.java.dir"  	value="${application}/src"/>
+	<property name="mc.class.dir" 	value="${application}/APP-INF/classes"/>
+	<property name="mc.lib.dir" 	value="${application}/APP-INF/lib"/>
+	
+	<!-- remote work log file -->
+	<property name="web.work.log" 	value="${wrkspc}/deploy_web.log"/>
+	<property name="was.work.log" 	value="${wrkspc}/deploy_was.log"/>
+	
+	<!-- server info -->
+	<property name="ecmo3.ip"  		value="211.172.253.129"/>
+	<property name="ecmows5.ip" 	value="10.149.144.42"/>
+	<property name="user.id"  		value="jeus"/>
+	<property name="user.pwd" 		value="8Yqi4q(1=Z"/>
+	<property name="stepover.dir"  	value="/ncontents/src"/>
+	<property name="container"  	value="ecmows5_MCHINA"/>
+	
+	<!-- etc -->	
+	<property name="product.file" 	value="MC_20150817_OPEN"/>
+	
+	
+<!-- **************************************************************** -->
+<!-- BUILD -->
+<!-- **************************************************************** -->
+	<target name="build">
+		<echo>---------------------------------------------------------------------------------------------</echo>
+		<echo> 빌드 </echo>
+		<echo>---------------------------------------------------------------------------------------------</echo>
+		<echo>  1. commons-pionnet.jar 빌드 ----------</echo>
+		<antcall target="compile.pdk" />
+		<antcall target="jar.pdk" />
+		<echo>  2. commons-interfaces.jar 빌드 -------</echo>
+		<antcall target="compile.if" />
+		<antcall target="jar.if" />
+		<echo>  3. commons-pricemgr.jar 빌드 ---------</echo>
+		<antcall target="compile.pricemgr" />
+		<antcall target="jar.pricemgr" />
+		<echo>  4. 웹 어플리케이션 빌드 -------------------</echo>		
+		<antcall target="compile" />
+	</target>
+	
+	<!-- ================================================== -->
+	<!-- COMPILE zPDK -->
+	<!-- ================================================== -->
+	<path id="classpath.pdk">
+		<fileset dir="${java.dir}/lib">
+			<include name="rt.jar" />
+		</fileset>		
+		<fileset dir="${jeus.dir}">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${ref.lib.dir}">
+			<include name="*.jar" />
+		</fileset>		
+		<fileset dir="${cmm.lib.dir}">
+			<include name="*.jar" />
+			<exclude name="commons-pionnet.jar" />
+			<exclude name="commons-interfaces.jar" />
+			<exclude name="commons-pricemgr.jar" />
+			<exclude name="ZipIt.jar" /> <!-- 각 application의 lib 디렉토리 안에 있는 jar를 사용 -->
+		</fileset>
+	</path>
+			
+	<target name="compile.pdk">
+		<mkdir dir="${cmm.pdk.dir}/build" />
+		<delete includeemptydirs="true">
+			<fileset dir="${cmm.pdk.dir}/build" includes="**/*"/>
+    	</delete>
+		<javac classpathref="classpath.pdk"
+			srcdir="${cmm.pdk.dir}/src" 
+			destdir="${cmm.pdk.dir}/build"			
+			encoding="utf-8"
+			includeantruntime="false" />
+		<copy todir="${cmm.pdk.dir}/build" overwrite="true">
+			<fileset dir="${cmm.pdk.dir}/src">
+				<exclude name="**/*.java" />
+				<exclude name="**/.svn/**" />
+		    </fileset>
+		</copy>
+	</target>
+	
+	<target name="jar.pdk">
+		<mkdir dir="${cmm.pdk.dir}/dist" />
+		<delete includeemptydirs="true">
+			<fileset dir="${cmm.pdk.dir}/dist" includes="**/*"/>
+    	</delete>
+		<jar encoding="UTF-8" destfile="${cmm.pdk.dir}/dist/commons-pionnet.jar">
+			<fileset dir="${cmm.pdk.dir}/build">
+				<exclude name="**/.svn/**" />
+			</fileset>
+		</jar>
+	</target>
+	
+	<!-- ================================================== -->
+	<!-- COMPILE zInterface -->
+	<!-- ================================================== -->			
+	<path id="classpath.ifapp">
+		<fileset dir="${java.dir}/jre/lib">
+			<include name="rt.jar" />
+		</fileset>
+		<fileset dir="${cmm.lib.dir}">
+			<include name="*.jar" />
+			<exclude name="commons-pionnet.jar" />
+			<exclude name="commons-interfaces.jar" />
+			<exclude name="commons-pricemgr.jar" />
+			<exclude name="ZipIt.jar" />			
+		</fileset>
+		<fileset dir="${cmm.pdk.dir}/dist">
+			<include name="commons-pionnet.jar"/>
+		</fileset>
+	</path>
+	
+	<path id="classpath.if">
+		<fileset dir="${java.dir}/jre/lib">
+			<include name="rt.jar" />
+		</fileset>
+		<fileset dir="${cmm.lib.dir}">
+			<include name="*.jar" />
+			<exclude name="commons-pionnet.jar" />
+			<exclude name="commons-interfaces.jar" />
+			<exclude name="commons-pricemgr.jar" />
+			<exclude name="ZipIt.jar" />
+		</fileset>		
+		<fileset dir="${cmm.pdk.dir}/dist">
+			<include name="commons-pionnet.jar"/>
+		</fileset>		
+		<fileset dir="${cmm.ifs.dir}/lib">
+			<include name="*.jar" />
+			<exclude name="commons-pionnet.jar"/>
+			<exclude name="ibatis-2.3.4.726.jar"/>
+			<exclude name="mcash.jar"/>
+			<exclude name="mgcs.jar"/>
+		</fileset>
+
+		<dirset dir="${cmm.ifs.dir}/build_app" />
+	</path>
+				
+	<target name="compile.if">
+		<mkdir dir="${cmm.ifs.dir}/build_app" />
+		<delete includeemptydirs="true">
+			<fileset dir="${cmm.ifs.dir}/build_app" includes="**/*"/>
+    	</delete>
+		<javac classpathref="classpath.ifapp"
+			srcdir="${cmm.ifs.dir}/src_app"
+			includes="com/mall/**"
+			destdir="${cmm.ifs.dir}/build_app"
+			encoding="utf-8"
+			includeantruntime="false" />
+			
+		<mkdir dir="${cmm.ifs.dir}/build" />
+		<delete includeemptydirs="true">
+			<fileset dir="${cmm.ifs.dir}/build" includes="**/*"/>
+    	</delete>
+		<javac classpathref="classpath.if" 
+			srcdir="${cmm.ifs.dir}/src"			
+			destdir="${cmm.ifs.dir}/build"
+			encoding="utf-8"
+			includeantruntime="false" />
+			
+		<copy todir="${cmm.ifs.dir}/build" overwrite="true">
+			<fileset dir="${cmm.ifs.dir}/src">
+				<exclude name="**/*.java" />
+				<exclude name="**/.svn/**" />
+		    </fileset>
+		</copy>
+	</target>
+	
+	<target name="jar.if">
+		<mkdir dir="${cmm.ifs.dir}/dist" />
+		<delete includeemptydirs="true">
+			<fileset dir="${cmm.ifs.dir}/dist" includes="**/*"/>
+    	</delete>
+		<jar encoding="UTF-8" destfile="${cmm.ifs.dir}/dist/commons-interfaces.jar">
+			<fileset dir="${cmm.ifs.dir}/build">
+				<exclude name="**/.svn/**" />
+			</fileset>
+		</jar>		
+	</target>
+		
+	<!-- ================================================== -->
+	<!-- COMPILE zPriceMgr -->
+	<!-- ================================================== -->
+	<path id="classpath.pricemgr">
+		<fileset dir="${java.dir}/jre/lib">
+			<include name="rt.jar" />
+		</fileset>
+		<fileset dir="${cmm.lib.dir}">
+			<include name="*.jar" />
+			<exclude name="commons-pionnet.jar"/>
+			<exclude name="commons-interfaces.jar" />
+			<exclude name="commons-pricemgr.jar" />
+			<exclude name="ZipIt.jar" />
+		</fileset>			
+		<fileset dir="${cmm.pdk.dir}/dist">
+			<include name="commons-pionnet.jar"/>
+		</fileset>
+	</path>	
+		
+	<target name="compile.pricemgr">
+		<mkdir dir="${cmm.prm.dir}/build" />
+		<delete includeemptydirs="true">
+			<fileset dir="${cmm.prm.dir}/build" includes="**/*"/>
+    	</delete>
+		<javac classpathref="classpath.pricemgr"
+			srcdir="${cmm.prm.dir}/src"			
+			destdir="${cmm.prm.dir}/build"
+			encoding="utf-8"
+			includeantruntime="false" />
+			
+		<copy todir="${cmm.prm.dir}/build" overwrite="true">
+			<fileset dir="${cmm.prm.dir}/src">
+				<exclude name="**/*.java" />
+				<exclude name="**/.svn/**" />
+		    </fileset>
+		</copy>
+	</target>
+	
+	<target name="jar.pricemgr">
+		<mkdir dir="${cmm.prm.dir}/dist" />
+		<delete includeemptydirs="true">
+			<fileset dir="${cmm.prm.dir}/dist" includes="**/*"/>
+    	</delete>
+		<jar encoding="UTF-8" destfile="${cmm.prm.dir}/dist/commons-pricemgr.jar">
+			<fileset dir="${cmm.prm.dir}/build">
+				<exclude name="**/.svn/**" />
+			</fileset>
+		</jar>
+	</target>	
+	
+	<!-- ================================================== -->
+	<!-- COMPILE mcgl -->
+	<!-- ================================================== -->	
+	<path id="classpath">
+		<fileset dir="${java.dir}/jre/lib">
+			<include name="rt.jar" />
+		</fileset>
+		<fileset dir="${ref.lib.dir}">
+			<include name="*.jar" />
+		</fileset>		
+		<fileset dir="${cmm.lib.dir}">
+			<include name="*.jar" />
+			<exclude name="commons-pionnet.jar" />
+			<exclude name="commons-interfaces.jar" />
+			<exclude name="commons-pricemgr.jar" />
+		</fileset>	
+		<fileset dir="${cmm.pdk.dir}/dist">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="${cmm.ifs.dir}/dist">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="${cmm.prm.dir}/dist">
+			<include name="*.jar" />
+		</fileset>			
+		<fileset dir="${mc.lib.dir}">
+			<include name="*.jar" />
+			<exclude name="commons-pionnet.jar" />
+			<exclude name="commons-interfaces.jar" />
+			<exclude name="commons-pricemgr.jar" />
+		</fileset>
+	</path>	
+	
+	<target name="compile">
+		<mkdir dir="${mc.class.dir}" />
+		<delete includeemptydirs="true">
+			<fileset dir="${mc.class.dir}" includes="**/*"/>
+    	</delete>
+		<javac classpathref="classpath"
+			srcdir="${mc.java.dir}" 
+			destdir="${mc.class.dir}"
+			encoding="utf-8" 
+			includeantruntime="false"
+			memoryMaximumSize="256m"/>
+	</target>
+	
+	
+<!-- **************************************************************** -->
+<!-- PACKAGING -->
+<!-- **************************************************************** -->
+	<target name="package">
+		<echo>---------------------------------------------------------------------------------------------</echo>
+		<echo> 패키징 </echo>
+		<echo>---------------------------------------------------------------------------------------------</echo>
+		<mkdir dir="${product}"/>
+		<antcall target="copy.libs"/>
+		<antcall target="tar.web"/>
+		<antcall target="tar.was"/>
+	</target>
+	
+	<target name="copy.libs">
+		<copy todir="${mc.lib.dir}" overwrite="true">
+			<fileset dir="${cmm.lib.dir}">
+				<include name="*.jar"/>
+				<exclude name="commons-pionnet.jar" />
+				<exclude name="commons-interfaces.jar" />
+				<exclude name="commons-pricemgr.jar" />
+				<exclude name="ZipIt.jar" />
+		    </fileset>
+		</copy>
+		<copy todir="${mc.lib.dir}" overwrite="true">
+			<fileset dir="${cmm.pdk.dir}/dist">
+				<include name="commons-pionnet.jar"/>
+		    </fileset>
+		</copy>
+		<copy todir="${mc.lib.dir}" overwrite="true">
+			<fileset dir="${cmm.ifs.dir}/dist">
+				<include name="commons-interfaces.jar"/>
+		    </fileset>
+		</copy>
+		<copy todir="${mc.lib.dir}" overwrite="true">
+			<fileset dir="${cmm.prm.dir}/dist">
+				<include name="commons-pricemgr.jar"/>
+		    </fileset>
+		</copy>
+	</target>
+	
+	<target name="tar.web">
+		<delete file="${product}/${product.file}_WEB.tar" />
+		<tar destfile="${product}/${product.file}_WEB.tar" longfile="gnu">
+			<tarfileset dir="${application}">
+				<include name="webroot/**"/>
+				<exclude name="**/.svn/**"/>
+			</tarfileset>
+		</tar>
+	</target>
+	
+	<target name="tar.was">
+		<delete file="${product}/${product.file}_WAS.tar" />
+		<tar destfile="${product}/${product.file}_WAS.tar" longfile="gnu">
+			<tarfileset dir="${application}">
+				<include name="APP-INF/**"/>
+				<include name="webapp/**"/>
+				<exclude name="**/.svn/**"/>
+			</tarfileset>
+		</tar>
+	</target>
+	
+	
+<!-- **************************************************************** -->
+<!-- DEPLOY -->
+<!-- **************************************************************** -->
+	<target name="deploy">
+		<echo>---------------------------------------------------------------------------------------------</echo>
+		<echo> 서버 전송 및 배포 </echo>
+		<echo>---------------------------------------------------------------------------------------------</echo>		
+		<antcall target="clean"/>
+		<antcall target="send"/>
+		<antcall target="copy.web"/>
+		<antcall target="copy.was"/>
+	</target>
+
+	<!-- ================================================== -->
+	<!-- INIT --> 
+	<!-- ================================================== -->
+	<target name="clean">
+		<sshexec host="${ecmows5.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${was.work.log}"
+			command="cd deploy;./mcinit ${product.file}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${was.work.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+	</target>
+	
+	<!-- ================================================== -->
+	<!-- SEND --> 
+	<!-- ================================================== -->
+	<target name="send">
+		<scp todir="${user.id}:${user.pwd}@${ecmows5.ip}:${stepover.dir}/${product.file}" trust="true">
+			<fileset dir="${product}">
+				<include name="${product.file}_WEB.tar"/>
+				<include name="${product.file}_WAS.tar"/>
+			</fileset>
+		</scp>
+	</target>
+	
+	<!-- ================================================== -->
+	<!-- COPY	 --> 
+	<!-- ================================================== -->	
+	<target name="copy.web">
+		<sshexec host="${ecmo3.ip}" username="${user.id}" password="${user.pwd}"
+			trust="true" verbose="false" output="${web.work.log}"
+			command="cd deploy;./mcuntar ${product.file}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${web.work.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />	
+	</target>
+	
+	<target name="copy.was">
+		<sshexec host="${ecmows5.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${was.work.log}"
+			command="cd deploy;./mcuntar ${product.file}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${was.work.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />		
+	</target>
+	
+	<target name="check_remote_work" unless="isSuccess">
+		<fail message="원격지 작업이 실패하였습니다..." />
+	</target>	
+	
+	
+<!-- **************************************************************** -->
+<!-- restart jeus -->
+<!-- **************************************************************** -->	
+	<target name="restart">
+		<sshexec host="${ecmows5.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${was.work.log}"
+			command="ja downcon ${container};ja startcon ${container};" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${was.work.log}" substring="Succeeded to start" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />			
+	</target>
+
+	<target name="restart_linux">
+		<echo>---------------------------------------------------------------------------------------------</echo>
+		<echo> 컨테이너 재시작 </echo>
+		<echo>---------------------------------------------------------------------------------------------</echo>		
+		<sshexec host="${ecmows5.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${was.work.log}"
+			command="/usr2/jeus6/bin/jeusadmin `hostname` -Uadministrator -Pjeusadmin downcon ${container};/usr2/jeus6/bin/jeusadmin `hostname` -Uadministrator -Pjeusadmin startcon ${container};" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${was.work.log}" substring="Succeeded to start" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />			
+	</target>	
+</project>

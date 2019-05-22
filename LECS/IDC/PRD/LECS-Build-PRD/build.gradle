@@ -1,0 +1,44 @@
+// 빌드 스크립트 자체를 위한 의존성 선언
+
+description = "LECS 빌드 스크립트"
+def defaultEncoding = 'UTF-8'  
+
+apply from: "env.gradle"
+apply from: "deps.gradle"
+apply from: 'utils.gradle'
+apply from: 'ssh.gradle'
+apply from: 'cleanup.gradle'
+
+apply from: "plugin.gradle"
+apply from: 'email.gradle'
+apply from: "source.gradle"
+apply from: "compile.gradle"
+apply from: 'unittest.gradle'
+apply from: 'assemble_css.gradle'
+apply from: 'collect.gradle'
+apply from: 'assemble.gradle'
+apply from: 'deploy.gradle'
+apply from: 'server.gradle'
+apply from: 'ceres.gradle'
+
+apply from: 'excel.gradle'
+apply from: 'merge.gradle'
+apply from: 'doc.gradle'
+
+task  build_all (dependsOn:[ checkout_all, compile_all, collect_all, assemble_all ]) << {
+	
+	
+}
+
+
+task doSelective << {
+	SELECTIVE_TASK = System.getProperty("SELECTIVE_TASK")
+	println "Sected Task:"+SELECTIVE_TASK
+	targetTask  = SELECTIVE_TASK == 'ALL' ? [ 'bo', 'lps','muji','nike','puma','uniqlo','batch' ] : [ (SELECTIVE_TASK - "_ONLY").toLowerCase()]
+	targetTask.each { t ->
+		project.tasks[ "compile_${t}" ].execute()
+		project.tasks[ "collect_${t}" ].execute()
+		project.tasks[ "assemble_${t}" ].execute()
+		project.tasks[ "deploy_${t}" ].execute()
+	}	
+}

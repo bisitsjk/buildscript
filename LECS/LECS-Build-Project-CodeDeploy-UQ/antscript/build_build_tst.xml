@@ -1,0 +1,56 @@
+<project name="LECS_Build_Build_TST">
+
+	<target name="build-project-all-tst">
+		<antcall target="build-library" />
+		<antcall target="build-bo" />
+		<antcall target="build-lps" />
+		<antcall target="build-muji" />
+		<antcall target="build-nike" />
+		<antcall target="build-batch" />
+		<antcall target="build-wms" />
+	</target>
+
+
+	<target name="build-bo">
+		<antcall target="build-bo-project" />
+		<antcall target="collect-project-bo" />
+		<antcall target="pack-project-bo" />
+	</target>
+
+	<target name="build-muji">
+		<antcall target="build-muji-project" />
+		<antcall target="collect-project-muji" />
+		<antcall target="switch-css-muji">
+			<param name="prefix" value="http://imagedev.mujikorea.net/" />
+		</antcall>
+		<antcall target="pack-project-muji" />
+	</target>
+
+	<target name="build-nike">
+		<antcall target="build-nike-project" />
+		<antcall target="collect-project-nike"/>
+		<antcall target="switch-css-nike">
+			<param name="prefix" value="http://imagedev.nikestore.co.kr/" />
+		</antcall>
+		<antcall target="pack-project-nike" />
+	</target>
+
+	<target name="build-lps">
+		<antcall target="build-lps-project" />
+		<antcall target="callback-lps-tst" />
+		<antcall target="collect-project-lps"/>
+		<antcall target="switch-css-lps" />
+		<antcall target="pack-project-lps" />
+	</target>
+
+	<target name="callback-lps-tst">
+		<copy 
+			file  ="build/LECS-Platform-LPS/WEB-INF/classes/config/spring/lps/controller/wms.xml.tst" 
+			tofile="build/LECS-Platform-LPS/WEB-INF/classes/config/spring/lps/controller/wms.xml" 
+			verbose="true" 
+			overwrite="true" />
+	</target>
+	
+ 
+
+</project>

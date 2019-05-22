@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="batch was test deploy" default="help">
+	<!-- ================================================== -->
+	<!-- properties -->
+	<!-- ================================================== -->
+	<property name="dep.id" value="${DEPLOY_ID}" />
+	
+	<property name="source.dir" value="/usr1/home/jeus/deploy/src/${dep.id}" />
+	<property name="java.home"  value="/usr/java1.6" />
+	<property name="ant.home"   value="/usr1/home/jeus/deploy/apache-ant-1.8.2" />
+	<property name="docroot"    value="/h2010" />
+	
+	<!-- real server info -->
+	<property name="her1.ip"  value="10.149.144.65" />
+	<property name="www6.ip"  value="211.233.44.26" />
+	<property name="user.id"  value="jeus" />
+	<property name="user.pwd" value="0fa18=b08a" />
+	
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->
+	<target name="check_exist">
+		<condition property="isExistWebapp">
+			<resourceexists>
+				<file file="${source.dir}/mpo/webapp"/>
+			</resourceexists>
+		</condition>
+		<condition property="isExistAppinf">
+			<resourceexists>
+				<file file="${source.dir}/mpo/APP-INF"/>
+			</resourceexists>
+		</condition>
+		<condition property="isExistCommon">
+			<resourceexists>
+				<file file="${source.dir}/common/conf"/>
+			</resourceexists>
+		</condition>
+		<condition property="isJspAndClass">
+			<and>
+				<istrue value="${isExistWebapp}"/>
+				<istrue value="${isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="isJsp">
+			<and>
+				<istrue value="${isExistWebapp}"/>
+				<isfalse value="${isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="isClass">
+			<and>
+				<isfalse value="${isExistWebapp}"/>
+				<istrue value="${isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="isWeb">
+			<resourceexists>
+				<file file="${source.dir}/mpo/webroot"/>
+			</resourceexists>
+		</condition>
+		<condition property="isWas">
+			<or>
+				<istrue value="${isExistWebapp}"/>
+				<istrue value="${isExistAppinf}"/>
+				<istrue value="${isExistCommon}"/>
+			</or>
+		</condition>
+		<condition property="isCommon">
+			<istrue value="${isExistCommon}"/>
+		</condition>
+	</target>
+
+	<target name="check_host">
+		<condition property="isValid">
+			<or>
+			<contains string="${hostname}" substring="ecfowstst"/>
+			<contains string="${hostname}" substring="ecfotst2"/>
+			<contains string="${hostname}" substring="fowasstg"/>
+			</or>
+		</condition>
+		<echo>hostname `${hostname}` is ${isValid}</echo>
+	</target>
+	
+	<target name="check_valid" depends="check_host" unless="isValid">
+		<fail message="배포 대상 서버가 아닙니다."/>
+	</target>
+		
+	
+	<!-- ================================================== -->
+	<!-- default target -->
+	<!-- ================================================== -->
+	<target name="help">
+		<echo>command1 : mpoinit [deploy id]</echo>
+		<echo>command2 : mpodeploy [deploy id]</echo>
+		<echo>command2 : mposync [deploy id]</echo>
+	</target>
+	
+	
+	<!-- ================================================== -->
+	<!-- init -->
+	<!-- ================================================== -->
+	<target name="init">
+		<antcall target="check_valid" />
+		<antcall target="delete_sources" />
+		<antcall target="make_directory" />
+	</target>
+	
+	<target name="delete_sources">
+		<echo>Target directory `${source.dir}/mpo`...</echo>
+		<delete dir="${source.dir}/mpo" />
+	</target>
+	
+	<target name="make_directory">
+		<echo>Target directory `${source.dir}`...</echo>
+		<mkdir dir="${source.dir}" />
+	</target>
+	
+
+	
+	<!-- ================================================== -->
+	<!-- backup -->
+	<!-- ================================================== -->
+	<target name="backup_was">
+		<java jvm="${java.home}/bin/java" fork="yes"
+		      failonerror="yes"
+		      jar="${ant.home}/bin/lotte.jar">
+			<arg value="${source.dir}"/>
+			<arg value="/h2010"/>
+			<arg value="${source.dir}_backup"/>
+		</java>
+	</target>
+		
+		
+	<!-- ================================================== -->
+	<!-- deploy -->
+	<!-- ================================================== -->
+	<target name="was" depends="check_exist" if="${isWas}">
+		<antcall target="check_valid" />
+		<antcall target="backup_was"/>
+		<antcall target="copy_common"/>
+		<antcall target="copy_class"/>
+		<antcall target="copy_jsp"/>
+	</target>
+
+	<target name="copy_jsp" if="isExistWebapp">
+        <echo message="WAS webapp(jsp)"/>
+        <copy todir="/h2010/mpo/webapp" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/mpo/webapp"
+                     includes="**/*.*"/>
+        </copy>
+    </target>
+
+    <target name="copy_class" if="isExistAppinf">
+        <echo message="WAS APP-INF(class, xml, properties and etc)"/>
+        <copy todir="/h2010/mpo/APP-INF" overwrite="yes" verbose="true">
+            <fileset dir="${source.dir}/mpo/APP-INF"
+                     includes="**/*.class,**/*.xml,**/*.properties,**/*.jar,**/*.dat"
+                     excludes="**/*.tar,**/*.zip"/>
+        </copy>
+    </target>
+
+    <target name="copy_common" if="isExistCommon">
+		<echo message="WAS common(common/conf)"/>
+		<copy todir="/h2010/common/conf" overwrite="yes" verbose="true">
+			<fileset dir="${source.dir}/common/conf" 
+			         includes="**/*.*" 
+			         excludes="**/*.tar,**/*.bak,**/*.zip"/>
+		</copy>
+    </target>
+
+	<target name="del_tar">
+		<delete file="/usr1/home/xclass/EC_BATCH/JAVA_APP/${dep.id}_BATCH.tar"/>
+	</target>
+	
+	<target name="clean_was">
+		<antcall target="clean_batch" />
+	</target>
+	<target name="clean_batch">
+		<delete verbose="true">
+			<dirset dir="/usr1/home/xclass/EC_BATCH/JAVA_APP">
+				<include name="z_bin"/>
+				<include name="z_conf"/>
+				<include name="z_ebay"/>
+				<include name="z_lib"/>
+				<include name="z_classes"/>
+			</dirset>
+		</delete>
+		<move file="/usr1/home/xclass/EC_BATCH/JAVA_APP/bin"  tofile="/usr1/home/xclass/EC_BATCH/JAVA_APP/z_bin" failonerror="false"/>
+		<move file="/usr1/home/xclass/EC_BATCH/JAVA_APP/conf"  tofile="/usr1/home/xclass/EC_BATCH/JAVA_APP/z_conf" failonerror="false"/>
+		<move file="/usr1/home/xclass/EC_BATCH/JAVA_APP/bin"  tofile="/usr1/home/xclass/EC_BATCH/JAVA_APP/z_bin" failonerror="false"/>
+		<move file="/usr1/home/xclass/EC_BATCH/JAVA_APP/ebay"  tofile="/usr1/home/xclass/EC_BATCH/JAVA_APP/z_ebay" failonerror="false"/>
+		<move file="/usr1/home/xclass/EC_BATCH/JAVA_APP/lib"  tofile="/usr1/home/xclass/EC_BATCH/JAVA_APP/z_lib" failonerror="false"/>
+		<move file="/usr1/home/xclass/EC_BATCH/JAVA_APP/classes"  tofile="/usr1/home/xclass/EC_BATCH/JAVA_APP/z_classes" failonerror="false"/>
+	</target>
+	
+	<target name="untar_was">
+		<antcall target="untar_batch_was" />
+	</target>
+	<target name="untar_batch_was">
+		<untar src="/usr1/home/xclass/EC_BATCH/JAVA_APP/${dep.id}_BATCH.tar" dest="/usr1/home/xclass/EC_BATCH/JAVA_APP" overwrite="yes"/>
+	</target>
+	
+	
+	<!-- ================================================== -->
+	<!-- boobal all deploy -->
+	<!-- ================================================== -->	
+	<target name="deployfortest">
+		<antcall target="clean_was"/>
+		<antcall target="untar_was"/>
+	</target>
+</project>

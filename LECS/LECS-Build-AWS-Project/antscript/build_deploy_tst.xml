@@ -1,0 +1,131 @@
+<project name="LECS_Build_Deploy_DEV">
+	<target name="deploy-bo">
+		<antcall target="deploy-bo-webapp">
+			<param name="address" value="${dev1}" />
+		</antcall>
+		<antcall target="deploy-bo-contents">
+			<param name="address" value="${dev1}" />
+		</antcall>
+		<antcall target="deploy-bo-images">
+			<param name="address" value="${dev1}" />
+		</antcall>
+	</target>
+
+	<target name="deploy-bonike">
+		<antcall target="deploy-bonike-webapp">
+			<param name="address" value="${dev1}" />
+		</antcall>
+		<antcall target="deploy-bonike-contents">
+			<param name="address" value="${dev1}" />
+		</antcall>
+		<antcall target="deploy-bonike-images">
+			<param name="address" value="${dev1}" />
+		</antcall>
+	</target>
+
+	<target name="deploy-lps">
+		<antcall target="deploy-lps-webapp">
+			<param name="address" value="${dev1}" />
+			<param name="path" value="/lotte/lecs/webapp/lps/" />
+		</antcall>
+		<antcall target="deploy-lps-contents">
+			<param name="address" value="${dev1}" />
+			<param name="path" value="/lotte/lecsDocs/contents/lps/" />
+		</antcall>
+		<antcall target="deploy-lps-images">
+			<param name="address" value="${dev1}" />
+			<param name="path" value="/lotte/lecsDocs/contents/lps/" />
+		</antcall>
+	</target>
+
+	<target name="deploy-lpsnike">
+		<antcall target="deploy-lps-webapp">
+			<param name="address" value="${dev1}" />
+			<param name="path" value="/lotte/lecs/webapp/lpsnike/" />
+		</antcall>
+		<antcall target="deploy-lps-contents">
+			<param name="address" value="${dev1}" />
+			<param name="path" value="/lotte/lecsDocs/contents/lpsnike/" />
+		</antcall>
+		<antcall target="deploy-lps-images">
+			<param name="address" value="${dev1}" />
+			<param name="path" value="/lotte/lecsDocs/contents/lpsnike/" />
+		</antcall>
+	</target>
+
+	<target name="deploy-muji">
+		<antcall target="deploy-muji-webapp">
+			<param name="address" value="${dev2}" />
+		</antcall>
+		<antcall target="deploy-muji-contents">
+			<param name="address" value="${dev2}" />
+		</antcall>
+		<!-- 이미지 서버는  dev1 -->
+		<antcall target="deploy-muji-images">
+			<param name="address" value="${dev1}" />
+		</antcall>
+	</target>
+
+	<target name="deploy-nike">
+		<antcall target="deploy-nike-webapp">
+			<param name="address" value="${dev2}" />
+		</antcall>
+		<antcall target="deploy-nike-contents">
+			<param name="address" value="${dev2}" />
+		</antcall>
+		<!-- 이미지 서버는  dev1 -->
+		<antcall target="deploy-nike-images">
+			<param name="address" value="${dev1}" />
+		</antcall>
+	</target>
+
+	
+	<target name="deploy-wms-tst">
+		<antcall target="deploy-target">
+			<param name="remote.address" value="${dev2}" />
+			<param name="deploy.material" value="LECS-Platform-LPS_webapp.zip" />
+			<param name="deploy.path" value="/lotte/lecs/webapp/wms/" />
+			<param name="remove.old" value="yes" />
+		</antcall>
+	</target>
+		 
+	
+
+	
+	
+	
+	<target name="deploy-batch-tst">
+		<antcall target="deploy-batch">
+			<param name="batch.home">/lotte/lecs/batch</param>
+		</antcall>
+	</target>
+
+	<target name="deploy-batch-tst-new">
+			<antcall target="deploy-batch">
+				<param name="batch.home">/lotte/lecs/batch_new</param>
+			</antcall>
+	</target>
+
+
+	<target name="deploy-batch">
+		<!-- classes -->
+		<mkdir dir="${batch.home}/inf/classes" />
+		<copy todir="${batch.home}/inf/classes">
+			<fileset dir="build/LECS-Batch/WEB-INF/classes" />
+		</copy>
+
+		<!-- dependency libraries -->
+		<mkdir dir="${batch.home}/inf/lib" />
+		<copy todir="${batch.home}/inf/lib">
+			<fileset dir="build/LECS-Batch/WEB-INF/lib" />
+			<fileset dir="build/src/LECS-Batch/inf/lib" />
+		</copy>
+
+		<!-- shell programs -->
+		<mkdir dir="${batch.home}/bin" />
+		<copy todir="${batch.home}/bin">
+			<fileset dir="build/src/LECS-Batch/bin" />
+		</copy>
+	</target>
+
+</project>

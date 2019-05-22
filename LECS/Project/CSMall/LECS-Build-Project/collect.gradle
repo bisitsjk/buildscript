@@ -1,0 +1,246 @@
+파일수집WithExcludes = { sourceDir, destDir, includes, excludes ->
+	if (excludes == null){
+		excludes = []
+	}
+	excludes += ['**/.svn*','**/*.java']
+	println "파일을 수집합니다. ${sourceDir} -> ${destDir}   include:${includes}, excludes:${excludes}"
+	
+	file(destDir).mkdirs()
+	
+	copy {
+		from fileTree(sourceDir).include(includes).exclude(excludes)
+		into destDir
+		includeEmptyDirs  = true
+		fileMode = 0644
+	}	
+}
+
+파일수집 = { sourceDir, destDir, includes ->
+	return 파일수집WithExcludes (sourceDir,destDir, includes, null)
+}
+
+
+웹어플_WEBINF_수집 = {프로젝트 ->
+	println "어플 파일을 수집합니다."
+	파일수집WithExcludes (
+		컨텐츠_소스_위치(프로젝트)+"/WEB-INF",
+		웹어플_WEB_INF_경로(프로젝트),
+		['**/*'],
+		['classes']
+	)	
+}
+
+
+웹어플_컴포넌트_수집 = { 프로젝트 ->
+	파일수집 (
+		컴파일_목적_위치(Library),
+		웹어플_클래스_경로(프로젝트),
+		['**/*']		
+	)
+}
+
+웹어플_라이브러리_수집 = { 프로젝트 ->
+	파일수집WithExcludes (
+		소스위치(Library)+"/lib",
+		웹어플_라이브러리_경로(프로젝트),
+		['**/*.jar'],
+		['ojdbc6.jar']
+		)
+}
+
+웹어플_JSP_수집 = {프로젝트 ->
+	println "JSP를 수집합니다."
+	파일수집(
+		컨텐츠_소스_위치(프로젝트),
+		어플_경로(프로젝트),
+		['WEB-INF/**/*.jsp', 'index.jsp', 'kr/index2.jsp', 'kr/index.jsp', 'lems.jsp','helpdesk*','ispCertSuccess.jsp','healthCheck.jsp', 'kr/mobile/index.jsp'],
+	)
+}
+
+웹어플_컨텐츠_수집 = { 프로젝트 ->
+	println "컨텐츠를 수집합니다."
+	파일수집WithExcludes (
+		컨텐츠_소스_위치(프로젝트),
+		컨텐츠_목적_위치(프로젝트),
+		['**/*'],
+		['image*/*', 'image', 'WEB-INF', 'kr/index.jsp' , 'kr/index2.jsp', 'kr/mobile/index.jsp']
+	)
+}
+
+// Batch,  BO, LPS는  CSS를 수정하지 않기 때문에 변경되는 컨텐츠가 없다. 
+// SOURCE에서 바로  배포본을 만들수 있기 때문에 컨텐츠 수집작업을 제외해도 된다. 
+웹어플_프로젝트_파일수집 = { 프로젝트, 컨텐츠_제외_여부 ->
+	웹어플_WEBINF_수집(프로젝트)
+	웹어플_컴포넌트_수집(프로젝트)
+	웹어플_라이브러리_수집(프로젝트)	
+	웹어플_JSP_수집(프로젝트)
+	if (컨텐츠_제외_여부 == null || 컨텐츠_제외_여부 == false){
+		웹어플_컨텐츠_수집(프로젝트)
+	}	
+}
+
+
+
+파일명Body = {파일경로->
+	파일경로[0..(파일경로.lastIndexOf('.')-1)]
+}
+
+파일명BaseName = {파일경로->
+	def temp = 파일경로[(파일경로.lastIndexOf('/')+1)..-1]	
+	temp[0..(temp.lastIndexOf('.')-1)]
+}
+
+
+파일확장자 = { 파일경로 ->
+	파일경로[(파일경로.lastIndexOf('.')+1)..-1]	
+}
+
+스테이지_배포용_파일경로 = { 파일경로, 스테이지 ->
+	def 파일명Body = 파일명Body(파일경로)
+	def 확장자 = 파일확장자(파일경로)
+	def 스테이지_파일경로  = "${파일명Body}.${확장자}.${스테이지}"
+	return 스테이지_파일경로
+}
+
+
+스테이지_파일제거 = { 프로젝트, 파일경로 ->
+	def 파일명Body = 파일명BaseName(파일경로)
+	def 확장자 = 파일확장자(파일경로)
+	
+	parentFile = file(컴파일_목적_위치(프로젝트)+"/${파일경로}").parentFile
+	parentFile .eachFile { childFile ->
+		def fileName = childFile.name
+		if (fileName.contains(파일명Body) && fileName.contains(확장자) && fileName.endsWith("${파일명Body}.${확장자}")==false) {
+			println "스테이지 파일을 제거합니다(${childFile})"
+			childFile.delete()
+		}
+	}
+}
+
+
+설정파일_치환 = { 프로젝트, 파일경로, 스테이지 ->	
+	println "$프로젝트, $파일경로, $스테이지 ${컴파일_목적_위치(프로젝트)}"
+	def 소스파일 = file(컴파일_목적_위치(프로젝트)+'/'+스테이지_배포용_파일경로(파일경로, 스테이지))
+	def target = 소스파일.toString() - ".${스테이지}"
+	println "Copy ${소스파일} -> ${target}"
+	copy {
+		from 소스파일
+		into 소스파일.parent
+		rename { fileName ->
+			fileName - ".${스테이지}"
+		}
+	}
+	
+	def 대상파일 = file(컴파일_목적_위치(프로젝트)+'/'+파일경로)	
+	파일_동일성_확인 소스파일, 대상파일
+	스테이지_파일제거 프로젝트, 파일경로
+}
+
+설정파일_치환_DEPLOY = { 프로젝트,  파일경로 ->
+	설정파일_치환  프로젝트, 파일경로, DEPLOY	
+}
+
+
+
+업로드_규칙_파일수집  = {
+	println "업로드 규칙 엑셀파일을 수집합니다."
+	파일수집 (
+		소스위치(Bo)+"/resources/excel/rule",
+		프로젝트_빌드패스(Bo)+"/rule",
+		['**/*']		
+	)
+}
+
+
+
+배치어플_컴포넌트_수집 = {
+	파일수집 (
+		컴파일_목적_위치(Library),
+		컴파일_목적_위치(Batch),
+		['**/*']		
+	)
+}
+
+
+
+
+배치어플_라이브러리_수집 = {
+	파일수집 (
+		소스위치(Library)+"/lib",
+		배치어플_라이브러리_경로(),
+		['**/*.jar']				
+	)
+}
+
+배치어플_스크립트_수집 = {
+	파일수집 (
+		소스위치(Batch)+"/bin",
+		배치어플_BIN_경로(),
+		['**/*.sh']				
+	)
+	
+	//ant.chmod(file:배치어플_BIN_경로()+"/*.sh", perm:"+x")
+}
+
+
+task collect_muji << {
+	웹어플_프로젝트_파일수집 Muji, false
+}
+
+task collect_nike << {
+	웹어플_프로젝트_파일수집 Nike, false
+}
+
+task collect_puma << {
+	웹어플_프로젝트_파일수집 Puma, false
+}
+
+task collect_uniqlo << {
+	웹어플_프로젝트_파일수집 Uniqlo, false
+}
+
+task collect_kiehls << {
+	웹어플_프로젝트_파일수집 Kiehls, false
+}
+
+task collect_northface << {
+	웹어플_프로젝트_파일수집 Northface, false
+}
+
+task collect_youngone << {
+	웹어플_프로젝트_파일수집 Youngone, false
+}
+
+task collect_gu << {
+	웹어플_프로젝트_파일수집 Gu, false
+}
+
+task collect_cs << {
+	웹어플_프로젝트_파일수집 Cs, false
+}
+
+task collect_bo << {
+	업로드_규칙_파일수집()
+	웹어플_프로젝트_파일수집 Bo, true
+	
+}
+
+
+task collect_lps << {
+	웹어플_프로젝트_파일수집 Lps, true
+}
+
+task collect_uniqloapi << {
+	웹어플_프로젝트_파일수집 Uniqloapi, true
+}
+
+
+task collect_batch << {
+	배치어플_컴포넌트_수집()
+	배치어플_스크립트_수집()
+	배치어플_라이브러리_수집()
+}
+
+task collect_all(dependsOn: [collect_muji,collect_nike, collect_bo, collect_lps, collect_batch] ) << {
+
+}

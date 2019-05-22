@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="sync lotte bo" basedir=".">
+	<!-- ================================================== -->
+	<!-- properties -->
+	<!-- ================================================== -->
+	<property name="srv" value="${TARGET_SERVER}"/>
+	
+	<!-- set property -->
+	<property file="com_lotte_bo_${srv}.properties" />
+	
+	<!-- real server info [원본] -->
+	<property name="prowas1.ip"  value="10.149.144.47"/>
+	<property name="proweb1.ip"  value="121.254.239.93"/>
+	<property name="user.id"  value="jeus"/>
+	<!-- <property name="user.pwd" value="8Yqi4q(1=Z"/> -->
+	
+	<!-- deploy id -->
+	<property name="prefix.dep.id" value="BO_" />
+	<tstamp><format property="infix.dep.id" pattern="yyyyMMdd"/></tstamp>
+	<property name="suffix.dep.id" value="_SYNC" />
+	<property name="dep.id" value="${prefix.dep.id}${infix.dep.id}${suffix.dep.id}" />		
+	
+	<!-- log file -->
+	<property name="backup.was.log" value="../logs/${dep.id}_BACKUP_WAS.log" />
+	<property name="backup.web.log" value="../logs/${dep.id}_BACKUP_WEB.log" />
+	<property name="sync.was.log"   value="../logs/${dep.id}_SYNC_WAS.log" />
+	<property name="sync.web.log"   value="../logs/${dep.id}_SYNC_WEB.log" />
+	
+	<!-- remote command -->
+	<property name="backup.cmd" value="bobackup" />
+	<property name="sync.cmd" value="bosync" />
+	
+	<!-- container name -->
+	<property name="inst.dir" value="/usr2/apache-tomcat/instance/" />
+	<property name="instance1" value="${tname1}" />
+	<property name="instance2" value="${tname2}" />
+	<property name="instance3" value="${tname3}" />
+	<property name="instance4" value="${tname4}" />
+	
+	
+	<!-- ================================================== -->
+	<!-- check -->
+	<!-- ================================================== -->
+	<target name="check_remote_work" unless="isSuccess">
+		<fail message="원격지 작업이 실패하였습니다..." />
+	</target>
+	
+	<!-- ================================================== -->
+	<!-- backup(source) -->
+	<!-- ================================================== -->
+	<target name="backup_was">
+		<echo>=================================================================================== WAS backup 시작 ==========</echo>
+		<antcall target="zip_was"/>
+		<echo>=================================================================================== WAS backup 종료 ==========</echo>
+	</target>
+	
+	<target name="backup_web">
+		<echo>=================================================================================== 웹서버 backup 시작 ==========</echo>
+		<antcall target="zip_web"/>
+		<echo>=================================================================================== 웹서버 backup 종료 ==========</echo>
+	</target>
+	
+	<target name="zip_was">
+		<sshexec host="${prowas1.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${backup.was.log}"
+			command="cd deploy;./${backup.cmd} ${dep.id}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${backup.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+	</target>
+	
+	<target name="zip_web">
+		<sshexec host="${proweb1.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${backup.web.log}"
+			command="cd deploy;./${backup.cmd} ${dep.id}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${backup.web.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+	</target>
+	
+	
+	<!-- ================================================== -->
+	<!-- get zip file and unzip at docroot(target) -->
+	<!-- ================================================== -->
+	<target name="sync">
+		<echo>=================================================================================== WEB/WAS sync sources 시작 ==========</echo>
+		<antcall target="get_and_unzip_was"/>
+		<echo>=================================================================================== WEB/WAS sync sources 종료 ==========</echo>
+	</target>
+	
+	<target name="sync_was">
+		<echo>=================================================================================== WAS sync sources 시작 ==========</echo>
+		<antcall target="get_and_unzip_was"/>
+		<antcall target="shutdown_tomcat"/>
+		<antcall target="was_status_check"/>
+		<antcall target="start_tomcat"/>
+		<antcall target="was_status_check"/>
+		<echo>=================================================================================== WAS sync sources 종료 ==========</echo>
+	</target>
+
+	<target name="sync_web">
+		<echo>=================================================================================== 웹서버 sync sources 시작 ==========</echo>
+		<antcall target="get_and_unzip_web"/>
+		<echo>=================================================================================== 웹서버 sync sources 종료 ==========</echo>
+	</target>
+	
+	<!-- *************************************************************** -->
+	<!-- ******************** RESTART APACHE-TOMCAT ******************** -->
+	<!-- ********************* 2017.11.10 jylee102 ********************* -->
+	<!-- *************************************************************** -->
+	
+	<target name="get_and_unzip_was"> <!-- test server only -->
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${sync.was.log}"
+			command="cd deploy;./${sync.cmd} ${dep.id}" />	
+	</target>
+	<target name="shutdown_tomcat"> 
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${was.work.log}"
+				command="${inst.dir}${instance1}/bin/shutdown.sh;${inst.dir}${instance2}/bin/shutdown.sh;${inst.dir}${instance3}/bin/shutdown.sh;${inst.dir}${instance4}/bin/shutdown.sh" />
+	</target>
+
+	<target name="start_tomcat"> 
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${was.work.log}"
+			command="${inst.dir}${instance1}/bin/start.sh;${inst.dir}${instance2}/bin/start.sh;${inst.dir}${instance3}/bin/start.sh;${inst.dir}${instance4}/bin/start.sh" />
+	</target>
+				
+	<target name="was_status_check"> 
+		<sshexec host="${was.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${was.work.log}"
+				command="${tomcat.check}" />
+	</target>		
+
+	<target name="get_and_unzip_web">
+		<sshexec host="${web.ip}" username="${user.id}" password="${user.pwd}" 
+			trust="true" verbose="false" output="${sync.web.log}"
+			command="cd deploy;./${sync.web.cmd} ${dep.id}" />
+		<condition property="isSuccess">
+			<resourcecontains resource="${sync.web.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+	</target>
+	
+
+</project>

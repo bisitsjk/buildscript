@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottedotcom" basedir=".">
+    <!-- **************************************************************** -->
+	<!-- PROPERTY -->
+	<!-- **************************************************************** -->
+	<!-- PROPERTY -->
+	<property name="dep.id" value="${DEPLOY_ID}"/>
+	<!-- SET PROPERTY -->
+	<property file="test_lotte.properties" />
+	
+	<!-- test server info -->
+	<property name="tst.web.ip" value="10.149.193.34"/>
+	<property name="tst.was.ip" value="10.149.193.44"/>
+	<property name="tst.user.id" value="jeus"/>
+	<!-- <property name="tst.user.pwd" value="8Yqi4q(1=Z"/> -->
+	
+	<!-- nas server info -->
+	<property name="host.ip" value="10.149.144.36"/>
+	<property name="user.id" value="jeus"/>
+	<!-- <property name="user.pwd" value="8Yqi4q(1=Z"/> -->
+	<!--
+	<property name="request.fo.dir" value="S:\01. 일반문서\05. 배포이력 관리\front\배포요청"/>
+	-->
+	<!--
+	<property name="request.fo.dir" value="G:/hudson/jobs/ONLY_TEST_LOTTEDOTCOM_TEST/workspace/request/front"/>
+	-->
+	<property name="nas.fo.dir" value="/ncontents/src"/>
+
+	<property name="dep.was.log" value="../log/${deploy.id}_DEP_WAS.log" />
+	<property name="dep.web.log" value="../log/${deploy.id}_DEP_WEB.log" />
+
+	<!-- **************************************************************** -->
+	<!-- CHECK -->
+	<!-- **************************************************************** -->
+	<target name="param_check">
+		<condition property="isValid">
+		  <and>
+			<length string="${dep.id}" when="greater" length="10"/>
+			<contains string="${dep.id}" substring="FO_" casesensitive="true"/>
+		  </and>
+		</condition>
+	</target>
+	
+	<target name="fail_param_check" unless="isValid">
+		<fail message="DEPLOY_ID가 유효하지 않습니다."/>
+	</target>
+
+	<target name="check_exist">
+		<condition property="isExistWebapp">
+			<resourceexists>
+				<file file="${request.fo.dir}/${dep.id}/fo/webapp"/>
+			</resourceexists>
+		</condition>
+		<condition property="isExistAppinf">
+			<resourceexists>
+				<file file="${request.fo.dir}/${dep.id}/fo/APP-INF"/>
+			</resourceexists>
+		</condition>
+		<condition property="isExistCommon">
+			<resourceexists>
+				<file file="${request.fo.dir}/${dep.id}/common/conf"/>
+			</resourceexists>
+		</condition>
+		<condition property="isJspAndClass">
+			<and>
+				<istrue value="${isExistWebapp}"/>
+				<istrue value="${isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="isJsp">
+			<and>
+				<istrue value="${isExistWebapp}"/>
+				<isfalse value="${isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="isClass">
+			<and>
+				<isfalse value="${isExistWebapp}"/>
+				<istrue value="${isExistAppinf}"/>
+			</and>
+		</condition>
+		<condition property="isComm">
+			<and>
+				<isfalse value="${isExistWebapp}"/>
+				<isfalse value="${isExistAppinf}"/>
+				<istrue value="${isExistCommon}"/>
+			</and>
+		</condition>
+		<condition property="isWeb">
+			<resourceexists>
+				<file file="${request.fo.dir}/${dep.id}/fo/webroot"/>
+			</resourceexists>
+		</condition>
+	</target>	
+	
+	<target name="check_remote_work" unless="isSuccess">
+		<fail message="원격지 작업이 실패하였습니다..." />
+	</target>
+	
+	
+	<!-- **************************************************************** -->
+	<!-- send files to the NAS -->
+	<!-- **************************************************************** -->	
+	<target name="copy_to_nas" depends="param_check">
+		<antcall target="fail_param_check"/>
+		<antcall target="rmdir"/>
+		<antcall target="mkdir"/>
+		<antcall target="send"/>
+	</target>
+	
+	<target name="rmdir" if="isValid">
+		<!-- 0. REMOVE DIR -->
+		<ftp server="${host.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${nas.fo.dir}"
+		     action="delete" passive="yes" verbose="yes">
+			 <fileset>
+				<include name="${dep.id}/**/*.*"></include>
+			 </fileset>
+		</ftp>
+		<ftp server="${host.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${nas.fo.dir}"
+		     action="rmdir" passive="yes" verbose="yes">
+			 <fileset>
+				<include name="${dep.id}"></include>
+				<include name="${dep.id}/**"></include>
+			 </fileset>
+		</ftp>
+	</target>
+	<target name="mkdir" if="isValid">
+		<!-- 1. MAKE DIR -->
+		<ftp server="${host.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${nas.fo.dir}/${dep.id}"
+		     action="mkdir" passive="yes" verbose="yes">
+		</ftp>
+	</target>
+	<target name="send" if="isValid">
+		<!-- 2. FTP (from local to nas) -->
+		<echo>WEB</echo>
+		<ftp server="${host.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${nas.fo.dir}/${dep.id}"
+		     action="put" passive="yes" verbose="yes">
+			<fileset dir="${request.fo.dir}/${dep.id}">
+				<include name="fo/webroot/**/*.*"></include>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</ftp>
+		<echo></echo>
+		<echo>WAS - JSP</echo>
+		<ftp server="${host.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${nas.fo.dir}/${dep.id}"
+		     action="put" passive="yes" verbose="yes">
+			<fileset dir="${request.fo.dir}/${dep.id}">
+				<include name="fo/webapp/**/*.jsp"></include>
+				<include name="fo/webapp/**/*.htm"></include>
+				<include name="fo/webapp/**/*.html"></include>
+				<include name="fo/webapp/**/*.txt"></include>
+				<include name="fo/webapp/**/*.xml"></include>
+				<include name="fo/webapp/**/*.properties"></include>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</ftp>
+		<echo></echo>
+		<echo>WAS - CLASS/XML (jeus restarting required)</echo>
+		<ftp server="${host.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${nas.fo.dir}/${dep.id}"
+		     action="put" passive="yes" verbose="yes">
+			<fileset dir="${request.fo.dir}/${dep.id}">
+				<include name="fo/webapp/WEB-INF/web.xml"></include>
+				<include name="fo/APP-INF/classes/com/mall/**/*.class"></include>
+				<include name="fo/APP-INF/classes/com/wms/**/*.class"></include>
+				<include name="fo/APP-INF/conf/spring/*.xml"></include>
+				<include name="fo/APP-INF/conf/sqlmap/**/*.xml"></include>
+				<include name="fo/APP-INF/conf/message/*.properties"></include>
+				<include name="fo/APP-INF/conf/*.properties"></include>
+				<include name="fo/APP-INF/lib/*.jar"></include>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</ftp>
+		<echo></echo>
+		<echo>WAS - COMMON (jeus restarting required)</echo>
+		<ftp server="${host.ip}" userid="${user.id}" password="${user.pwd}"
+		     remotedir="${nas.fo.dir}/${dep.id}"
+		     action="put" passive="yes" verbose="yes">
+			<fileset dir="${request.fo.dir}/${dep.id}">
+				<include name="common/conf/**/**"></include>
+				<exclude name="**/.svn/**"></exclude>
+			</fileset>
+		</ftp>
+	</target>
+	
+
+	<!-- **************************************************************** -->
+	<!-- Deploy -->
+	<!-- **************************************************************** -->	
+	<target name="copy_jsp" if="isJsp">
+		<!-- 공통 header 시작 -->
+		<tstamp><format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>배포 작업을 진행합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+		<echo>${tst.was.ip} 접속을 시작합니다... [${conn_time}]</echo>
+		<record name="${dep.was.log}" action="start"/>
+		<!-- 공통 header 끝 -->
+		<telnet server="${tst.was.ip}" userid="${tst.user.id}" password="${tst.user.pwd}">
+			<read>/jeus]%</read>
+			<write>cd deploy</write>
+			<read>/deploy]%</read>
+			<write>./get jsp ${dep.id}</write>
+			<read>/deploy]%</read>
+			<write>exit</write>
+		</telnet>
+		<!-- 공통 footer 시작 -->
+		<record name="${dep.was.log}" action="stop"/>
+		<tstamp><format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${tst.was.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<resourcecontains resource="${dep.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>배포 작업이 완료되었습니다...</echo>
+		<!-- 공통 footer 끝 -->
+	</target>
+	
+	<target name="copy_class" if="isClass">
+		<!-- 공통 header 시작 -->
+		<tstamp><format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>배포 작업을 진행합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+		<echo>${tst.was.ip} 접속을 시작합니다... [${conn_time}]</echo>
+		<record name="${dep.was.log}" action="start"/>
+		<!-- 공통 header 끝 -->
+		<telnet server="${tst.was.ip}" userid="${tst.user.id}" password="${tst.user.pwd}">
+			<read>/jeus]%</read>
+			<write>cd deploy</write>
+			<read>/deploy]%</read>
+			<write>./get class ${dep.id}</write>
+			<read>/deploy]%</read>
+			<write>ja downcon ecfowstst_FO1</write>
+			<read>/deploy]%</read>
+			<write>ja startcon ecfowstst_FO1</write>
+			<read>/deploy]%</read>
+			<write>exit</write>
+		</telnet>
+		<!-- 공통 footer 시작 -->
+		<record name="${dep.was.log}" action="stop"/>
+		<tstamp><format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${tst.was.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<resourcecontains resource="${dep.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>배포 작업이 완료되었습니다...</echo>
+		<!-- 공통 footer 끝 -->
+	</target>
+	
+	<target name="copy_comm" if="isComm">
+		<!-- 공통 header 시작 -->
+		<tstamp><format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>배포 작업을 진행합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+		<echo>${tst.was.ip} 접속을 시작합니다... [${conn_time}]</echo>
+		<record name="${dep.was.log}" action="start"/>
+		<!-- 공통 header 끝 -->
+		<telnet server="${tst.was.ip}" userid="${tst.user.id}" password="${tst.user.pwd}">
+			<read>/jeus]%</read>
+			<write>cd deploy</write>
+			<read>/deploy]%</read>
+			<write>./get common ${dep.id}</write>
+			<read>/deploy]%</read>
+			<write>exit</write>
+		</telnet>
+		<!-- 공통 footer 시작 -->
+		<record name="${dep.was.log}" action="stop"/>
+		<tstamp><format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${tst.was.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<resourcecontains resource="${dep.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>배포 작업이 완료되었습니다...</echo>
+		<!-- 공통 footer 끝 -->
+	</target>
+	
+	<target name="copy_was" if="isJspAndClass">
+		<!-- 공통 header 시작 -->
+		<tstamp><format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>배포 작업을 진행합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+		<echo>${tst.was.ip} 접속을 시작합니다... [${conn_time}]</echo>
+		<record name="${dep.was.log}" action="start"/>
+		<!-- 공통 header 끝 -->
+		<telnet server="${tst.was.ip}" userid="${tst.user.id}" password="${tst.user.pwd}">
+			<read>/jeus]%</read>
+			<write>cd deploy</write>
+			<read>/deploy]%</read>
+			<write>./get was ${dep.id}</write>
+			<read>/deploy]%</read>
+			<write>ja downcon ecfowstst_FO1</write>
+			<read>/deploy]%</read>
+			<write>ja startcon ecfowstst_FO1</write>
+			<read>/deploy]%</read>
+			<write>exit</write>
+		</telnet>
+		<!-- 공통 footer 시작 -->
+		<record name="${dep.was.log}" action="stop"/>
+		<tstamp><format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${tst.was.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<resourcecontains resource="${dep.was.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>배포 작업이 완료되었습니다...</echo>
+		<!-- 공통 footer 끝 -->
+	</target>
+	
+	<target name="copy_web" if="isWeb">
+		<!-- 공통 header 시작 -->
+		<tstamp><format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>배포 작업을 진행합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+		<echo>${tst.web.ip} 접속을 시작합니다... [${conn_time}]</echo>
+		<record name="${dep.web.log}" action="start"/>
+		<!-- 공통 header 끝 -->
+		<telnet server="${tst.web.ip}" userid="${tst.user.id}" password="${tst.user.pwd}" timeout="30">
+			<read>/jeus]%</read>
+			<write>cd deploy</write>
+			<read>/deploy]%</read>
+			<write>./get web ${dep.id}</write>
+			<read>/deploy]%</read>
+			<write>exit</write>
+		</telnet>
+		<!-- 공통 footer 시작 -->
+		<record name="${dep.web.log}" action="stop"/>
+		<tstamp><format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/></tstamp>
+		<echo>${tst.web.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<resourcecontains resource="${dep.web.log}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>배포 작업이 완료되었습니다...</echo>
+		<!-- 공통 footer 끝 -->
+	</target>
+	
+	<target name="deploy_was" depends="param_check, check_exist">
+		<antcall target="fail_param_check"/>
+		<antcall target="copy_was"/>
+		<antcall target="copy_class"/>
+		<antcall target="copy_jsp"/>
+		<antcall target="copy_comm"/>
+	</target>
+	
+	<target name="deploy_web" depends="param_check, check_exist">
+		<antcall target="fail_param_check"/>
+		<antcall target="copy_web"/>
+	</target>
+</project>

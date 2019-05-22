@@ -1,0 +1,12 @@
+jdbc.driverClassName=oracle.jdbc.driver.OracleDriver
+jdbc.url=jdbc:oracle:thin:@210.93.129.11:1521:ora01
+jdbc.username=COMMERCE_DEV
+jdbc.password=COMMERCE#DEV
+jdbc.pool.initialSize=5
+jdbc.pool.maxActive=10
+lps.lecs.com=localhost:8080
+img.lecs.com=localhost:8080
+bo.lecs.com=localhost:8081
+cc.lecs.com=localhost:8082
+muji.lecs.com=localhost:8083
+nike.lecs.com=localhost:8084

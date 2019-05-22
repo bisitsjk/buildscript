@@ -1,0 +1,362 @@
+// 구성 파일들을 모음니다. 
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+		classpath gradleApi() // $GRADLE_HOME/lib 에 있는 라이브러리들중 .guava.jar 를 사용하기 위
+   }
+}
+import java.security.MessageDigest
+
+설정파일_재복사 = { 프로젝트,소스종류, 대상경로 ->
+	println "설정파일_재복사 :$프로젝트 $소스종류 $대상경로"
+	tree = SourceDirs["$프로젝트"]["$소스종류"].collect { srcDir ->
+		return fileTree(소스위치 (프로젝트)+"/$srcDir").include("**/*.xml*").include("**/*.properties*").exclude('**/.svn/**')
+	}	
+	copy {
+		from tree
+		into 대상경로
+	}
+}
+
+설정파일수집 = { 프로젝트 ->	
+	println "설정 파일을 수집합니다."
+	설정파일_재복사 Library, 'src', 웹어플_클래스_경로 (프로젝트)
+	설정파일_재복사 프로젝트, 'src', 웹어플_클래스_경로 (프로젝트)
+}
+
+공통설정_치환 = { 프로젝트 ->
+	설정파일_치환_DEPLOY 프로젝트, '/config/system/lecs/config_lecs.xml'
+	설정파일_치환_DEPLOY 프로젝트, '/config/log4j/log4j.xml'
+	설정파일_치환_DEPLOY 프로젝트, '/config/spring/bean/common.xml'
+	설정파일_치환_DEPLOY 프로젝트, '/interfaces.properties'
+	설정파일_치환_DEPLOY 프로젝트, '/xdsp_pool.properties'
+	설정파일_치환_DEPLOY 프로젝트, '/CancelRefund.properties'
+	설정파일_치환_DEPLOY 프로젝트, '/Mcash.properties'
+	설정파일_치환_DEPLOY 프로젝트, '/config/system/salt/config_salt.xml'
+}
+
+
+어플_배포본_생성 = { 프로젝트 ->
+	println "어플 배포본 생성 "	
+
+	ant.zip(
+		basedir: 어플_경로(프로젝트), 
+		destfile: 프로젝트_빌드패스(프로젝트)+"/"+웹어플_배포본(프로젝트)
+	)
+}
+
+웹어플_운영배포시_특별_사례 = { base프로젝트, 변이_프로젝트, sourceFilePath, targetFileName , 적용_Cases ->
+	설정파일수집 	base프로젝트
+	프로젝트_설청파일_치환 base프로젝트
+	
+	if (DEPLOY in 적용_Cases) {
+		def 소스파일 = file(웹어플_WEB_INF_경로(base프로젝트)+sourceFilePath)
+		copy {
+			from 	소스파일	
+			into 	소스파일.parent
+			rename { fileName ->
+				targetFileName
+			}
+		}
+		파일_동일성_확인 (소스파일, new File(소스파일.parent,targetFileName ))
+	}
+	
+	destfile = 프로젝트_빌드패스(변이_프로젝트)+"/"+웹어플_배포본(변이_프로젝트)
+	println "어플 배포본 생성 : $destfile"	
+	
+	ant.zip(
+		basedir: 어플_경로(base프로젝트), 
+		destfile: 프로젝트_빌드패스(변이_프로젝트)+"/"+웹어플_배포본(변이_프로젝트)
+	)
+}
+
+
+컨텐츠_배포본_생성  = { 프로젝트 -> 
+	println "컨텐츠 배포본 생성 "
+	ant.zip(
+		destfile: 프로젝트_빌드패스(프로젝트)+"/"+웹어플_컨텐츠_배포본(프로젝트)		
+	){
+		fileset(dir:컨텐츠_목적_위치(프로젝트)) {
+		}
+	}
+}
+
+컨텐츠_배포본_생성_From_Source = { 프로젝트 -> 
+	println "컨텐츠 배포본 생성 From Source "
+	ant.zip(
+		destfile: 프로젝트_빌드패스(프로젝트)+"/"+웹어플_컨텐츠_배포본(프로젝트)		
+	){
+		fileset(dir:컨텐츠_소스_위치(프로젝트)) {
+			exclude (name:"**/*.jsp")
+			exclude (name:"WEB-INF")
+			exclude (name:"**/.svn")
+			exclude (name:"**/*.java")
+		}
+	}
+}
+
+이미지_배포본_생성 = { 프로젝트 -> 
+	println "이미지 배포본 생성 "
+	ant.zip(
+		destfile: 프로젝트_빌드패스(프로젝트)+"/"+웹어플_이미지_배포본(프로젝트)
+	){
+		fileset(dir:컨텐츠_이미지_소스_위치(프로젝트)) {
+			exclude (name:"**/.svn")
+		}
+	}
+}
+
+
+웹어플_대상경로_만들기 = { 프로젝트 ->
+	[ 어플_경로(프로젝트), 웹어플_클래스_경로(프로젝트), 웹어플_라이브러리_경로(프로젝트) ].each { path ->
+		file(path).mkdirs()
+	}
+}
+
+웹어플_배포본_만들기 = { 프로젝트, 이미지배포본생성여부 ->
+	웹어플_대상경로_만들기 프로젝트
+	
+	if ( hasProperty("DEPLOY_FILTER")){
+		println " 배포 목록 필터가 있습니다. $DEPLOY_FILTER"
+		if (DEPLOY_FILTER.contains("app") || DEPLOY_FILTER.contains("all")){
+			어플_배포본_생성 프로젝트			
+		}
+		if (DEPLOY_FILTER.contains("contents") || DEPLOY_FILTER.contains("all")){
+			컨텐츠_배포본_생성 프로젝트
+		}
+		if (DEPLOY_FILTER.contains("images") || DEPLOY_FILTER.contains("all")){
+			if (이미지배포본생성여부) {
+				이미지_배포본_생성 프로젝트
+			}
+		}
+	}
+	else {
+		어플_배포본_생성 프로젝트
+		컨텐츠_배포본_생성 프로젝트
+		if (이미지배포본생성여부) {
+			이미지_배포본_생성 프로젝트
+		}
+	}
+		
+	
+ 	
+}
+
+
+
+// spring_properties.properties를 만들어 낸다. 
+property파일_치환 = { 프로젝트, 스테이지 ->	
+//	println  " property파일_치환 :$프로젝트 "+DeployConfig[프로젝트]
+	DeployConfig[프로젝트].배포본_목록.each { 배포본_이름, 배포본_정보 ->
+		println "DEPLOY: $DEPLOY"
+		println "Machine: $MACHINE\n"
+		
+		def dataSource = null;
+		if (배포본_정보['SERVER']["$DEPLOY"].containsKey('mobile') == false ) {
+			if (배포본_정보['SERVER']["$DEPLOY"]["$MACHINE"].containsKey('datasource') == false || 배포본_정보['SERVER']["$DEPLOY"]["$MACHINE"]['datasource'] == null){
+				return;
+			}
+			else {
+				dataSource = 배포본_정보['SERVER']["$DEPLOY"]["$MACHINE"]['datasource']
+			}
+			
+		}
+		else {
+			if (배포본_정보['SERVER']["$DEPLOY"]['default']["$MACHINE"] == null
+				|| 배포본_정보['SERVER']["$DEPLOY"]['default']["$MACHINE"].containsKey('datasource') == false 
+				|| 배포본_정보['SERVER']["$DEPLOY"]['default']["$MACHINE"]['datasource'] == null){
+				return;
+			}
+			dataSource = 배포본_정보['SERVER']["$DEPLOY"]['default']["$MACHINE"]['datasource']
+		}
+		println "DS:$dataSource"
+		
+/*		if (배포본_정보['SERVER']["$DEPLOY"]["$MACHINE"].containsKey('datasource') == false 
+			|| 배포본_정보['SERVER']["$DEPLOY"]["$MACHINE"]['datasource'] == null){
+			return;
+		}
+		dataSource = 배포본_정보['SERVER']["$DEPLOY"]["$MACHINE"]['datasource']
+		
+*/		def sourceFile = file(컴파일_목적_위치(프로젝트)+"/config/spring/common/${dataSource}")
+		def targetFile = file(컴파일_목적_위치(프로젝트)+"/config/spring/common/spring_properties.properties")
+		println "DATASOURCE 설정파일 교체: ${sourceFile} to ${targetFile}"
+		
+		com.google.common.io.Files.copy( sourceFile	,  targetFile)
+	}		
+}
+
+프로젝트_설청파일_치환 = { 프로젝트 ->
+	공통설정_치환 프로젝트
+	ProjectConfig[프로젝트].each { config ->
+		설정파일_치환 프로젝트, config, DEPLOY		
+	}
+	
+	property파일_치환 프로젝트, DEPLOY
+
+}
+배치어플_배포본_생성 = { 
+	println "배치어플_배포본_생성"
+	ant.fixcrlf (
+		srcdir: 소스위치(Batch)+"/bin",
+		includes: "**/*.sh",
+		eol:"lf",
+		eof:"remove"
+	)
+	ant.zip(		
+		destfile: 프로젝트_빌드패스(Batch)+"/"+배치어플_배포본()
+	){
+		zipfileset(dir:소스위치(Batch)+"/bin", prefix:"bin")	 {
+			exclude (name:"**/.svn")
+		}
+		
+		zipfileset(dir:소스위치(Batch)+"/inf/lib", prefix:"inf/lib")	 {
+			exclude (name:"**/.svn")
+		}
+				
+		zipfileset(dir:컴파일_목적_위치(Batch), prefix:"inf/classes")	
+		
+		zipfileset(dir:소스위치(Library)+"/lib", prefix:"inf/lib")	 {
+			exclude (name:"**/.svn")
+			include (name:"*.jar")
+		}
+	}
+}
+
+업로드_규칙_배폰본_만들기 = {
+	println "업로드_규칙_배폰본_만들기"
+	ant.zip(
+		basedir: 소스위치(Bo)+"/resources/excel/rule", 
+		destfile: 프로젝트_빌드패스(Bo)+"/"+업로드_규칙_배포본()
+	){
+		fileset(dir:소스위치(Bo)+"/resources/excel/rule") {
+			exclude (name:"**/.svn")
+			exclude (name:"**/*.java")
+		}
+	}	
+}
+
+
+
+task assemble_muji << {
+	CSS링크수정 (Muji)
+	설정파일수집 	Muji	
+	프로젝트_설청파일_치환 Muji
+	웹어플_배포본_만들기 Muji, true
+}
+
+task assemble_nike << {
+	CSS링크수정 (Nike)
+	설정파일수집 	Nike	
+	프로젝트_설청파일_치환 Nike
+	웹어플_배포본_만들기 Nike, true
+}
+
+task assemble_puma << {
+	CSS링크수정 (Puma)
+	설정파일수집 	Puma
+	프로젝트_설청파일_치환 Puma
+	웹어플_배포본_만들기 Puma, true
+}
+
+task assemble_uniqlo << {
+	CSS링크수정 (Uniqlo)
+	설정파일수집 	Uniqlo
+	프로젝트_설청파일_치환 Uniqlo
+	웹어플_배포본_만들기 Uniqlo, true
+}
+
+
+
+task assemble_kiehls << {
+	CSS링크수정 (Kiehls)
+	설정파일수집 	Kiehls
+	프로젝트_설청파일_치환 Kiehls
+	웹어플_배포본_만들기 Kiehls, true
+}
+
+task assemble_northface << {
+	CSS링크수정 (Northface)
+	설정파일수집 	Northface
+	프로젝트_설청파일_치환 Northface
+	웹어플_배포본_만들기 Northface, true
+}
+
+task assemble_youngone << {
+	CSS링크수정 (Youngone)
+	설정파일수집 	Youngone
+	프로젝트_설청파일_치환 Youngone
+	웹어플_배포본_만들기 Youngone, true
+}
+
+task assemble_lps << {
+ 	설정파일수집 	Lps	
+	프로젝트_설청파일_치환 Lps
+	
+	웹어플_대상경로_만들기 Lps
+	어플_배포본_생성 Lps
+	컨텐츠_배포본_생성_From_Source Lps
+}
+
+task assemble_uniqloapi << {
+	설정파일수집 	Uniqloapi
+	프로젝트_설청파일_치환 Uniqloapi
+
+	웹어플_대상경로_만들기 Uniqloapi
+	어플_배포본_생성 Uniqloapi
+	컨텐츠_배포본_생성_From_Source Uniqloapi
+}
+
+// 20140424 wms 예외 배포 사항 추가
+task assemble_wms << {
+	웹어플_운영배포시_특별_사례 (Lps, Wms, '/web.xml.wms', 'web.xml', ['tst', 'stg', 'prd'])
+	웹어플_운영배포시_특별_사례 (Lps, Wms, '/classes/config/spring/lps/controller/common.xml.wms', 'common.xml', ['tst', 'stg', 'prd'])
+}
+
+// 20150421 oa 배포 사항 추가
+task assemble_oa << {
+	웹어플_운영배포시_특별_사례 (Lps, Oa, '/web.xml.oa', 'web.xml', ['tst', 'stg', 'prd'])
+}
+
+// 20160601 nkoa 배포 사항 추가
+task assemble_nkoa << {
+	웹어플_운영배포시_특별_사례 (Lps, Oa, '/web.xml.oa', 'web.xml', ['tst', 'stg', 'prd'])
+}
+
+task assemble_bo << {
+	설정파일수집 	Bo
+	프로젝트_설청파일_치환 Bo	
+	
+	웹어플_대상경로_만들기 Bo
+	어플_배포본_생성 Bo
+	컨텐츠_배포본_생성_From_Source Bo
+	업로드_규칙_배폰본_만들기 ()
+}
+
+
+task assemble_cc() << {
+	웹어플_운영배포시_특별_사례 (Bo, Cc, '/classes/config/system/bo/config_cc.xml.prd', 'config_bo.xml', ['prd'])
+}
+
+
+
+task assemble_po << {
+	웹어플_운영배포시_특별_사례 (Bo, Po, '/classes/config/system/bo/config_po.xml.prd', 'config_bo.xml', ['prd'])
+}
+
+
+
+task assemble_batch << {
+	println "설정 파일을 수집합니다."
+	설정파일_재복사 Library, 'src', 컴파일_목적_위치 (Batch)
+	설정파일_재복사 Batch, 'src', 컴파일_목적_위치(Batch)
+	프로젝트_설청파일_치환 Batch
+
+	배치어플_배포본_생성()
+}
+
+
+task assemble_all ( dependsOn:[assemble_bo, assemble_lps, assemble_nike, assemble_muji, assemble_batch]){
+	
+}

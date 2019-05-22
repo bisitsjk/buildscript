@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottesmartpickTelnetTst_jenkins">
+	<!-- PROPERTY -->
+	<!-- **************************************************************** -->
+	<!-- parameters -->
+	
+	<property name="user.id" value="jeus"/>
+	<property name="user.pwd" value="w&uch6raDa*r"/>
+
+	
+
+<!-- **************************************************************** -->
+	<!-- DEPLOY -->
+	<!-- **************************************************************** -->
+	<target name="TelnetTst">
+		<antcall target="TelTst" />
+	</target>
+
+	<target name="TelTst">
+		<tstamp>
+			<format property="conn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>Telnet 접속을 진행합니다... 이 작업은 원격지에 접속하여 수행합니다...</echo>
+		<echo>${was.ip} 접속을 시작합니다... [${conn_time}]</echo>
+		<record name="../logs/${was.ip}_TelnetTst.log" action="start"/>
+		<telnet server="${was.ip}" userid="${user.id}" password="${user.pwd}">
+			<read>/jeus]%</read>
+			<write>cd deploy</write>
+			<read>/jeus/deploy]%</read>
+			<write>exit</write>
+		</telnet>
+		<record name="../logs/${was.ip}_TelnetTst.log" action="stop"/>
+		<concat destfile="../logs/${was.ip}_TelnetTst.log" append="true">TELNET CHECK SUCCESSFUL</concat>
+		<tstamp>
+			<format property="disconn_time" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+		</tstamp>
+		<echo>${was.ip} 접속을 종료했습니다... [${disconn_time}]</echo>
+		<condition property="isSuccess">
+			<resourcecontains resource="../logs/${was.ip}_TelnetTst.log" substring="TELNET CHECK SUCCESSFUL" casesensitive="true" />
+		</condition>
+		<antcall target="check_remote_work" />
+		<echo>접속 테스트 작업이 완료되었습니다...</echo>
+	</target>
+
+	<target name="check_remote_work" unless="isSuccess">
+		<fail message="원격지 작업이 실패하였습니다..." />
+	</target>
+
+</project>

@@ -1,0 +1,53 @@
+<project name="LECS_Build_Restart_STG">
+	<target name="restart-bo-stg">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${stg1}" />
+			<param name="container" value="bo" />
+		</antcall>
+	</target>
+
+	<target name="restart-bonike-stg">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${stg1}" />
+			<param name="container" value="bonike" />
+		</antcall>
+	</target>
+	<target name="restart-lps-stg">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${stg1}" />
+			<param name="container" value="lps" />
+		</antcall>
+	</target>
+
+	<target name="restart-wms-stg">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${stg3}" />
+			<param name="container" value="lps" />
+		</antcall>
+	</target>
+
+	<target name="restart-lpsnike-stg">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${stg1}" />
+			<param name="container" value="lpsnike" />
+		</antcall>
+	</target>
+	<target name="restart-muji-stg">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${stg2}" />
+			<param name="container" value="muji" />
+		</antcall>
+	</target>
+
+	<target name="restart-nike-stg">
+		<antcall target="restart-container">
+			<param name="remote.address" value="${stg2}" />
+			<param name="container" value="nike" />
+		</antcall>
+	</target>
+	
+	
+
+	
+
+</project>

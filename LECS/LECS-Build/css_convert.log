@@ -1,0 +1,316 @@
+Source CSS: /work/LECS/LECS-Build/build/LECS-Store-Puma/content/css/common.css
+	.graph01	{background:url("http://imagedev.puma.co.kr/bg/point_star01.png") no-repeat 0 0; display:inline-block;}
+	.graph01 span span	{background:url("http://imagedev.puma.co.kr/bg/point_star01_on.png") no-repeat 0 0; height:18px;}
+	.graph02	{background:url("http://imagedev.puma.co.kr/bg/point_star01.png") no-repeat 0 0; display:inline-block;}
+	.graph02 span span	{background:url("http://imagedev.puma.co.kr/bg/point_star02_on.png") no-repeat 0 0; height:18px;}
+	.button1	{background:url("http://imagedev.puma.co.kr/bg/button1_right.gif") no-repeat 100% 0; margin-left:20px; margin-right:20px;}
+	.button1 .contents	{background:url("http://imagedev.puma.co.kr/bg/button1_left.gif") no-repeat 0 0; text-align:center;}
+	.button1 .morebtn01	 {background:url("http://imagedev.puma.co.kr/ico/arrow09.gif") no-repeat 100% 50%; padding:0 15px;}
+	.button1 .btnIn	{background:url("http://imagedev.puma.co.kr/bg/button1_left.gif") no-repeat 0 0; text-align:center; height:29px; padding:3px 0;}
+	.button1 .morebtn01	 {background:url("http://imagedev.puma.co.kr/ico/arrow09.gif") no-repeat 100% 50%; padding:0 15px;}
+	.button2	{background:url("http://imagedev.puma.co.kr/bg/button1_right.gif") no-repeat 100% 0; margin-left:10px; margin-right:10px;}
+	.button2 .contents	{background:url("http://imagedev.puma.co.kr/bg/button1_left.gif") no-repeat 0 0; text-align:center;}
+	.button2 .morebtn01	 {background:url("http://imagedev.puma.co.kr/ico/arrow09.gif") no-repeat 100% 50%; padding:0 15px;}
+	.bul1	{background:url("http://imagedev.puma.co.kr/ico/dot01.gif") no-repeat 0 7px; font-size:11px; padding-left:8px; line-height:1.5;}
+	.bul2	{background:url("http://imagedev.puma.co.kr/ico/dot01.gif") no-repeat 0 7px; padding-left:8px; color:#333; font:normal normal 12px/1.5 gulim;}
+	.inputWrap4	{display:inline-block; background:url("http://imagedev.puma.co.kr/bg/bar01.gif") no-repeat 100% 50%; padding-right:50px; margin-right:50px;}
+	.style_select1	 {position:relative; display:inline-block; background:url("http://imagedev.puma.co.kr/bg/best_keyword_left.gif") no-repeat 0 0; vertical-align:top; text-align:left; z-index:100;}
+	.style_select1 p	{background:url("http://imagedev.puma.co.kr/bg/best_keyword_right.gif") no-repeat 100% 0;}
+	.style_select1_on	 {position:relative; display:inline-block; background:url("http://imagedev.puma.co.kr/bg/best_keyword_left_on.gif") no-repeat 0 0; vertical-align:top; text-align:left; z-index:100;}
+	.style_select1_on p	{background:url("http://imagedev.puma.co.kr/bg/best_keyword_right_on.gif") no-repeat 100% 0;}
+	.style_select1_on ul	{display:block; position:absolute; top:19px; left:0; width:100%; background:url("http://imagedev.puma.co.kr/bg/best_keyword_btm_on.png") no-repeat 0 100%; padding:0 0 5px;}
+	.style_select2	 {position:relative; display:inline-block; background:url("http://imagedev.puma.co.kr/bg/best_keyword_left_2.gif") no-repeat 0 0; text-align:left; z-index:100;}
+	.style_select2 p	{background:url("http://imagedev.puma.co.kr/bg/best_keyword_right_2.gif") no-repeat 100% 0;}
+	.style_select2_on	 {position:relative; display:inline-block; background:url("http://imagedev.puma.co.kr/bg/best_keyword_left_2.gif") no-repeat 0 0; text-align:left; z-index:100;}
+	.style_select2_on p	{background:url("http://imagedev.puma.co.kr/bg/best_keyword_right_2.gif") no-repeat 100% 0;}
+	.style_select2_on ul	{display:block; position:absolute; top:19px; left:0; width:122px; background:url("http://imagedev.puma.co.kr/bg/best_keyword_btm_2_on.gif") no-repeat 0 100%; padding:0 3px 4px; overflow:hidden;}
+	.style_select2_on ul li	{display:inline-block; line-height:1; vertical-align:top; padding:0; width:100%; background:url("http://imagedev.puma.co.kr/bg/line1.gif") repeat-x 0 0; margin:-1px 0 0;}
+	.style_select2_on ul li a:hover	{background:url("http://imagedev.puma.co.kr/bg/line1.gif") repeat-x 0 0; color:#fff;}
+	.style_select3	 {position:relative; display:inline-block; background:url("http://imagedev.puma.co.kr/bg/best_keyword_left_2.gif") no-repeat 0 0; text-align:left; z-index:0;}
+	.style_select3 p	{background:url("http://imagedev.puma.co.kr/bg/best_keyword_right_2.gif") no-repeat 100% 0;}
+	.style_select3_on	 {position:relative; display:inline-block; background:url("http://imagedev.puma.co.kr/bg/best_keyword_left_2.gif") no-repeat 0 0; text-align:left; z-index:0;}
+	.style_select3_on p	{background:url("http://imagedev.puma.co.kr/bg/best_keyword_right_2.gif") no-repeat 100% 0;}
+	.style_select3_on ul	{background:url("http://imagedev.puma.co.kr/bg/scrolling_left.gif") no-repeat 0 100%; padding:0 3px;}
+	.style_select3_on ul li	{display:inline-block; line-height:1; vertical-align:top; padding:0; width:100%; background:url("http://imagedev.puma.co.kr/bg/line1.gif") repeat-x 0 0; margin:-1px 0 0;}
+	.style_select3_on div.scrolling	 {background:url("http://imagedev.puma.co.kr/bg/scrolling_right.gif") no-repeat 100% 100%; display:block; position:absolute; top:19px; left:0; padding:0 0 4px; overflow:hidden; overflow-y:scroll; scrollbar-track-color:#2e2e2e; scrollbar-arrow-color:#000; scrollbar-face-color:#828282; scrollbar-highlight-color:#828282; scrollbar-3dlight-color:#828282; scrollbar-shadow-color:#828282;}
+Source CSS: /work/LECS/LECS-Build/build/LECS-Store-Puma/content/css/layout.css
+	body {background:url("http://imagedev.puma.co.kr/bg/main_bg.gif") 0 0;}
+	#wrapper {width:100%; background:url("http://imagedev.puma.co.kr/bg/top_bg.gif") repeat-x 0 0;}
+	#header .logo	 {position:absolute; top:0; left:0; background:url("http://imagedev.puma.co.kr/common/btn_header_logo.png") no-repeat 0 0; width:176px; height:93px; margin:36px 0 0 -31px; z-index:20;}
+	#header .utilmenu ul li a	 {display:inline-block; color:#fff; padding:1px 9px 0 8px; background:url("http://imagedev.puma.co.kr/common/bar_util.gif") no-repeat 100% 2px;}
+	.gnb {width:988px; background:url("http://imagedev.puma.co.kr/common/gnb_wrap_bg.gif") no-repeat 0 0; height:41px; position:relative; display:inline-block;}
+	.gnb .navigation ul {background:url("http://imagedev.puma.co.kr/common/gnb_list_bg2.gif") no-repeat 0 100%; position:absolute; top:41px; left:145px; display:none; overflow:hidden; padding:0 0 20px;}
+	.gnb .navigation li a.title	{font:normal bold 11px/1.2 helvetica; color:#e2e2e2; display:block; padding:13px 24px 15px 12px; background:url("http://imagedev.puma.co.kr/common/bg_depth1_title.gif") no-repeat 100% 0;}
+	.gnb .navigation li a.on	{ background:url("http://imagedev.puma.co.kr/common/bg_depth1_title_on.gif") no-repeat 100% 0;}
+	.gnb .navigation ul li.gnb_list_basic	{background:url("http://imagedev.puma.co.kr/common/gnb_basic_bg.gif") no-repeat 16px 13px; width:100%; display:block;}
+	.gnb .navigation ul li li p	 {background:url("http://imagedev.puma.co.kr/common/jum.gif") no-repeat 26px 100%;}
+	.gnb .navigation ul li.navigation_first ul li p	 {background-image:url("http://imagedev.puma.co.kr/common/jum1.gif") no-repeat 26px 100%;}
+	.search_field	{text-align:right; background:url("http://imagedev.puma.co.kr/common/bg_search_field.gif") repeat-x 0 0; width:100%; height:27px; display:inline-block; position:relative; z-index:19;}
+	.search_field .history a	{float:left; padding:5px 9px 5px 8px; background:url("http://imagedev.puma.co.kr/common/bul_arrow1.gif") no-repeat 100% 50%; margin-right:-3px; font-size:10px; font-family:arial;}
+	.search_field .search_field_input	{width:267px; background:url("http://imagedev.puma.co.kr/common/search_field_input.gif") no-repeat 0 0; text-align:right; display:inline-block; margin:0 5px 0 0; vertical-align:middle;}
+	.search_field .search_field_input_on	{width:267px; background:url("http://imagedev.puma.co.kr/common/search_field_input_on.gif") no-repeat 0 0; text-align:right; display:inline-block; margin:0 5px 0 0; vertical-align:middle;}
+	#footer .footer_puma ul {width:982px; background:url("http://imagedev.puma.co.kr/common/footer_bg.gif") no-repeat 0 0; overflow:hidden; padding:6px 0 0 6px; height:20px;}
+	#footer .footer_puma ul li {background:url("http://imagedev.puma.co.kr/common/footer_bar.gif") no-repeat 100% 1px; float:left; padding:0 14px;}
+	#body_sub	{width:100%; position:relative; z-index:10; background:url("http://imagedev.puma.co.kr/common/bg_sub_left_btm.gif") #fff repeat-y 0 0;}
+	#body_sub #contents	{background:url("http://imagedev.puma.co.kr/common/bg_sub_left_top.gif") no-repeat 0 27px;}
+	#lnb .navigation	{background:url("http://imagedev.puma.co.kr/common/bg_lnb_top_line.gif") no-repeat 0 0; margin:0 0 40px;}
+	#lnb .navigation ul li	{background:url("http://imagedev.puma.co.kr/common/bg_lnb_list_btm.gif") no-repeat 0 100%; padding:0 0 1px; margin:0 0 -1px;}
+	#lnb .navigation ul li ul	 {display:none; background:url("http://imagedev.puma.co.kr/common/bg_lnb_depth2_line.gif") no-repeat 0 0;}
+	#lnb .navigation ul li.on	{background:url("http://imagedev.puma.co.kr/common/bg_lnb_depth2_line.gif") no-repeat 0 100%;}
+	#lnb .navigation ul li.on a	 {background:url("http://imagedev.puma.co.kr/common/bg_lnb_depth1_over.gif") no-repeat 0 0; padding:5px 40px 4px 20px; width:138px; color:#e2e2e2;}
+	#lnb .navigation ul li.on ul li a	{color:#6e6f6e; font:normal normal 11px/1.5 tahoma; padding:5px 28px; width:142px; background:url("http://imagedev.puma.co.kr/common/bg_dot1.gif") no-repeat 20px 12px;}
+	#lnb .navigation ul li.on ul li.on	{background:url("http://imagedev.puma.co.kr/common/bg_lnb_list_btm.gif") no-repeat 0 100%;}
+	#lnb .price ul	{background:url("http://imagedev.puma.co.kr/common/bg_lnb_top_line.gif") no-repeat 0 0; width:100%; display:inline-block; overflow:hidden; padding:0 0 1px;}
+	#lnb .price ul li	{background:url("http://imagedev.puma.co.kr/common/bg_lnb_list_btm.gif") no-repeat 0 100%; padding:0 0 1px; position:relative;}
+	#lnb .price ul li .cost	 {display:block; color:#999; font:normal normal 11px/1.5 tahoma,dotum,"돋움"; padding:5px 28px; width:142px; background:url("http://imagedev.puma.co.kr/common/bg_dot1.gif") no-repeat 20px 12px;}
+	#lnb .button_selector	{margin:0 0 40px; background:url("http://imagedev.puma.co.kr/common/bg_lnb_list_btm.gif") no-repeat 0 100%; padding:0 0 1px; width:100%; overflow:hidden;}
+	#lnb .button_selector ul	{background:url("http://imagedev.puma.co.kr/common/bg_lnb_top_line.gif") no-repeat 0 0; width:100%; display:inline-block; overflow:hidden; padding:10px 0 0 10px;}
+	#lnb .button_selector ul li .size		{display:block; width:37px; height:20px; background:url("http://imagedev.puma.co.kr/btn/selector_1.gif") no-repeat 0 0; margin:0 0 0 14px;}
+	#lnb .button_selector ul li.on .size		{background:url("http://imagedev.puma.co.kr/btn/selector_1_on.gif") no-repeat 0 0;}
+	#lnb .button_selector_2	{margin:0 0 10px; background:url("http://imagedev.puma.co.kr/common/bg_lnb_list_btm.gif") no-repeat 0 100%; padding:0 0 1px; width:100%; overflow:hidden;}
+	#lnb .button_selector_2 ul	{background:url("http://imagedev.puma.co.kr/common/bg_lnb_top_line.gif") no-repeat 0 0; width:100%; display:inline-block; overflow:hidden; padding:10px 0 0 10px;}
+	#lnb .button_selector_2 ul li.on .size span		{background:url("http://imagedev.puma.co.kr/bg/selector_2_on.gif") no-repeat 0 0; display:block;}
+Source CSS: /work/LECS/LECS-Build/build/LECS-Store-Puma/content/css/main.css
+	.visual_section	{width:100%; padding:0 0 3px; background:url("http://imagedev.puma.co.kr/bg/visual_btm_line.gif") repeat-x 0 100%; position:relative; text-align:center;}
+	.roller_inner	{background:url("http://imagedev.puma.co.kr/bg/main_roller_right.png") no-repeat 100% 0; display:inline-block;}
+	.roller_inner .container	 {background:url("http://imagedev.puma.co.kr/bg/main_roller_left.png") no-repeat 0 0; display:inline-block; position:relative; left:-10px; line-height:1;}
+	.roller_inner ul li span	{position:absolute; top:0; left:0; background:url("http://imagedev.puma.co.kr/bg/roller_over.png") no-repeat 0 0; width:70px; height:30px; cursor:pointer; filter:alpha(opacity=0); opacity:0;}
+	.puma_pick	{background:url("http://imagedev.puma.co.kr/bg/main_puma_pick.gif") no-repeat 0 0;}
+	.puma_pick .inner	{background:url("http://imagedev.puma.co.kr/bg/main_puma_pick_btm.gif") no-repeat 0 100%; padding:0 0 20px; width:100%;}
+	.main_arrivals	 {background:url("http://imagedev.puma.co.kr/bg/main_arrivals_btm.gif") no-repeat 50% 100%; padding:0 20px 20px; width:948px; position:relative; overflow:hidden;}
+	.main_arrivals ul	 {width:960px; overflow:hidden; background:url("http://imagedev.puma.co.kr/bg/main_arrivals_list.gif") no-repeat 0 0;}
+	.main_notice ul li	{background:url("http://imagedev.puma.co.kr/bg/dot1.gif") repeat-x 0 100%; text-align:right; width:100%; display:inline-block; padding:7px 0; font-size:11px; margin:0 0 -1px;}
+	.main_notice ul li a	{background:url("http://imagedev.puma.co.kr/common/bg_dot1.gif") no-repeat 0 3px; float:left; width:310px; text-align:left; padding:0 0 0 10px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;}
+	.blog_sns	{float:left; width:180px; height:115px; position:relative; background:url("http://imagedev.puma.co.kr/bg/main_blog_sns.jpg") no-repeat 0 0;}
+	.sub_visual	{width:100%; padding:0 0 3px; background:url("http://imagedev.puma.co.kr/bg/visual_btm_line.gif") repeat-x 0 100%; margin:0 0 20px;}
+	.sub_visual_2	{width:100%; padding:0 0 3px; background:url("http://imagedev.puma.co.kr/bg/visual_btm_line.gif") repeat-x 0 100%;}
+	.product_list_type1 h3	{background:url("http://imagedev.puma.co.kr/bg/h3_product_list_type1.gif") repeat-x 0 0; font-size:11px; margin:0 0 15px;}
+	.product_list_type1 .product_list li .palets li	 {background:url("http://imagedev.puma.co.kr/bg/product_chip1.gif") no-repeat 0 0; width:20px; height:19px; display:inline-block; padding:1px 0 0 1px; text-align:left; float:none; margin:0; position:none;}
+	.product_list_type2 h3	{background:url("http://imagedev.puma.co.kr/bg/h3_product_list_type1.gif") repeat-x 0 0; font-size:11px; margin:0 0 15px;}
+	.product_list_type2 ul li .palets li	 {background:url("http://imagedev.puma.co.kr/bg/product_chip1.gif") no-repeat 0 0; width:19px; height:18px; display:inline-block; padding:1px 0 0 1px; text-align:left; float:none; margin:0; position:none;}
+	.product_list_type3 h3	{background:url("http://imagedev.puma.co.kr/bg/h3_product_list_type1.gif") repeat-x 0 0; font-size:11px; margin:0 0 15px;}
+	.product_list_type3 ul li .palets li	 {background:url("http://imagedev.puma.co.kr/bg/product_chip1.gif") no-repeat 0 0; width:19px; height:18px; display:inline-block; padding:1px 0 0 1px; text-align:left; float:none; margin:0; position:none;}
+	.product_list_type4 h3	{background:url("http://imagedev.puma.co.kr/bg/h3_product_list_type1.gif") repeat-x 0 0; font-size:11px; margin:0 0 15px;}
+	.product_list_type4 .product_list li .palets li	 {background:url("http://imagedev.puma.co.kr/bg/product_chip1.gif") no-repeat 0 0; width:20px; height:19px; display:inline-block; padding:1px 0 0 1px; text-align:left; float:none; margin:0; position:none;}
+	.product_list_type6 h3	{background:url("http://imagedev.puma.co.kr/bg/h3_product_list_type1.gif") repeat-x 0 0; font-size:11px; margin:0 0 15px;}
+	.product_list_type6 .product_list li .palets li	 {background:url("http://imagedev.puma.co.kr/bg/product_chip1.gif") no-repeat 0 0; width:20px; height:19px; display:inline-block; padding:1px 0 0 1px; text-align:left; float:none; margin:0; position:none;}
+	.product_list_type7 h3	{background:url("http://imagedev.puma.co.kr/bg/h3_product_list_type1.gif") repeat-x 0 0; font-size:11px; margin:0 0 15px;}
+	.product_list_type7 .product_list li .palets li	 {background:url("http://imagedev.puma.co.kr/bg/product_chip1.gif") no-repeat 0 0; width:20px; height:19px; display:inline-block; padding:1px 0 0 1px; text-align:left; float:none; margin:0; position:none;}
+	.product_list_type8 h3	{background:url("http://imagedev.puma.co.kr/bg/h3_product_list_type1.gif") repeat-x 0 0; font-size:11px; margin:0 0 15px;}
+	.product_list_type8 ul li .palets li	 {background:url("http://imagedev.puma.co.kr/bg/product_chip1.gif") no-repeat 0 0; width:19px; height:18px; display:inline-block; padding:1px 0 0 1px; text-align:left; float:none; margin:0; position:none;}
+	.product_list_type9 h3	{background:url("http://imagedev.puma.co.kr/bg/h3_product_list_type1.gif") repeat-x 0 0; font-size:11px; margin:0 0 15px;}
+	.product_list_type9 ul li .palets li	 {background:url("http://imagedev.puma.co.kr/bg/product_chip1.gif") no-repeat 0 0; width:19px; height:18px; display:inline-block; padding:1px 0 0 1px; text-align:left; float:none; margin:0; position:none;}
+	.product_list_type5 h3	{background:url("http://imagedev.puma.co.kr/bg/h3_product_list_type1.gif") repeat-x 0 0; font-size:11px; margin:0 0 15px;}
+	.product_list_type5 ul li .palets li	 {background:url("http://imagedev.puma.co.kr/bg/product_chip1.gif") no-repeat 0 0; width:19px; height:18px; display:inline-block; padding:1px 0 0 1px; text-align:left; float:none; margin:0; position:none;}
+	.total_page .total	{font-family:gulim,"굴림"; background:url("http://imagedev.puma.co.kr/bg/slash1.gif") no-repeat 2px 6px; display:inline-block; padding:0 0 0 11px;}
+	.tab_menu_4	{width:948px; position:relative; margin-left:auto; margin-right:auto; background:url("http://imagedev.puma.co.kr/bg/dot2.gif") repeat-x 0 100%;}
+	.tab_menu_5 ul	{width:100%; display:inline-block; background:url("http://imagedev.puma.co.kr/bg/dot4.gif") repeat-x 0 100%;}
+	.tab_menu_5 ul li	 {float:left; margin-right:-1px; background:url("http://imagedev.puma.co.kr/bg/tab_menu_5_right.gif") no-repeat 100% 0;}
+	.tab_menu_5 ul li a	{display:block; padding:10px 50px 8px; font-size:11px; background:url("http://imagedev.puma.co.kr/bg/tab_menu_5_left.gif") no-repeat 0 0;}
+	.tab_menu_5 ul li.on	{border:none; background:url("http://imagedev.puma.co.kr/bg/tab_menu_5_right_on.gif") no-repeat 100% 0;}
+	.tab_menu_5 ul li.on a	{background:url("http://imagedev.puma.co.kr/bg/tab_menu_5_left_on.gif") no-repeat 0 0; color:#333;}
+	.tab_menu_7 ul	{width:100%; display:inline-block; background:url("http://imagedev.puma.co.kr/bg/dot4.gif") repeat-x 0 100%;}
+	.tab_menu_7 ul li	 {float:left; margin-right:-1px; background:url("http://imagedev.puma.co.kr/bg/tab_menu_5_right.gif") no-repeat 100% 0; font:normal normal 12px arial, helvetica, clean, sans-serif;}
+	.tab_menu_7 ul li a	{display:block; padding:8px 50px 7px; font-size:11px; background:url("http://imagedev.puma.co.kr/bg/tab_menu_5_left.gif") no-repeat 0 0;}
+	.tab_menu_7 ul li.on	{border:none; background:url("http://imagedev.puma.co.kr/bg/tab_menu_5_right_on.gif") no-repeat 100% 0;}
+	.choice_coundition	{background:url("http://imagedev.puma.co.kr/bg/product_choice_box.gif") no-repeat; width:720px; padding:7px 10px 5px 20px; margin-left:auto; margin-right:auto; overflow:hidden; text-align:right;}
+	.product_detail	{background:url("http://imagedev.puma.co.kr/bg/product_detail_btm.gif") no-repeat 20px 100%; width:948px; padding:0 20px; display:inline-block; position:relative; z-index:1;}
+	.product_detail .big_img	{background:url("http://imagedev.puma.co.kr/bg/product_detail_top.gif") no-repeat 0 0; float:left; width:454px; margin:0 20px 0 0; padding:0 20px 0 0; position:relative; z-index:10; display:inline-block;}
+	.product_detail .big_img .show_img a.zoom	{background:url("http://imagedev.puma.co.kr/btn/zoom1.gif") no-repeat 100% 0; padding:4px 30px 0 0; height:22px; position:absolute; bottom:0; right:0; font:normal normal 11px/1.5 tahoma,verdana,arial; color:#5e5f5e; z-index:10;}
+	.product_detail .zoom_section	 {position:absolute; top:0; left:0; cursor:move; background:url("http://imagedev.puma.co.kr/bg/bg.png") repeat -480px -500px; margin:-400px 0 0 -400px; padding:300px; display:none;}
+	.product_detail .big_img ul li a	{position:absolute; top:3px; left:0; width:70px; height:70px; display:block; background:url("http://imagedev.puma.co.kr/bg/product_thumnail.gif") no-repeat 0 0;}
+	.product_detail .big_img ul li a:hover	{border:0; top:0; width:70px; height:73px; background:url("http://imagedev.puma.co.kr/bg/product_thumnail_on.gif") no-repeat 0 0;}
+	.product_detail .big_img ul li.on a	{border:0; top:0; width:70px; height:73px; background:url("http://imagedev.puma.co.kr/bg/product_thumnail_on.gif") no-repeat 0 0;}
+	.product_detail .info .title	{display:block; background:url("http://imagedev.puma.co.kr/bg/product_detail_title.gif") no-repeat 0 100%; color:#3a3a3a; font:normal normal 30px/1.1 helvetica,tahoma,arial,verdana; padding:7px 0 19px;}
+	.color_list ul li	 {background:url("http://imagedev.puma.co.kr/bg/product_chip2.gif") no-repeat 0 0; width:20px; height:20px; display:inline-block; padding:1px 0 0 1px; float:left; position:relative; margin:0 4px 0 0;}
+	.color_list ul li a:hover	{display:block; left:-25px; background:url("http://imagedev.puma.co.kr/bg/product_color_thumnail.gif") no-repeat 0 0; width:70px; height:106px;}
+	.color_list ul li.on a	{background:url("http://imagedev.puma.co.kr/bg/product_color_on.gif") no-repeat 0 0;}
+	.color_list ul li.on a:hover	{display:block; left:0; width:21px; height:21px; display:block; background:url("http://imagedev.puma.co.kr/bg/product_color_on.gif") no-repeat 0 0;}
+	.color_list ul li.disabled a	{background:url("http://imagedev.puma.co.kr/btn/product_color_disabled.gif") no-repeat 0 0; left:0;}
+	.size_list ul li a	{background:url("http://imagedev.puma.co.kr/btn/selector_1.gif") no-repeat 0 0; display:block; text-align:center; padding:4px 4px 4px 0; height:16px; font:normal normal 10px/1.1 tahoma; color:#222;}
+	.size_list ul li.on a	{background:url("http://imagedev.puma.co.kr/btn/selector_1_on.gif") no-repeat 0 0;}
+	.size_list ul li a:hover	{background:url("http://imagedev.puma.co.kr/btn/selector_1_over.gif") no-repeat 0 0;}
+	.size_list ul li.on a:hover	{background:url("http://imagedev.puma.co.kr/btn/selector_1_on.gif") no-repeat 0 0;}
+	.size_list ul li.disabled a	 {background:url("http://imagedev.puma.co.kr/btn/selector_1_disabled.gif") no-repeat 0 0;}
+	.product_amount .amount_center	{padding:7px 0; text-align:center; background:url("http://imagedev.puma.co.kr/bg/product_amount.gif") no-repeat 0 0; font-weight:bold;}
+	.save_cart	{background:url("http://imagedev.puma.co.kr/bg/save_cart.jpg") no-repeat 0 0; padding:20px 0 0;}
+	.product_chain	{background:url("http://imagedev.puma.co.kr/bg/product_chain.gif") no-repeat 0 20px; padding:30px 0 10px; margin:0 20px 30px; height:130px; position:relative;}
+	.banner_notice	{background:url("http://imagedev.puma.co.kr/bg/banner_notice_btm.gif") no-repeat 0 100%; width:948px; margin-left:auto; margin-right:auto;}
+	.banner_notice .inner	 {background:url("http://imagedev.puma.co.kr/bg/banner_notice_top.gif") no-repeat 0 0; padding:1px; width:946px;}
+	.banner_present	{background:url("http://imagedev.puma.co.kr/bg/banner_present_btm.gif") no-repeat 0 100%; width:948px; margin-left:auto; margin-right:auto;}
+	.banner_present .inner	 {background:url("http://imagedev.puma.co.kr/bg/banner_present_top.gif") no-repeat 0 0; padding:1px 1px 0; width:946px; position:relative; display:inline-block; text-align:right;}
+	.product_introduce .safe_info .txt li	{background:url("http://imagedev.puma.co.kr/bg/dot3.gif") no-repeat 0 6px; padding:0 10px; line-height:1.5;}
+	.review_list	 {background:url("http://imagedev.puma.co.kr/bg/review_line_top.gif") repeat-x 0 0; padding:2px 0 0; border-bottom:1px solid #ababab; width:100%; display:inline-block;}
+	.review_list li .point	{float:left; padding:0 25px 0 20px; background:url("http://imagedev.puma.co.kr/bg/review_list_point.gif") no-repeat 20px 0; width:82px; height:81px;}
+	.review_list li .recomm .recommand	{background:url("http://imagedev.puma.co.kr/bg/review_recommand.gif") no-repeat 0 0; display:inline-block; padding:1px 5px 0 16px;}
+	.review_list li .recomm .cop	{background:url("http://imagedev.puma.co.kr/bg/review_cop.gif") no-repeat 0 0; display:inline-block; padding:1px 0 0 23px;}
+	.review_list li .detail .user .user_id	{background:url("http://imagedev.puma.co.kr/bg/bar1.gif") no-repeat 100% 0; padding:0 10px 0 0; display:inline-block;}
+	.review_list li .detail .user .date	{background:url("http://imagedev.puma.co.kr/bg/bar1.gif") no-repeat 100% 0; padding:0 10px 0 4px; display:inline-block;}
+	.review_list li .detail .user .view_photo .photo_list	{background:url("http://imagedev.puma.co.kr/bg/review_photo.gif") no-repeat 0 0; position:absolute; top:-5px; left:-171px; width:351px; padding:28px 0 1px 1px; display:none;}
+	.review_list li .grade_appraisal li	{width:auto; display:block; border-bottom:none; margin:0 8px 0 0; padding:0 3px 0 0; position:none; float:left; background:url("http://imagedev.puma.co.kr/bg/bar1.gif") no-repeat 100% 3px;}
+	.product_caution_tab1 ul li ul li	{width:auto; display:block; padding:0 30px 3px 8px; background:url("http://imagedev.puma.co.kr/bg/dot3.gif") no-repeat 0 4px; color:#7d7d7d; font-size:11px; line-height:1.5;}
+	.product_caution_tab1 ul.tab_type2 li	{width:auto; display:block; padding:0 30px 13px 8px; background:url("http://imagedev.puma.co.kr/bg/dot3.gif") no-repeat 0 4px; color:#7d7d7d; font-size:11px; line-height:1.5;}
+	.product_as table tbody td ul li	{background:url("http://imagedev.puma.co.kr/bg/dot3.gif") no-repeat 0 7px; padding:0 30px 2px 8px; line-height:1.5;}
+	.sub_visual_4 ul li .img	{padding:0 0 3px; background:url("http://imagedev.puma.co.kr/bg/visual_btm_line.gif") repeat-x 0 100%;}
+	.plan_list_banner	 ul li	{float:left; width:228px; height:140px; padding:0 12px 12px 0; background:url("http://imagedev.puma.co.kr/bg/plan_list_shadow.jpg") no-repeat 0 0;}
+	.sub_visual_5	.header h2 span	{color:#7a7a7a; display:inline-block; background:url("http://imagedev.puma.co.kr/bg/bar2.gif") no-repeat 0 3px; font-size:11px; font-weight:normal; margin:0 0 0 7px; padding:0 0 0 10px;}
+	.style_shop_rolling .rolling_section ul li.on .overlay	{background:url("http://imagedev.puma.co.kr/bg/styleshop_overlay.gif") no-repeat 0 0; filter:alpha(opacity=100); opacity:1; width:210px; height:130px; position:absolute; top:0; left:10px;}
+	#lnb .price ul li .cost	 {display:block; color:#999; font:normal normal 11px/1.5 arial, helvetica, clean, sans-serif, dotum,"돋움"; padding:5px 28px; width:142px; background:url("http://imagedev.puma.co.kr/common/bg_dot1.gif") no-repeat 20px 12px;}
+Source CSS: /work/LECS/LECS-Build/build/LECS-Store-Puma/content/publishing/css/common.css
+	.graph01	{background:url("http://imagedev.puma.co.kr/bg/point_star01.png") no-repeat 0 0; display:inline-block;}
+	.graph01 span span	{background:url("http://imagedev.puma.co.kr/bg/point_star01_on.png") no-repeat 0 0; height:18px;}
+	.graph02	{background:url("http://imagedev.puma.co.kr/bg/point_star01.png") no-repeat 0 0; display:inline-block;}
+	.graph02 span span	{background:url("http://imagedev.puma.co.kr/bg/point_star02_on.png") no-repeat 0 0; height:18px;}
+	.button1	{background:url("http://imagedev.puma.co.kr/bg/button1_right.gif") no-repeat 100% 0; margin-left:20px; margin-right:20px;}
+	.button1 .contents	{background:url("http://imagedev.puma.co.kr/bg/button1_left.gif") no-repeat 0 0; text-align:center;}
+	.button1 .morebtn01	 {background:url("http://imagedev.puma.co.kr/ico/arrow09.gif") no-repeat 100% 50%; padding:0 15px;}
+	.button1 .btnIn	{background:url("http://imagedev.puma.co.kr/bg/button1_left.gif") no-repeat 0 0; text-align:center; height:29px; padding:3px 0;}
+	.button1 .morebtn01	 {background:url("http://imagedev.puma.co.kr/ico/arrow09.gif") no-repeat 100% 50%; padding:0 15px;}
+	.button2	{background:url("http://imagedev.puma.co.kr/bg/button1_right.gif") no-repeat 100% 0; margin-left:10px; margin-right:10px;}
+	.button2 .contents	{background:url("http://imagedev.puma.co.kr/bg/button1_left.gif") no-repeat 0 0; text-align:center;}
+	.button2 .morebtn01	 {background:url("http://imagedev.puma.co.kr/ico/arrow09.gif") no-repeat 100% 50%; padding:0 15px;}
+	.bul1	{background:url("http://imagedev.puma.co.kr/ico/dot01.gif") no-repeat 0 7px; font-size:11px; padding-left:8px; line-height:1.5;}
+	.bul2	{background:url("http://imagedev.puma.co.kr/ico/dot01.gif") no-repeat 0 7px; padding-left:8px; color:#333; font:normal normal 12px/1.5 gulim;}
+	.inputWrap4	{display:inline-block; background:url("http://imagedev.puma.co.kr/bg/bar01.gif") no-repeat 100% 50%; padding-right:50px; margin-right:50px;}
+	.style_select1	 {position:relative; display:inline-block; background:url("http://imagedev.puma.co.kr/bg/best_keyword_left.gif") no-repeat 0 0; vertical-align:top; text-align:left; z-index:100;}
+	.style_select1 p	{background:url("http://imagedev.puma.co.kr/bg/best_keyword_right.gif") no-repeat 100% 0;}
+	.style_select1_on	 {position:relative; display:inline-block; background:url("http://imagedev.puma.co.kr/bg/best_keyword_left_on.gif") no-repeat 0 0; vertical-align:top; text-align:left; z-index:100;}
+	.style_select1_on p	{background:url("http://imagedev.puma.co.kr/bg/best_keyword_right_on.gif") no-repeat 100% 0;}
+	.style_select1_on ul	{display:block; position:absolute; top:19px; left:0; width:100%; background:url("http://imagedev.puma.co.kr/bg/best_keyword_btm_on.png") no-repeat 0 100%; padding:0 0 5px;}
+	.style_select2	 {position:relative; display:inline-block; background:url("http://imagedev.puma.co.kr/bg/best_keyword_left_2.gif") no-repeat 0 0; text-align:left; z-index:100;}
+	.style_select2 p	{background:url("http://imagedev.puma.co.kr/bg/best_keyword_right_2.gif") no-repeat 100% 0;}
+	.style_select2_on	 {position:relative; display:inline-block; background:url("http://imagedev.puma.co.kr/bg/best_keyword_left_2.gif") no-repeat 0 0; text-align:left; z-index:100;}
+	.style_select2_on p	{background:url("http://imagedev.puma.co.kr/bg/best_keyword_right_2.gif") no-repeat 100% 0;}
+	.style_select2_on ul	{display:block; position:absolute; top:19px; left:0; width:122px; background:url("http://imagedev.puma.co.kr/bg/best_keyword_btm_2_on.gif") no-repeat 0 100%; padding:0 3px 4px; overflow:hidden;}
+	.style_select2_on ul li	{display:inline-block; line-height:1; vertical-align:top; padding:0; width:100%; background:url("http://imagedev.puma.co.kr/bg/line1.gif") repeat-x 0 0; margin:-1px 0 0;}
+	.style_select2_on ul li a:hover	{background:url("http://imagedev.puma.co.kr/bg/line1.gif") repeat-x 0 0; color:#fff;}
+	.style_select3	 {position:relative; display:inline-block; background:url("http://imagedev.puma.co.kr/bg/best_keyword_left_2.gif") no-repeat 0 0; text-align:left; z-index:0;}
+	.style_select3 p	{background:url("http://imagedev.puma.co.kr/bg/best_keyword_right_2.gif") no-repeat 100% 0;}
+	.style_select3_on	 {position:relative; display:inline-block; background:url("http://imagedev.puma.co.kr/bg/best_keyword_left_2.gif") no-repeat 0 0; text-align:left; z-index:0;}
+	.style_select3_on p	{background:url("http://imagedev.puma.co.kr/bg/best_keyword_right_2.gif") no-repeat 100% 0;}
+	.style_select3_on ul	{background:url("http://imagedev.puma.co.kr/bg/scrolling_left.gif") no-repeat 0 100%; padding:0 3px;}
+	.style_select3_on ul li	{display:inline-block; line-height:1; vertical-align:top; padding:0; width:100%; background:url("http://imagedev.puma.co.kr/bg/line1.gif") repeat-x 0 0; margin:-1px 0 0;}
+	.style_select3_on div.scrolling	 {background:url("http://imagedev.puma.co.kr/bg/scrolling_right.gif") no-repeat 100% 100%; display:block; position:absolute; top:19px; left:0; padding:0 0 4px; overflow:hidden; overflow-y:scroll; scrollbar-track-color:#2e2e2e; scrollbar-arrow-color:#000; scrollbar-face-color:#828282; scrollbar-highlight-color:#828282; scrollbar-3dlight-color:#828282; scrollbar-shadow-color:#828282;}
+Source CSS: /work/LECS/LECS-Build/build/LECS-Store-Puma/content/publishing/css/layout.css
+	body {background:url("http://imagedev.puma.co.kr/bg/main_bg.gif") 0 0;}
+	#wrapper {width:100%; background:url("http://imagedev.puma.co.kr/bg/top_bg.gif") repeat-x 0 0;}
+	#header .logo	 {position:absolute; top:0; left:0; background:url("http://imagedev.puma.co.kr/common/btn_header_logo.png") no-repeat 0 0; width:176px; height:93px; margin:36px 0 0 -31px; z-index:20;}
+	#header .utilmenu ul li a	 {display:inline-block; color:#fff; padding:1px 9px 0 8px; background:url("http://imagedev.puma.co.kr/common/bar_util.gif") no-repeat 100% 2px;}
+	.gnb {width:988px; background:url("http://imagedev.puma.co.kr/common/gnb_wrap_bg.gif") no-repeat 0 0; height:41px; position:relative; display:inline-block;}
+	.gnb .navigation ul {background:url("http://imagedev.puma.co.kr/common/gnb_list_bg2.gif") no-repeat 0 100%; position:absolute; top:41px; left:145px; display:none; overflow:hidden; padding:0 0 20px;}
+	.gnb .navigation li a.title	{font:normal bold 11px/1.2 helvetica; color:#e2e2e2; display:block; padding:13px 24px 15px 12px; background:url("http://imagedev.puma.co.kr/common/bg_depth1_title.gif") no-repeat 100% 0;}
+	.gnb .navigation li a.on	{ background:url("http://imagedev.puma.co.kr/common/bg_depth1_title_on.gif") no-repeat 100% 0;}
+	.gnb .navigation ul li.gnb_list_basic	{background:url("http://imagedev.puma.co.kr/common/gnb_basic_bg.gif") no-repeat 16px 13px; width:100%; display:block;}
+	.gnb .navigation ul li li p	 {background:url("http://imagedev.puma.co.kr/common/jum.gif") no-repeat 26px 100%;}
+	.gnb .navigation ul li.navigation_first ul li p	 {background-image:url("http://imagedev.puma.co.kr/common/jum1.gif") no-repeat 26px 100%;}
+	.search_field	{text-align:right; background:url("http://imagedev.puma.co.kr/common/bg_search_field.gif") repeat-x 0 0; width:100%; height:27px; display:inline-block; position:relative; z-index:19;}
+	.search_field .history a	{float:left; padding:5px 9px 5px 8px; background:url("http://imagedev.puma.co.kr/common/bul_arrow1.gif") no-repeat 100% 50%; margin-right:-3px; font-size:10px; font-family:arial;}
+	.search_field .search_field_input	{width:267px; background:url("http://imagedev.puma.co.kr/common/search_field_input.gif") no-repeat 0 0; text-align:right; display:inline-block; margin:0 5px 0 0; vertical-align:middle;}
+	.search_field .search_field_input_on	{width:267px; background:url("http://imagedev.puma.co.kr/common/search_field_input_on.gif") no-repeat 0 0; text-align:right; display:inline-block; margin:0 5px 0 0; vertical-align:middle;}
+	#footer .footer_puma ul {width:982px; background:url("http://imagedev.puma.co.kr/common/footer_bg.gif") no-repeat 0 0; overflow:hidden; padding:6px 0 0 6px; height:20px;}
+	#footer .footer_puma ul li {background:url("http://imagedev.puma.co.kr/common/footer_bar.gif") no-repeat 100% 1px; float:left; padding:0 14px;}
+	#body_sub	{width:100%; position:relative; z-index:10; background:url("http://imagedev.puma.co.kr/common/bg_sub_left_btm.gif") #fff repeat-y 0 0;}
+	#body_sub #contents	{background:url("http://imagedev.puma.co.kr/common/bg_sub_left_top.gif") no-repeat 0 27px;}
+	#lnb .navigation	{background:url("http://imagedev.puma.co.kr/common/bg_lnb_top_line.gif") no-repeat 0 0; margin:0 0 40px;}
+	#lnb .navigation ul li	{background:url("http://imagedev.puma.co.kr/common/bg_lnb_list_btm.gif") no-repeat 0 100%; padding:0 0 1px; margin:0 0 -1px;}
+	#lnb .navigation ul li ul	 {display:none; background:url("http://imagedev.puma.co.kr/common/bg_lnb_depth2_line.gif") no-repeat 0 0;}
+	#lnb .navigation ul li.on	{background:url("http://imagedev.puma.co.kr/common/bg_lnb_depth2_line.gif") no-repeat 0 100%;}
+	#lnb .navigation ul li.on a	 {background:url("http://imagedev.puma.co.kr/common/bg_lnb_depth1_over.gif") no-repeat 0 0; padding:5px 40px 4px 20px; width:138px; color:#e2e2e2;}
+	#lnb .navigation ul li.on ul li a	{color:#6e6f6e; font:normal normal 11px/1.5 tahoma; padding:5px 28px; width:142px; background:url("http://imagedev.puma.co.kr/common/bg_dot1.gif") no-repeat 20px 12px;}
+	#lnb .navigation ul li.on ul li.on	{background:url("http://imagedev.puma.co.kr/common/bg_lnb_list_btm.gif") no-repeat 0 100%;}
+	#lnb .price ul	{background:url("http://imagedev.puma.co.kr/common/bg_lnb_top_line.gif") no-repeat 0 0; width:100%; display:inline-block; overflow:hidden; padding:0 0 1px;}
+	#lnb .price ul li	{background:url("http://imagedev.puma.co.kr/common/bg_lnb_list_btm.gif") no-repeat 0 100%; padding:0 0 1px; position:relative;}
+	#lnb .price ul li .cost	 {display:block; color:#999; font:normal normal 11px/1.5 tahoma,dotum,"돋움"; padding:5px 28px; width:142px; background:url("http://imagedev.puma.co.kr/common/bg_dot1.gif") no-repeat 20px 12px;}
+	#lnb .button_selector	{margin:0 0 40px; background:url("http://imagedev.puma.co.kr/common/bg_lnb_list_btm.gif") no-repeat 0 100%; padding:0 0 1px; width:100%; overflow:hidden;}
+	#lnb .button_selector ul	{background:url("http://imagedev.puma.co.kr/common/bg_lnb_top_line.gif") no-repeat 0 0; width:100%; display:inline-block; overflow:hidden; padding:10px 0 0 10px;}
+	#lnb .button_selector ul li .size		{display:block; width:37px; height:20px; background:url("http://imagedev.puma.co.kr/btn/selector_1.gif") no-repeat 0 0; margin:0 0 0 14px;}
+	#lnb .button_selector ul li.on .size		{background:url("http://imagedev.puma.co.kr/btn/selector_1_on.gif") no-repeat 0 0;}
+	#lnb .button_selector_2	{margin:0 0 10px; background:url("http://imagedev.puma.co.kr/common/bg_lnb_list_btm.gif") no-repeat 0 100%; padding:0 0 1px; width:100%; overflow:hidden;}
+	#lnb .button_selector_2 ul	{background:url("http://imagedev.puma.co.kr/common/bg_lnb_top_line.gif") no-repeat 0 0; width:100%; display:inline-block; overflow:hidden; padding:10px 0 0 10px;}
+	#lnb .button_selector_2 ul li.on .size span		{background:url("http://imagedev.puma.co.kr/bg/selector_2_on.gif") no-repeat 0 0; display:block;}
+Source CSS: /work/LECS/LECS-Build/build/LECS-Store-Puma/content/publishing/css/main.css
+	.visual_section	{width:100%; padding:0 0 3px; background:url("http://imagedev.puma.co.kr/bg/visual_btm_line.gif") repeat-x 0 100%; position:relative; text-align:center;}
+	.roller_inner	{background:url("http://imagedev.puma.co.kr/bg/main_roller_right.png") no-repeat 100% 0; display:inline-block;}
+	.roller_inner .container	 {background:url("http://imagedev.puma.co.kr/bg/main_roller_left.png") no-repeat 0 0; display:inline-block; position:relative; left:-10px; line-height:1;}
+	.roller_inner ul li span	{position:absolute; top:0; left:0; background:url("http://imagedev.puma.co.kr/bg/roller_over.png") no-repeat 0 0; width:70px; height:30px; cursor:pointer; filter:alpha(opacity=0); opacity:0;}
+	.puma_pick	{background:url("http://imagedev.puma.co.kr/bg/main_puma_pick.gif") no-repeat 0 0;}
+	.puma_pick .inner	{background:url("http://imagedev.puma.co.kr/bg/main_puma_pick_btm.gif") no-repeat 0 100%; padding:0 0 20px; width:100%;}
+	.main_arrivals	 {background:url("http://imagedev.puma.co.kr/bg/main_arrivals_btm.gif") no-repeat 50% 100%; padding:0 20px 20px; width:948px; position:relative; overflow:hidden;}
+	.main_arrivals ul	 {width:960px; overflow:hidden; background:url("http://imagedev.puma.co.kr/bg/main_arrivals_list.gif") no-repeat 0 0;}
+	.main_notice ul li	{background:url("http://imagedev.puma.co.kr/bg/dot1.gif") repeat-x 0 100%; text-align:right; width:100%; display:inline-block; padding:7px 0; font-size:11px; margin:0 0 -1px;}
+	.main_notice ul li a	{background:url("http://imagedev.puma.co.kr/common/bg_dot1.gif") no-repeat 0 3px; float:left; width:310px; text-align:left; padding:0 0 0 10px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;}
+	.blog_sns	{float:left; width:180px; height:115px; position:relative; background:url("http://imagedev.puma.co.kr/bg/main_blog_sns.jpg") no-repeat 0 0;}
+	.sub_visual	{width:100%; padding:0 0 3px; background:url("http://imagedev.puma.co.kr/bg/visual_btm_line.gif") repeat-x 0 100%; margin:0 0 20px;}
+	.sub_visual_2	{width:100%; padding:0 0 3px; background:url("http://imagedev.puma.co.kr/bg/visual_btm_line.gif") repeat-x 0 100%;}
+	.product_list_type1 h3	{background:url("http://imagedev.puma.co.kr/bg/h3_product_list_type1.gif") repeat-x 0 0; font-size:11px; margin:0 0 15px;}
+	.product_list_type1 .product_list li .palets li	 {background:url("http://imagedev.puma.co.kr/bg/product_chip1.gif") no-repeat 0 0; width:20px; height:19px; display:inline-block; padding:1px 0 0 1px; text-align:left; float:none; margin:0; position:none;}
+	.product_list_type2 h3	{background:url("http://imagedev.puma.co.kr/bg/h3_product_list_type1.gif") repeat-x 0 0; font-size:11px; margin:0 0 15px;}
+	.product_list_type2 ul li .palets li	 {background:url("http://imagedev.puma.co.kr/bg/product_chip1.gif") no-repeat 0 0; width:19px; height:18px; display:inline-block; padding:1px 0 0 1px; text-align:left; float:none; margin:0; position:none;}
+	.product_list_type3 h3	{background:url("http://imagedev.puma.co.kr/bg/h3_product_list_type1.gif") repeat-x 0 0; font-size:11px; margin:0 0 15px;}
+	.product_list_type3 ul li .palets li	 {background:url("http://imagedev.puma.co.kr/bg/product_chip1.gif") no-repeat 0 0; width:19px; height:18px; display:inline-block; padding:1px 0 0 1px; text-align:left; float:none; margin:0; position:none;}
+	.product_list_type4 h3	{background:url("http://imagedev.puma.co.kr/bg/h3_product_list_type1.gif") repeat-x 0 0; font-size:11px; margin:0 0 15px;}
+	.product_list_type4 .product_list li .palets li	 {background:url("http://imagedev.puma.co.kr/bg/product_chip1.gif") no-repeat 0 0; width:20px; height:19px; display:inline-block; padding:1px 0 0 1px; text-align:left; float:none; margin:0; position:none;}
+	.product_list_type6 h3	{background:url("http://imagedev.puma.co.kr/bg/h3_product_list_type1.gif") repeat-x 0 0; font-size:11px; margin:0 0 15px;}
+	.product_list_type6 .product_list li .palets li	 {background:url("http://imagedev.puma.co.kr/bg/product_chip1.gif") no-repeat 0 0; width:20px; height:19px; display:inline-block; padding:1px 0 0 1px; text-align:left; float:none; margin:0; position:none;}
+	.product_list_type7 h3	{background:url("http://imagedev.puma.co.kr/bg/h3_product_list_type1.gif") repeat-x 0 0; font-size:11px; margin:0 0 15px;}
+	.product_list_type7 .product_list li .palets li	 {background:url("http://imagedev.puma.co.kr/bg/product_chip1.gif") no-repeat 0 0; width:20px; height:19px; display:inline-block; padding:1px 0 0 1px; text-align:left; float:none; margin:0; position:none;}
+	.product_list_type8 h3	{background:url("http://imagedev.puma.co.kr/bg/h3_product_list_type1.gif") repeat-x 0 0; font-size:11px; margin:0 0 15px;}
+	.product_list_type8 ul li .palets li	 {background:url("http://imagedev.puma.co.kr/bg/product_chip1.gif") no-repeat 0 0; width:19px; height:18px; display:inline-block; padding:1px 0 0 1px; text-align:left; float:none; margin:0; position:none;}
+	.product_list_type9 h3	{background:url("http://imagedev.puma.co.kr/bg/h3_product_list_type1.gif") repeat-x 0 0; font-size:11px; margin:0 0 15px;}
+	.product_list_type9 ul li .palets li	 {background:url("http://imagedev.puma.co.kr/bg/product_chip1.gif") no-repeat 0 0; width:19px; height:18px; display:inline-block; padding:1px 0 0 1px; text-align:left; float:none; margin:0; position:none;}
+	.product_list_type5 h3	{background:url("http://imagedev.puma.co.kr/bg/h3_product_list_type1.gif") repeat-x 0 0; font-size:11px; margin:0 0 15px;}
+	.product_list_type5 ul li .palets li	 {background:url("http://imagedev.puma.co.kr/bg/product_chip1.gif") no-repeat 0 0; width:19px; height:18px; display:inline-block; padding:1px 0 0 1px; text-align:left; float:none; margin:0; position:none;}
+	.total_page .total	{font-family:gulim,"굴림"; background:url("http://imagedev.puma.co.kr/bg/slash1.gif") no-repeat 2px 6px; display:inline-block; padding:0 0 0 11px;}
+	.tab_menu_4	{width:948px; position:relative; margin-left:auto; margin-right:auto; background:url("http://imagedev.puma.co.kr/bg/dot2.gif") repeat-x 0 100%;}
+	.tab_menu_5 ul	{width:100%; display:inline-block; background:url("http://imagedev.puma.co.kr/bg/dot4.gif") repeat-x 0 100%;}
+	.tab_menu_5 ul li	 {float:left; margin-right:-1px; background:url("http://imagedev.puma.co.kr/bg/tab_menu_5_right.gif") no-repeat 100% 0;}
+	.tab_menu_5 ul li a	{display:block; padding:10px 50px 8px; font-size:11px; background:url("http://imagedev.puma.co.kr/bg/tab_menu_5_left.gif") no-repeat 0 0;}
+	.tab_menu_5 ul li.on	{border:none; background:url("http://imagedev.puma.co.kr/bg/tab_menu_5_right_on.gif") no-repeat 100% 0;}
+	.tab_menu_5 ul li.on a	{background:url("http://imagedev.puma.co.kr/bg/tab_menu_5_left_on.gif") no-repeat 0 0; color:#333;}
+	.tab_menu_7 ul	{width:100%; display:inline-block; background:url("http://imagedev.puma.co.kr/bg/dot4.gif") repeat-x 0 100%;}
+	.tab_menu_7 ul li	 {float:left; margin-right:-1px; background:url("http://imagedev.puma.co.kr/bg/tab_menu_5_right.gif") no-repeat 100% 0; font:normal normal 12px arial, helvetica, clean, sans-serif;}
+	.tab_menu_7 ul li a	{display:block; padding:8px 50px 7px; font-size:11px; background:url("http://imagedev.puma.co.kr/bg/tab_menu_5_left.gif") no-repeat 0 0;}
+	.tab_menu_7 ul li.on	{border:none; background:url("http://imagedev.puma.co.kr/bg/tab_menu_5_right_on.gif") no-repeat 100% 0;}
+	.choice_coundition	{background:url("http://imagedev.puma.co.kr/bg/product_choice_box.gif") no-repeat; width:720px; padding:7px 10px 5px 20px; margin-left:auto; margin-right:auto; overflow:hidden; text-align:right;}
+	.product_detail	{background:url("http://imagedev.puma.co.kr/bg/product_detail_btm.gif") no-repeat 20px 100%; width:948px; padding:0 20px; display:inline-block; position:relative; z-index:1;}
+	.product_detail .big_img	{background:url("http://imagedev.puma.co.kr/bg/product_detail_top.gif") no-repeat 0 0; float:left; width:454px; margin:0 20px 0 0; padding:0 20px 0 0; position:relative; z-index:10; display:inline-block;}
+	.product_detail .big_img .show_img a.zoom	{background:url("http://imagedev.puma.co.kr/btn/zoom1.gif") no-repeat 100% 0; padding:4px 30px 0 0; height:22px; position:absolute; bottom:0; right:0; font:normal normal 11px/1.5 tahoma,verdana,arial; color:#5e5f5e; z-index:10;}
+	.product_detail .zoom_section	 {position:absolute; top:0; left:0; cursor:move; background:url("http://imagedev.puma.co.kr/bg/bg.png") repeat -480px -500px; margin:-400px 0 0 -400px; padding:300px; display:none;}
+	.product_detail .big_img ul li a	{position:absolute; top:3px; left:0; width:70px; height:70px; display:block; background:url("http://imagedev.puma.co.kr/bg/product_thumnail.gif") no-repeat 0 0;}
+	.product_detail .big_img ul li a:hover	{border:0; top:0; width:70px; height:73px; background:url("http://imagedev.puma.co.kr/bg/product_thumnail_on.gif") no-repeat 0 0;}
+	.product_detail .big_img ul li.on a	{border:0; top:0; width:70px; height:73px; background:url("http://imagedev.puma.co.kr/bg/product_thumnail_on.gif") no-repeat 0 0;}
+	.product_detail .info .title	{display:block; background:url("http://imagedev.puma.co.kr/bg/product_detail_title.gif") no-repeat 0 100%; color:#3a3a3a; font:normal normal 30px/1.1 helvetica,tahoma,arial,verdana; padding:7px 0 19px;}
+	.color_list ul li	 {background:url("http://imagedev.puma.co.kr/bg/product_chip2.gif") no-repeat 0 0; width:20px; height:20px; display:inline-block; padding:1px 0 0 1px; float:left; position:relative; margin:0 4px 0 0;}
+	.color_list ul li a:hover	{display:block; left:-25px; background:url("http://imagedev.puma.co.kr/bg/product_color_thumnail.gif") no-repeat 0 0; width:70px; height:106px;}
+	.color_list ul li.on a	{background:url("http://imagedev.puma.co.kr/bg/product_color_on.gif") no-repeat 0 0;}
+	.color_list ul li.on a:hover	{display:block; left:0; width:21px; height:21px; display:block; background:url("http://imagedev.puma.co.kr/bg/product_color_on.gif") no-repeat 0 0;}
+	.color_list ul li.disabled a	{background:url("http://imagedev.puma.co.kr/btn/product_color_disabled.gif") no-repeat 0 0; left:0;}
+	.size_list ul li a	{background:url("http://imagedev.puma.co.kr/btn/selector_1.gif") no-repeat 0 0; display:block; text-align:center; padding:4px 4px 4px 0; height:16px; font:normal normal 10px/1.1 tahoma; color:#222;}
+	.size_list ul li.on a	{background:url("http://imagedev.puma.co.kr/btn/selector_1_on.gif") no-repeat 0 0;}
+	.size_list ul li a:hover	{background:url("http://imagedev.puma.co.kr/btn/selector_1_over.gif") no-repeat 0 0;}
+	.size_list ul li.on a:hover	{background:url("http://imagedev.puma.co.kr/btn/selector_1_on.gif") no-repeat 0 0;}
+	.size_list ul li.disabled a	 {background:url("http://imagedev.puma.co.kr/btn/selector_1_disabled.gif") no-repeat 0 0;}
+	.product_amount .amount_center	{padding:7px 0; text-align:center; background:url("http://imagedev.puma.co.kr/bg/product_amount.gif") no-repeat 0 0; font-weight:bold;}
+	.save_cart	{background:url("http://imagedev.puma.co.kr/bg/save_cart.jpg") no-repeat 0 0; padding:20px 0 0;}
+	.product_chain	{background:url("http://imagedev.puma.co.kr/bg/product_chain.gif") no-repeat 0 20px; padding:30px 0 10px; margin:0 20px 30px; height:130px; position:relative;}
+	.banner_notice	{background:url("http://imagedev.puma.co.kr/bg/banner_notice_btm.gif") no-repeat 0 100%; width:948px; margin-left:auto; margin-right:auto;}
+	.banner_notice .inner	 {background:url("http://imagedev.puma.co.kr/bg/banner_notice_top.gif") no-repeat 0 0; padding:1px; width:946px;}
+	.banner_present	{background:url("http://imagedev.puma.co.kr/bg/banner_present_btm.gif") no-repeat 0 100%; width:948px; margin-left:auto; margin-right:auto;}
+	.banner_present .inner	 {background:url("http://imagedev.puma.co.kr/bg/banner_present_top.gif") no-repeat 0 0; padding:1px 1px 0; width:946px; position:relative; display:inline-block; text-align:right;}
+	.product_introduce .safe_info .txt li	{background:url("http://imagedev.puma.co.kr/bg/dot3.gif") no-repeat 0 6px; padding:0 10px; line-height:1.5;}
+	.review_list	 {background:url("http://imagedev.puma.co.kr/bg/review_line_top.gif") repeat-x 0 0; padding:2px 0 0; border-bottom:1px solid #ababab; width:100%; display:inline-block;}
+	.review_list li .point	{float:left; padding:0 25px 0 20px; background:url("http://imagedev.puma.co.kr/bg/review_list_point.gif") no-repeat 20px 0; width:82px; height:81px;}
+	.review_list li .recomm .recommand	{background:url("http://imagedev.puma.co.kr/bg/review_recommand.gif") no-repeat 0 0; display:inline-block; padding:1px 5px 0 16px;}
+	.review_list li .recomm .cop	{background:url("http://imagedev.puma.co.kr/bg/review_cop.gif") no-repeat 0 0; display:inline-block; padding:1px 0 0 23px;}
+	.review_list li .detail .user .user_id	{background:url("http://imagedev.puma.co.kr/bg/bar1.gif") no-repeat 100% 0; padding:0 10px 0 0; display:inline-block;}
+	.review_list li .detail .user .date	{background:url("http://imagedev.puma.co.kr/bg/bar1.gif") no-repeat 100% 0; padding:0 10px 0 4px; display:inline-block;}
+	.review_list li .detail .user .view_photo .photo_list	{background:url("http://imagedev.puma.co.kr/bg/review_photo.gif") no-repeat 0 0; position:absolute; top:-5px; left:-171px; width:351px; padding:28px 0 1px 1px; display:none;}
+	.review_list li .grade_appraisal li	{width:auto; display:block; border-bottom:none; margin:0 8px 0 0; padding:0 3px 0 0; position:none; float:left; background:url("http://imagedev.puma.co.kr/bg/bar1.gif") no-repeat 100% 3px;}
+	.product_caution_tab1 ul li ul li	{width:auto; display:block; padding:0 30px 3px 8px; background:url("http://imagedev.puma.co.kr/bg/dot3.gif") no-repeat 0 4px; color:#7d7d7d; font-size:11px; line-height:1.5;}
+	.product_caution_tab1 ul.tab_type2 li	{width:auto; display:block; padding:0 30px 13px 8px; background:url("http://imagedev.puma.co.kr/bg/dot3.gif") no-repeat 0 4px; color:#7d7d7d; font-size:11px; line-height:1.5;}
+	.product_as table tbody td ul li	{background:url("http://imagedev.puma.co.kr/bg/dot3.gif") no-repeat 0 7px; padding:0 30px 2px 8px; line-height:1.5;}
+	.sub_visual_4 ul li .img	{padding:0 0 3px; background:url("http://imagedev.puma.co.kr/bg/visual_btm_line.gif") repeat-x 0 100%;}
+	.plan_list_banner	 ul li	{float:left; width:228px; height:140px; padding:0 12px 12px 0; background:url("http://imagedev.puma.co.kr/bg/plan_list_shadow.jpg") no-repeat 0 0;}
+	.sub_visual_5	.header h2 span	{color:#7a7a7a; display:inline-block; background:url("http://imagedev.puma.co.kr/bg/bar2.gif") no-repeat 0 3px; font-size:11px; font-weight:normal; margin:0 0 0 7px; padding:0 0 0 10px;}
+	.style_shop_rolling .rolling_section ul li.on .overlay	{background:url("http://imagedev.puma.co.kr/bg/styleshop_overlay.gif") no-repeat 0 0; filter:alpha(opacity=100); opacity:1; width:210px; height:130px; position:absolute; top:0; left:10px;}
+	#lnb .price ul li .cost	 {display:block; color:#999; font:normal normal 11px/1.5 arial, helvetica, clean, sans-serif, dotum,"돋움"; padding:5px 28px; width:142px; background:url("http://imagedev.puma.co.kr/common/bg_dot1.gif") no-repeat 20px 12px;}

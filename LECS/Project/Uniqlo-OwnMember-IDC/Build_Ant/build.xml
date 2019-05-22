@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lecs20.deploy" basedir="."><!-- Global Param: ${target} -->
+	
+	<property file="pwd.properties" />
+	
+	<tstamp>
+		<format property="DATETIMESTAMP" pattern="yyyyMMddHHmm" />
+	</tstamp>
+
+	<taskdef resource="net/sf/antcontrib/antlib.xml" />
+	
+	<target name="CLEAN_DEV">
+		<delete dir="/Source/lecs2/jobs/2.UPDATE_DEV/workspace/src/LECS-Batch"/>
+		<delete dir="/Source/lecs2/jobs/2.UPDATE_DEV/workspace/src/app"/>				
+	</target>
+	
+	<target name="CLEAN.PRJ">
+		<delete dir="/Source/lecs2/jobs/UQPRJ/workspace/src/app"/>
+	</target>
+	
+	<target name="CLEAN.PRJ.BATCH">
+		<delete dir="/Source/lecs2/jobs/Batch.UQPRJ/workspace/src/LECS-Batch"/>
+	</target>
+	
+	<target name="DR.SSH.RESTART.SERVERS">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="sh ~/scripts/restart.sh" trust="true" verbose="false" timeout="100000" failonerror="false"/>
+	</target>
+	
+	<target name="DR.SSH.START.SERVERS">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="cd /usr2/jeus6/bin;./jboot;sleep 5" trust="true" verbose="false" timeout="20000" failonerror="false"/>
+	</target>
+	
+	<target name="PROJ.SSH.START.SERVERS">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="/usr2/jeus6/bin/jboot;sleep 5" trust="true" verbose="false" timeout="20000" failonerror="false"/>
+	</target>
+	
+	<target name="SSH.RESTART.CONS">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin downcon" trust="true"/>
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin startcon" trust="true"/>
+	</target>
+	
+	<target name="container_restart">
+		<sshexec host="${server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin downcon ${con_name}" trust="true"/>
+		<sshexec host="${server.ip}" username="jeus" password="${jeuspwd}" command="jeusadmin `hostname` -Uadministrator -Pjeusadmin startcon ${con_name}" trust="true"/>
+	</target>
+	
+	<target name="SSH.DOWNCON">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="sh ~/scripts/downcon.sh" trust="true" verbose="false"/>
+	</target>
+	
+	<target name="PROJ.SSH.DOWNCON">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}" command="sh /usr1/home/jeus/scripts/downcon.sh" trust="true" verbose="false"/>
+	</target>
+	
+	<target name="DISK_CLEAN">
+		<sshexec host="${fo.server.ip}" username="jeus" password="${jeuspwd}"
+		command="sh ~/scripts/diskclean.sh" trust="true"/>
+	</target>
+
+	<target name="TMP.DELETE.SVN3">
+		<delete dir="/usr3/lecs20/mergeTool/merge"/>
+	</target>
+
+	<!-- AWS -->	
+	<target name="DEV.AWS.TEMP.DIR.DELETE">
+		<delete dir="/Source/lecs2/jobs/3.NIKE.AWS.DEV/workspace/AWSWAR"/>
+		<mkdir dir="/Source/lecs2/jobs/3.NIKE.AWS.DEV/workspace/AWSWAR"/>
+		<delete dir="/Source/lecs2/jobs/3.NIKE.AWS.DEV/workspace/AWSWEB"/>
+		<mkdir dir="/Source/lecs2/jobs/3.NIKE.AWS.DEV/workspace/AWSWEB"/>
+		<delete dir="/Source/lecs2/jobs/3.NIKE.AWS.DEV/workspace/AWSIMG"/>
+		<mkdir dir="/Source/lecs2/jobs/3.NIKE.AWS.DEV/workspace/AWSIMG"/>
+	</target>
+
+	<target name="PRJ.AWS.TEMP.DIR.DELETE">
+		<delete dir="/Source/lecs2/jobs/NikeLaunchCalendar.AWS/workspace/AWSWAR"/>
+		<mkdir dir="/Source/lecs2/jobs/NikeLaunchCalendar.AWS/workspace/AWSWAR"/>
+		<delete dir="/Source/lecs2/jobs/NikeLaunchCalendar.AWS/workspace/AWSWEB"/>
+		<mkdir dir="/Source/lecs2/jobs/NikeLaunchCalendar.AWS/workspace/AWSWEB"/>
+		<delete dir="/Source/lecs2/jobs/NikeLaunchCalendar.AWS/workspace/AWSIMG"/>
+		<mkdir dir="/Source/lecs2/jobs/NikeLaunchCalendar.AWS/workspace/AWSIMG"/>
+	</target>
+
+	<target name="PRJ.UQAWS.TEMP.DIR.DELETE">
+		<delete dir="/Source/lecs2/jobs/Uniqlo.AWS/workspace/AWSWAR"/>
+		<mkdir dir="/Source/lecs2/jobs/Uniqlo.AWS/workspace/AWSWAR"/>
+		<delete dir="/Source/lecs2/jobs/Uniqlo.AWS/workspace/AWSWEB"/>
+		<mkdir dir="/Source/lecs2/jobs/Uniqlo.AWS/workspace/AWSWEB"/>
+		<delete dir="/Source/lecs2/jobs/Uniqlo.AWS/workspace/AWSIMG"/>
+		<mkdir dir="/Source/lecs2/jobs/Uniqlo.AWS/workspace/AWSIMG"/>
+	</target>
+
+	<target name="PRJ.NEW.UQAWS.TEMP.DIR.DELETE">
+		<delete dir="/Source/lecs2/jobs/New.Uniqlo.AWS/workspace/AWSWAR"/>
+		<mkdir dir="/Source/lecs2/jobs/New.Uniqlo.AWS/workspace/AWSWAR"/>
+		<delete dir="/Source/lecs2/jobs/New.Uniqlo.AWS/workspace/AWSWEB"/>
+		<mkdir dir="/Source/lecs2/jobs/New.Uniqlo.AWS/workspace/AWSWEB"/>
+		<delete dir="/Source/lecs2/jobs/New.Uniqlo.AWS/workspace/AWSIMG"/>
+		<mkdir dir="/Source/lecs2/jobs/New.Uniqlo.AWS/workspace/AWSIMG"/>
+	</target>
+
+	<target name="PRJ.UQAPIAWS.TEMP.DIR.DELETE">
+		<delete dir="/Source/lecs2/jobs/UniqloAPI.AWS/workspace/AWSWAR"/>
+		<mkdir dir="/Source/lecs2/jobs/UniqloAPI.AWS/workspace/AWSWAR"/>
+		<delete dir="/Source/lecs2/jobs/UniqloAPI.AWS/workspace/AWSWEB"/>
+		<mkdir dir="/Source/lecs2/jobs/UniqloAPI.AWS/workspace/AWSWEB"/>
+	</target>
+
+	<target name="DEV.NIKE.AWS.WAR.FILECOPY">	
+		<copy todir="/Source/lecs2/jobs/3.NIKE.AWS.DEV/workspace/AWSWAR">
+			<fileset dir="/Source/lecs2/jobs/3.NIKE.AWS.DEV/workspace/build/build/LECS-Store-Nike">
+				<include name="LECS-Store-Nike-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="DEV.NIKE.AWS.IMG.FILECOPY">	
+		<copy todir="/Source/lecs2/jobs/3.NIKE.AWS.DEV/workspace/AWSIMG">
+			<fileset dir="/Source/lecs2/jobs/3.NIKE.AWS.DEV/workspace/build/build/LECS-Store-Nike">
+				<include name="LECS-Store-Nike-IMAGE*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="PRJ.NIKE.AWS.WAR.FILECOPY">	
+		<copy tofile="/Source/lecs2/jobs/NikeLaunchCalendar.AWS/workspace/AWSWAR/ROOT.war">
+			<fileset dir="/Source/lecs2/jobs/NikeLaunchCalendar.AWS/workspace/build/build/LECS-Store-Nike">
+				<include name="LECS-Store-Nike-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="PRJ.UQ.AWS.WAR.FILECOPY">	
+		<copy tofile="/Source/lecs2/jobs/Uniqlo.AWS/workspace/AWSWAR/ROOT.war">
+			<fileset dir="/Source/lecs2/jobs/Uniqlo.AWS/workspace/build/build/LECS-Store-Uniqlo">
+				<include name="LECS-Store-Uniqlo-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="PRJ.NEW.UQ.AWS.WAR.FILECOPY">	
+		<copy tofile="/Source/lecs2/jobs/New.Uniqlo.AWS/workspace/AWSWAR/ROOT.war">
+			<fileset dir="/Source/lecs2/jobs/New.Uniqlo.AWS/workspace/build/build/LECS-Store-Uniqlo">
+				<include name="LECS-Store-Uniqlo-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="PRJ.UQAPI.AWS.WAR.FILECOPY">	
+		<copy tofile="/Source/lecs2/jobs/UniqloAPI.AWS/workspace/AWSWAR/ROOT.war">
+			<fileset dir="/Source/lecs2/jobs/UniqloAPI.AWS/workspace/build/build/LECS-Store-Uniqlo-FR-API">
+				<include name="LECS-Store-Uniqlo-FR-API-WEBAPP*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="DEV.NIKE.AWS.WEB.FILECOPY">	
+		<copy todir="/Source/lecs2/jobs/3.NIKE.AWS.DEV/workspace/AWSWEB">
+			<fileset dir="/Source/lecs2/jobs/3.NIKE.AWS.DEV/workspace/build/build/LECS-Store-Nike">
+				<include name="LECS-Store-Nike-CONTENT*.tar"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="PRJ.NIKE.AWS.WEB.FILECOPY">	
+		<copy tofile="/Source/lecs2/jobs/NikeLaunchCalendar.AWS/workspace/AWSWEB/contents.tar">
+			<fileset dir="/Source/lecs2/jobs/NikeLaunchCalendar.AWS/workspace/build/build/LECS-Store-Nike">
+				<include name="LECS-Store-Nike-CONTENT*.tar"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="PRJ.UQ.AWS.WEB.FILECOPY">
+		<copy tofile="/Source/lecs2/jobs/Uniqlo.AWS/workspace/AWSWEB/contents.tar">
+			<fileset dir="/Source/lecs2/jobs/Uniqlo.AWS/workspace/build/build/LECS-Store-Uniqlo">
+				<include name="LECS-Store-Uniqlo-CONTENT*.tar"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="PRJ.NEW.UQ.AWS.WEB.FILECOPY">
+		<copy tofile="/Source/lecs2/jobs/New.Uniqlo.AWS/workspace/AWSWEB/contents.tar">
+			<fileset dir="/Source/lecs2/jobs/New.Uniqlo.AWS/workspace/build/build/LECS-Store-Uniqlo">
+				<include name="LECS-Store-Uniqlo-CONTENT*.tar"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="PRJ.UQAPI.AWS.WEB.FILECOPY">
+		<copy tofile="/Source/lecs2/jobs/UniqloAPI.AWS/workspace/AWSWEB/contents.tar">
+			<fileset dir="/Source/lecs2/jobs/UniqloAPI.AWS/workspace/build/build/LECS-Store-Uniqlo-FR-API">
+				<include name="LECS-Store-Uniqlo-FR-API-CONTENT*.tar"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="PRJ.NIKE.AWS.IMG.FILECOPY">	
+		<copy tofile="/Source/lecs2/jobs/NikeLaunchCalendar.AWS/workspace/AWSIMG/nike_image_tst.zip">
+			<fileset dir="/Source/lecs2/jobs/NikeLaunchCalendar.AWS/workspace/build/build/LECS-Store-Nike">
+				<include name="LECS-Store-Nike-IMAGE*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="PRJ.UQ.AWS.IMG.FILECOPY">	
+		<copy tofile="/Source/lecs2/jobs/Uniqlo.AWS/workspace/AWSIMG/uniqlo_image_tst.zip">
+			<fileset dir="/Source/lecs2/jobs/Uniqlo.AWS/workspace/build/build/LECS-Store-Uniqlo">
+				<include name="LECS-Store-Uniqlo-IMAGE*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="PRJ.NEW.UQ.AWS.IMG.FILECOPY">	
+		<copy tofile="/Source/lecs2/jobs/New.Uniqlo.AWS/workspace/AWSIMG/new_uniqlo_image_tst.zip">
+			<fileset dir="/Source/lecs2/jobs/New.Uniqlo.AWS/workspace/build/build/LECS-Store-Uniqlo">
+				<include name="LECS-Store-Uniqlo-IMAGE*.zip"/>
+			</fileset>
+		</copy>
+	</target>
+
+
+<!-- aws common.xml copy -->	
+	
+    <target name="DEV.AWS.COMMON.COPY">
+    	<copy file="/Source/lecs2/jobs/2.UPDATE_DEV/workspace/src/app/classes/config/spring/bean/common.xml.nikeaws" tofile="/Source/lecs2/jobs/3.NIKE.AWS.DEV/workspace/build/build/LECS-Store-Nike/app/WEB-INF/classes/config/spring/bean/common.xml" overwrite="true"/>
+    </target>
+
+    <target name="PRJ.AWS.COMMON.COPY">
+    	<copy file="/Source/lecs2/jobs/NikeLaunchCalendar.AWS/workspace/src/app/classes/config/spring/bean/common.xml.aws" tofile="/Source/lecs2/jobs/NikeLaunchCalendar.AWS/workspace/build/build/LECS-Store-Nike/app/WEB-INF/classes/config/spring/bean/common.xml" overwrite="true"/>
+    </target>
+
+    <target name="PRJ.UQ.AWS.COMMON.COPY">
+    	<copy file="/Source/lecs2/jobs/Uniqlo.AWS/workspace/src/app/classes/config/spring/bean/common.xml.aws" tofile="/Source/lecs2/jobs/Uniqlo.AWS/workspace/build/build/LECS-Store-Uniqlo/app/WEB-INF/classes/config/spring/bean/common.xml" overwrite="true"/>
+    </target>
+
+    <target name="PRJ.NEW.UQ.AWS.COMMON.COPY">
+    	<copy file="/Source/lecs2/jobs/New.Uniqlo.AWS/workspace/src/app/classes/config/spring/bean/common.xml.aws" tofile="/Source/lecs2/jobs/New.Uniqlo.AWS/workspace/build/build/LECS-Store-Uniqlo/app/WEB-INF/classes/config/spring/bean/common.xml" overwrite="true"/>
+    </target>
+
+    <target name="PRJ.UQAPI.AWS.COMMON.COPY">
+    	<copy file="/Source/lecs2/jobs/UniqloAPI.AWS/workspace/src/app/classes/config/spring/bean/common.xml.aws" tofile="/Source/lecs2/jobs/UniqloAPI.AWS/workspace/build/build/LECS-Store-Uniqlo/app/WEB-INF/classes/config/spring/bean/common.xml" overwrite="true"/>
+    </target>
+
+	<!-- DEV -->
+	
+	<target name="DEV.UPLOAD.NIKE.IMG">
+		<scp file="/Source/lecs2/jobs/3.NIKE.AWS.DEV/workspace/AWSIMG/nike_image_dev.zip" remoteTofile="jeus:${jeuspwd}"/>
+	</target>
+	
+	<target name="DEV.DEPLOY.NIKE.IMG">
+		<sshexec host="10.149.187.70" username="jeus" password="${jeuspwd}" command="unzip -o -q /lotte/lecsDocs/temp/nike_image_dev.zip -d /lotte/lecsDocs/images/NKS1" trust="true"/>
+	</target>	
+	
+    <target name="DEV.AWS.UPLOAD.WAR">
+   		<sshexec host="10.149.140.5" username="jeus" password="${jeuspwd}" command="rm ~/deploy/nike/dev/was/ROOT.war"  trust="true"/>
+		<scp file="/Source/lecs2/jobs/3.NIKE.AWS.DEV/workspace/AWSWAR/ROOT.war" remoteTofile="jeus:${jeuspwd}"/>
+    </target>
+
+    <target name="DEV.AWS.UPLOAD.WEB">
+   		<sshexec host="10.149.140.5" username="jeus" password="${jeuspwd}" command="rm ~/deploy/nike/dev/web/contents.tar"  trust="true"/>
+		<scp file="/Source/lecs2/jobs/3.NIKE.AWS.DEV/workspace/AWSWEB/contents.tar" remoteTofile="jeus:${jeuspwd}"/>
+    </target>
+	
+	<!-- PRJ -->
+	
+    <target name="PRJ.AWS.UPLOAD.WAR">
+   		<sshexec host="10.149.140.5" username="jeus" password="${jeuspwd}" command="rm -fr ~/deploy/nike/prj2/was/ROOT.war"  trust="true"/>
+		<scp file="/Source/lecs2/jobs/NikeLaunchCalendar.AWS/workspace/AWSWAR/ROOT.war" remoteTofile="jeus:${jeuspwd}"/>
+    </target>
+	
+    <target name="PRJ.UQ.AWS.UPLOAD.WAR">
+   		<sshexec host="10.149.140.5" username="jeus" password="${jeuspwd}" command="rm -fr ~/deploy/uniqlo/prj/was/ROOT.war"  trust="true"/>
+		<scp file="/Source/lecs2/jobs/Uniqlo.AWS/workspace/AWSWAR/ROOT.war" remoteTofile="jeus:${jeuspwd}"/>
+    </target>
+	
+    <target name="PRJ.NEW.UQ.AWS.UPLOAD.WAR">
+   		<sshexec host="10.149.140.5" username="jeus" password="${jeuspwd}" command="rm -fr ~/deploy/uniqlo/prj2/was/ROOT.war"  trust="true"/>
+		<scp file="/Source/lecs2/jobs/New.Uniqlo.AWS/workspace/AWSWAR/ROOT.war" remoteTofile="jeus:${jeuspwd}"/>
+    </target>
+	
+    <target name="PRJ.UQAPI.AWS.UPLOAD.WAR">
+   		<sshexec host="10.149.140.5" username="jeus" password="${jeuspwd}" command="rm -fr ~/deploy/uqoa/prj/was/ROOT.war"  trust="true"/>
+		<scp file="/Source/lecs2/jobs/UniqloAPI.AWS/workspace/AWSWAR/ROOT.war" remoteTofile="jeus:${jeuspwd}"/>
+    </target>
+
+    <target name="PRJ.AWS.UPLOAD.WEB">
+   		<sshexec host="10.149.140.5" username="jeus" password="${jeuspwd}" command="rm -fr ~/deploy/nike/prj2/web/contents.tar"  trust="true"/>
+		<scp file="/Source/lecs2/jobs/NikeLaunchCalendar.AWS/workspace/AWSWEB/contents.tar" remoteTofile="jeus:${jeuspwd}"/>
+    </target>
+
+    <target name="PRJ.UQ.AWS.UPLOAD.WEB">
+   		<sshexec host="10.149.140.5" username="jeus" password="${jeuspwd}" command="rm -fr ~/deploy/uniqlo/prj/web/contents.tar"  trust="true"/>
+		<scp file="/Source/lecs2/jobs/Uniqlo.AWS/workspace/AWSWEB/contents.tar" remoteTofile="jeus:${jeuspwd}"/>
+    </target>
+
+    <target name="PRJ.NEW.UQ.AWS.UPLOAD.WEB">
+   		<sshexec host="10.149.140.5" username="jeus" password="${jeuspwd}" command="rm -fr ~/deploy/uniqlo/prj2/web/contents.tar"  trust="true"/>
+		<scp file="/Source/lecs2/jobs/New.Uniqlo.AWS/workspace/AWSWEB/contents.tar" remoteTofile="jeus:${jeuspwd}"/>
+    </target>
+
+    <target name="PRJ.UQAPI.AWS.UPLOAD.WEB">
+   		<sshexec host="10.149.140.5" username="jeus" password="${jeuspwd}" command="rm -fr ~/deploy/uqoa/prj/web/contents.tar"  trust="true"/>
+		<scp file="/Source/lecs2/jobs/UniqloAPI.AWS/workspace/AWSWEB/contents.tar" remoteTofile="jeus:${jeuspwd}"/>
+    </target>
+	
+	<target name="PRJ.UPLOAD.NIKE.IMG">
+		<scp file="/Source/lecs2/jobs/NikeLaunchCalendar.AWS/workspace/AWSIMG/nike_image_tst.zip" remoteTofile="jeus:${jeuspwd}"/>
+	</target>
+	
+	<target name="PRJ.UPLOAD.UQ.IMG">
+   		<sshexec host="10.149.199.49" username="jeus" password="${jeuspwd}" command="rm -fr ~/lotte/lecsDocs/temp/uniqlo_image_tst.zip"  trust="true"/>
+		<scp file="/Source/lecs2/jobs/Uniqlo.AWS/workspace/AWSIMG/uniqlo_image_tst.zip" remoteTofile="jeus:${jeuspwd}"/>
+	</target>
+	
+	<target name="PRJ.UPLOAD.NEW.UQ.IMG">
+   		<sshexec host="10.149.199.49" username="jeus" password="${jeuspwd}" command="rm -fr ~/lotte/lecsDocs/temp/new_uniqlo_image_tst.zip"  trust="true"/>
+		<scp file="/Source/lecs2/jobs/New.Uniqlo.AWS/workspace/AWSIMG/new_uniqlo_image_tst.zip" remoteTofile="jeus:${jeuspwd}"/>
+	</target>
+	
+	<target name="PRJ.DEPLOY.NIKE.IMG">
+		<sshexec host="10.149.199.51" username="jeus" password="${jeuspwd}" command="unzip -o -q /lotte/lecsDocs/temp/nike_image_tst.zip -d /lotte/lecsDocs/images/NKS1" trust="true"/>
+	</target>
+	
+	<target name="PRJ.DEPLOY.UQ.IMG">
+		<sshexec host="10.149.199.49" username="jeus" password="${jeuspwd}" command="unzip -o -q /lotte/lecsDocs/temp/uniqlo_image_tst.zip -d /lotte/lecsDocs/images/UQS1" trust="true"/>
+	</target>
+	
+	<target name="PRJ.DEPLOY.NEW.UQ.IMG">
+		<sshexec host="10.149.199.49" username="jeus" password="${jeuspwd}" command="unzip -o -q /lotte/lecsDocs/temp/new_uniqlo_image_tst.zip -d /lotte/lecsDocs/images/NQS1" trust="true"/>
+	</target>
+	
+    <target name="PRJ.AWS.NIKE.ALL">
+    	<antcall target="PRJ.NIKE.AWS.WAR.FILECOPY"/>
+    	<antcall target="PRJ.NIKE.AWS.WEB.FILECOPY"/>
+    	<antcall target="PRJ.NIKE.AWS.IMG.FILECOPY"/>
+    	<antcall target="PRJ.AWS.UPLOAD.WAR"/>
+    	<antcall target="PRJ.AWS.UPLOAD.WEB"/>
+    	<antcall target="PRJ.UPLOAD.NIKE.IMG"/>
+    	<antcall target="PRJ.DEPLOY.NIKE.IMG"/>
+   	</target>
+	
+	
+	
+	
+</project>
