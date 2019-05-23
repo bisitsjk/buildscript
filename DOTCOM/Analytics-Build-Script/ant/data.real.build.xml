@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="deploy.prd" basedir=".">
+<!-- 샘소 문제로 설정 변경  Global Param: ${BRANCH}, ${PHASE} -->
+<!--	<import file="default.build.prd.xml"/> Global Param: ${BRANCH}, ${PHASE} -->
+
+	<property file="pwd.properties" />
+	<property name="source.dir" value="E:\jenkins-analytics\jobs\REAL.CHECKOUT\workspace\${BRANCH}" />
+	<property name="cd.s3.dir" value="E:\jenkins-analytics\jobs\REAL.CHECKOUT\workspace\trunk\Analytics-Build-Script\cd\${target}" />
+	<property name="compile.dir" value="E:\jenkins-analytics\jenkinsBuild\compile\${BRANCH}" />
+	<property name="merge.dir" value="E:\jenkins-analytics\jenkinsBuild\merge\${BRANCH}\${PHASE}" />
+	<property name="work.dir" value="E:\jenkins-analytics\jobs\CodeDeploy.Analytics.DATA\workspace" />
+	
+
+	<patternset id="pattern.compile.copy.resource">
+		<exclude name="**/*.java"/>
+	</patternset>
+
+	<patternset id="pattern.unnecessary.resource">
+		<include name="**/*.bak"/>
+		<include name="**/*.java"/>
+		<include name="**/*.tst"/>
+		<include name="**/*.prd"/>
+	</patternset>
+
+	<path id="classpath.all.libs">
+		<fileset dir="${source.dir}/AnalyticsData/WebContent/WEB-INF/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${source.dir}/Analytics-Build-Script/lib/tomcatLib">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+
+	<!-- Ant Contrib -->
+	<taskdef resource="net/sf/antcontrib/antlib.xml" />
+	
+
+	<!-- ############### Compile ############### -->
+
+	<target name="_COMPILE.AnalyticsData">
+		<delete dir="${compile.dir}/AnalyticsData"/>
+		<mkdir dir="${compile.dir}/AnalyticsData"/>
+		
+		<javac debug="true" debuglevel="source,lines,vars" destdir="${compile.dir}/AnalyticsData" source="1.7" target="1.7" encoding="UTF-8">
+			<src path="${source.dir}/AnalyticsData/src"/>
+			<classpath refid="classpath.all.libs"/>
+		</javac>
+	</target>
+
+
+
+	<!-- ############### MERGE ############### -->
+
+	<target name="_MERGE.DATA.APP">
+		<!-- Clean -->
+		<delete dir="${merge.dir}/AnalyticsData/App" />
+		<!-- 무조건 지우고 다시 추가 -->
+		<mkdir dir="${merge.dir}/AnalyticsData/App" />
+		
+		<!-- Lib -->
+		<copy todir="${merge.dir}/AnalyticsData/App/WEB-INF/lib">
+			<fileset dir="${source.dir}/AnalyticsData/WebContent/WEB-INF/lib">
+				<include name="*.jar"/>
+			</fileset>
+		</copy>
+		
+		<!-- Classes -->
+		<copy todir="${merge.dir}/AnalyticsData/App/WEB-INF/classes">
+			<fileset dir="${compile.dir}/AnalyticsData"/>
+		</copy>
+		
+		<!-- 설정 -->
+		<copy todir="${merge.dir}/AnalyticsData/App/WEB-INF">
+			<fileset dir="${source.dir}/AnalyticsData/WebContent/WEB-INF">
+				<include name="*.xml"/>
+			</fileset>
+		</copy>
+		
+		<!-- 서버별 파일 교체 -->
+		<move todir="${merge.dir}/AnalyticsData/App" includeemptydirs="false" verbose="true">
+			<fileset dir="${merge.dir}/AnalyticsData/App">
+			</fileset>
+			<mapper type="glob" from="*.${PHASE}" to="*"/>
+		</move>
+		
+		<!-- 불필요한 파일 정리 -->
+		<delete>
+			<fileset dir="${merge.dir}/AnalyticsData/App">
+				<patternset refid="pattern.unnecessary.resource"/>
+			</fileset>
+		</delete>
+		
+		<!-- aws 설정 파일 복사 -->
+		<copy todir="${work.dir}/awsdeploy">
+			<fileset dir="${cd.s3.dir}"/>
+		</copy>
+				
+	</target>
+	
+	
+	
+	<!-- ############### WAR ############### -->
+		
+	<target name="_WAR.APP">
+		<!-- ${param.merge.dir}, ${param.war.name} -->
+		<!-- 배포용 파일 생성 -->
+		<delete file="${work.dir}/awsdeploy/ROOT.war" />
+		<war destfile="${work.dir}/awsdeploy/ROOT.war" basedir="${merge.dir}/AnalyticsData/App"/>
+	</target>
+	
+	<!-- ############### build.merge.pack ############### -->
+	
+	<!-- 운영 -->
+	<target name="COMPILE.MERGE.OPR">
+		<antcall target="_COMPILE.AnalyticsData" />
+		<antcall target="_MERGE.DATA.APP" />
+		<antcall target="_WAR.APP" />
+	</target>
+	
+	
+	
+	
+
+</project>

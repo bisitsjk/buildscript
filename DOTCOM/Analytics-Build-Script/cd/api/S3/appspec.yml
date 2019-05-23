@@ -1,0 +1,20 @@
+version: 0.0
+os: linux
+files:
+- source: /ROOT.war
+  destination: /usr1/home/jeus
+
+permissions:
+- object: /usr1/home/jeus
+  pattern: "**"
+  owner: jeus
+  group: www
+  mode: 644
+
+hooks:
+  ApplicationStart:
+   - location: scripts/ApplicationStart.sh
+     timeout: 60
+  ValidateService:
+   - location: scripts/ChangeLC.sh
+     timeout : 600

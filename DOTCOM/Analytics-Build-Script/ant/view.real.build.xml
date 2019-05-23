@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="deploy.prd" basedir=".">
+<!-- 샘소 문제로 설정 변경  Global Param: ${BRANCH}, ${PHASE} -->
+<!--	<import file="default.build.prd.xml"/> Global Param: ${BRANCH}, ${PHASE} -->
+
+	<property file="pwd.properties" />
+	<property name="source.dir" value="E:\jenkins-analytics\jobs\REAL.CHECKOUT\workspace\${BRANCH}" />
+	<property name="compile.dir" value="E:\jenkins-analytics\jenkinsBuild\compile\${BRANCH}" />
+	<property name="merge.dir" value="E:\jenkins-analytics\jenkinsBuild\merge\${BRANCH}\${PHASE}" />
+	<property name="work.dir" value="E:\jenkins-analytics\jobs\PRD.CD.Analytics.API.View\workspace" />
+	
+
+	<patternset id="pattern.compile.copy.resource">
+		<exclude name="**/*.java"/>
+	</patternset>
+
+	<patternset id="pattern.unnecessary.resource">
+		<include name="**/*.bak"/>
+		<include name="**/*.java"/>
+		<include name="**/*.tst"/>
+		<include name="**/*.prd"/>
+	</patternset>
+
+	<path id="classpath.all.libs">
+		<fileset dir="${source.dir}/Analytics-Library/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${source.dir}/Analytics-Build-Script/lib/tomcatLib">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+
+	<!-- Ant Contrib -->
+	<taskdef resource="net/sf/antcontrib/antlib.xml" />
+	
+
+	<!-- ############### Compile ############### -->
+
+	<target name="_COMPILE.AnalyticsApiView">
+		<delete dir="${compile.dir}/AnalyticsApiView"/>
+		<mkdir dir="${compile.dir}/AnalyticsApiView"/>
+		
+		<javac debug="true" debuglevel="source,lines,vars" destdir="${compile.dir}/AnalyticsApiView" source="1.7" target="1.7" encoding="UTF-8">
+			<src path="${source.dir}/AnalyticsApiView/src"/>
+			<classpath refid="classpath.all.libs"/>
+		</javac>
+	</target>
+
+
+
+	<!-- ############### MERGE ############### -->
+
+	<target name="_MERGE.API.APP">
+		<!-- Clean -->
+		<delete dir="${merge.dir}/AnalyticsApiView/App" />
+		<!-- 무조건 지우고 다시 추가 -->
+		<mkdir dir="${merge.dir}/AnalyticsApiView/App" />
+		
+		<!-- JSP -->
+		<copy todir="${merge.dir}/AnalyticsApiView/App/WEB-INF/jsp">
+			<fileset dir="${source.dir}/AnalyticsApiView/src/main/webapp/WEB-INF/jsp">
+				<include name="*.jsp" />
+			</fileset>
+		</copy>
+		
+		<!-- Lib -->
+		<copy todir="${merge.dir}/AnalyticsApiView/App/WEB-INF/lib">
+			<fileset dir="${source.dir}/Analytics-Library/lib">
+				<include name="*.jar"/>
+			</fileset>
+		</copy>
+		
+		<!-- Classes -->
+		<copy todir="${merge.dir}/AnalyticsApiView/App/WEB-INF/classes">
+			<fileset dir="${compile.dir}/AnalyticsApiView"/>
+		</copy>
+		
+		<!-- resources -->
+		<copy todir="${merge.dir}/AnalyticsApiView/App/WEB-INF/classes">
+			<fileset dir="${source.dir}/AnalyticsApiView/src/main/resources"/>
+		</copy>
+		
+		<!-- 설정 -->
+		<copy todir="${merge.dir}/AnalyticsApiView/App/WEB-INF">
+			<fileset dir="${source.dir}/AnalyticsApiView/src/main/webapp/WEB-INF">
+				<include name="*.xml"/>
+			</fileset>
+		</copy>
+		
+		<!-- 서버별 파일 교체 -->
+		<move todir="${merge.dir}/AnalyticsApiView/App" includeemptydirs="false" verbose="true">
+			<fileset dir="${merge.dir}/AnalyticsApiView/App">
+			</fileset>
+			<mapper type="glob" from="*.${PHASE}" to="*"/>
+		</move>
+		
+		<!-- 불필요한 파일 정리 -->
+		<delete>
+			<fileset dir="${merge.dir}/AnalyticsApiView/App">
+				<patternset refid="pattern.unnecessary.resource"/>
+			</fileset>
+		</delete>
+				
+		<!-- 기존 파일 삭제 -->
+		<delete dir="${work.dir}/awsdeploy"/>
+		<mkdir dir="${work.dir}/awsdeploy"/>
+		
+				
+	</target>
+	
+	
+	
+	<!-- ############### WAR ############### -->
+		
+	<target name="_WAR.APP">
+		<!-- ${param.merge.dir}, ${param.war.name} -->
+		<!-- 배포용 파일 생성 -->
+		<delete file="${work.dir}/awsdeploy/ROOT.war" />
+		<war destfile="${work.dir}/awsdeploy/ROOT.war" basedir="${merge.dir}/AnalyticsApiView/App" needxmlfile='false'/>
+	</target>
+	
+	<!-- ############### build.merge.pack ############### -->
+	
+	<!-- 운영 -->
+	<target name="COMPILE.MERGE.OPR">
+		<antcall target="_COMPILE.AnalyticsApiView" />
+		<antcall target="_MERGE.API.APP" />
+		<antcall target="_WAR.APP" />
+	</target>
+	
+	
+	
+	
+
+</project>

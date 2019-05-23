@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="runshell" basedir=".">
+	
+	<target name="runshell">
+		<exec executable="bin/bash">
+			<arg value="E:\AWS_SH\Analytics\api\ChangeLC.sh"/>
+		</exec>
+	</target>
+</project>

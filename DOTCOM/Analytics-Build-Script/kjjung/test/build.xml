@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="deploy" basedir="."><!-- Global Param: ${target} -->
+
+	<property name="path" value="E:/jenkins-analytics/jobs/${JOB_NAME}/workspace/awsdeploy" />
+	
+	<!-- FILECOPY -->
+		
+	<target name="copy.cd.src">
+		<delete dir="${path}"/>
+		<mkdir dir="${path}"/>
+		<copy todir="${path}">
+			<fileset dir="E:/jenkins-analytics/jobs/${JOB_NAME}/workspace/build/pack"/>
+		</copy>
+	</target>
+
+</project>
