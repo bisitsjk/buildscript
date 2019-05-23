@@ -1,0 +1,127 @@
+#!/bin/bash
+
+# -- Last Modified : Apr 12, 2018 by Kjjung
+echo -e "\n\n"
+echo "======================================================="
+echo "    Deploying time is [ $(TZ="Asia/Seoul" date --rfc-3339=seconds) ]"
+echo "======================================================="
+
+# Define some Env Variables
+
+# modified by jaewoo.kwak
+#SERVICE_TYPE=${1:?" ==> usage:  ./deploy_real_super [A|B]"}
+#SVR_TYPE=${2:?" ==> usage:  ./deploy_real_super [A|B] [FRONTWAS|MOBILEWAS|...]"}
+SVR_TYPE=${1:?" ==> usage:  ./deploy_real_super [FRONTWAS|MOBILEWAS|SAPIWAS|...]"}
+
+#if [ ! $1 ] && [ ! $2 ]; then
+#	echo "Usage : $0 [A|B] [FRONTWAS|MOBILEWAS|...]"
+#	exit;
+#fi
+
+set -x
+
+# added by jaewoo.kwak
+# -- SERVICE_TYPE : Setting Deploy Target : query route53 --#
+HOSTED_ZONE="Z2SWPMK5G125LD"
+RECORD_DOMAIN=""
+if [ ${SVR_TYPE} == "FRONTWAS" ]; then
+    RECORD_DOMAIN="frontwas.lottesuper.internal."
+    A_DNS_NAME="dualstack.internal-ec-prd-int-super-a-frontwas-202724947.ap-northeast-2.elb.amazonaws.com."
+    B_DNS_NAME="dualstack.internal-ec-prd-int-super-b-frontwas-1480062330.ap-northeast-2.elb.amazonaws.com." 
+	SECURITY_GROUP="sg-4df8b326 sg-943d94fc sg-c5228bad"
+elif [ ${SVR_TYPE} == "MOBILEWAS" ]; then
+    RECORD_DOMAIN="mobilewas.lottesuper.internal."
+    A_DNS_NAME="dualstack.internal-ec-prd-int-super-a-mobilewas-943598221.ap-northeast-2.elb.amazonaws.com."
+    B_DNS_NAME="dualstack.internal-ec-prd-int-super-b-mobilewas-1264553139.ap-northeast-2.elb.amazonaws.com."
+	SECURITY_GROUP="sg-4df8b326 sg-943d94fc sg-c5228bad"
+elif [ ${SVR_TYPE} == "SAPIWAS" ]; then
+    RECORD_DOMAIN="sapiwas.lottesuper.internal."
+    A_DNS_NAME="dualstack.internal-ec-prd-int-super-a-sapiwas-339289941.ap-northeast-2.elb.amazonaws.com."
+    B_DNS_NAME="dualstack.internal-ec-prd-int-super-b-sapiwas-15229718.ap-northeast-2.elb.amazonaws.com."
+	SECURITY_GROUP="sg-93ffb4f8 sg-943d94fc sg-c5228bad"	
+fi
+
+RECORD_INFO=(`aws route53 list-resource-record-sets --hosted-zone-id ${HOSTED_ZONE} --query "ResourceRecordSets[?Name == '${RECORD_DOMAIN}'].[Weight, SetIdentifier][0]" --output text`)
+
+SERVICE_TYPE="B"
+ACTIVE="A"
+
+if [ ${RECORD_INFO[0]} -eq 0 ] && [ ${RECORD_INFO[1]} == "A" ]; then
+    SERVICE_TYPE="A"
+    ACTIVE="B"
+
+elif [ ${RECORD_INFO[0]} -eq 255 ] && [ ${RECORD_INFO[1]} == "B" ]; then
+    SERVICE_TYPE="A"
+    ACTIVE="B"
+fi
+
+# -- create file of Launch Configuration User Data -- #
+echo "#!/bin/bash" > user-data.txt
+echo "sudo yum install amazon-ssm-agent -y" >> user-data.txt
+echo "sudo /sbin/start amazon-ssm-agent" >> user-data.txt
+
+ASG_NAME=SEOUL-EC-PRD-SUPER-${SERVICE_TYPE}-${SVR_TYPE}-ASG
+ASG_TAG_NAME=aws:autoscaling:groupName
+SERVER_TAG_NAME=Name
+SERVER_TAG_VALUE=SEOUL-EC-A-STG-SUPER-${SVR_TYPE}-01
+
+# -- Get AZ Name & Region Name -- #
+EC2_AVAIL_ZONE=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
+export AWS_DEFULAT_REGION="`echo \"$EC2_AVAIL_ZONE\" | sed -e 's:\([0-9][0-9]*\)[a-z]*\$:\\1:'`"
+awsDefaultRegion=$AWS_DEFULAT_REGION
+
+# -- Get STG InstaceID -- #
+STG_EC2_ID=$(aws ec2 describe-instances  --filter Name=instance-state-name,Values=running Name=tag:${SERVER_TAG_NAME},Values=${SERVER_TAG_VALUE} --query 'Reservations[].Instances[].[InstanceId]'   --region $awsDefaultRegion --output text | awk 'NR==1{print $1}')
+
+# -- Create a New AMI. -- #
+IMG_NAME=${SERVER_TAG_VALUE}_$(date +%y%m%d-%H%M)
+AMI_ID=$(aws ec2 create-image --instance-id ${STG_EC2_ID} --no-reboot --name $IMG_NAME --description "Golden Image for ${SERVER_TAG_VALUE} Server" --region $awsDefaultRegion --output text)
+
+while :
+do
+
+amistatus=$(aws ec2 describe-images --image-ids $AMI_ID --region $awsDefaultRegion| grep "State" | cut -d\" -f4)
+echo "amistatus : " $amistatus
+        if [ "$amistatus" == "available" ]; then
+                break;
+        elif [ "$amistatus" == "failed" ]; then
+                exit 1;
+        fi
+        sleep 10
+done
+
+# -- Attach a Tag For New AMI -- #
+aws ec2 create-tags  --resources $AMI_ID --tags Key=Name,Value="${SERVER_TAG_VALUE} Server Image" --region $awsDefaultRegion
+
+# -- Get Real Instance ID -- #
+#REAL_EC2_ID=$(aws ec2 describe-instances  --filter Name=instance-state-name,Values=running Name=tag:${ASG_TAG_NAME},Values=${ASG_NAME} --query 'Reservations[].Instances[].[InstanceId]'   --region $awsDefaultRegion --output text | awk 'NR==1{print $1}')
+# modified by jaewoo.kwak
+REAL_EC2_ID=$(aws ec2 describe-instances  --filter Name=instance-state-name,Values=running Name=tag:${ASG_TAG_NAME},Values=SEOUL-EC-PRD-SUPER-${ACTIVE}-${SVR_TYPE}-ASG --query 'Reservations[].Instances[].[InstanceId]'   --region $awsDefaultRegion --output text | awk 'NR==1{print $1}')
+if [ -z ${REAL_EC2_ID} ]; then
+    REAL_EC2_ID=${STG_EC2_ID}
+fi
+
+# -- Create a New Launch Configuration -- #
+LCNAME=LC-$IMG_NAME
+
+# modified by jaewoo.kwak
+aws autoscaling create-launch-configuration \
+      --launch-configuration-name ${LCNAME} \
+      --image-id $AMI_ID \
+      --instance-id $REAL_EC2_ID \
+      --instance-monitoring Enabled=true --region $awsDefaultRegion \
+	  --security-group $SECURITY_GROUP \
+      --user-data file://user-data.txt
+  
+# -- Update a New Launch Configuration -- #
+aws autoscaling update-auto-scaling-group \
+      --auto-scaling-group-name ${ASG_NAME} \
+      --launch-configuration-name ${LCNAME} --region $awsDefaultRegion
+
+echo
+echo "END Script"
+echo
+
+
+# -- End of Code (Lotte.com Deployment)-- #
+

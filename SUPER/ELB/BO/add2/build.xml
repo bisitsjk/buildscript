@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lottesuper.deploy" basedir="."><!-- Global Param: ${target} -->
+
+	<taskdef resource="net/sf/antcontrib/antlib.xml" />
+	
+	<target name="aws.init.dir">
+		<delete dir="E:/jenkins-lottesuper/jobs/${JOB_NAME}/workspace/awsscript"/>
+		<mkdir dir="E:/jenkins-lottesuper/jobs/${JOB_NAME}/workspace/awsscript"/>				
+	</target>
+	
+	<target name="aws.filecopy">	
+		<copy todir="E:/jenkins-lottesuper/jobs/${JOB_NAME}/workspace/awsscript">
+			<fileset dir="E:/jenkins-lottesuper/jobs/${JOB_NAME}/workspace/build/pack"/>
+		</copy>
+	</target>
+
+</project>

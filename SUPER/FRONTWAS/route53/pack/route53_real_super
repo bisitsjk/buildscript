@@ -1,0 +1,92 @@
+#!/bin/bash
+
+# -- Last Modified : Apr 5, 2018 by Kjjung
+echo -e "\n\n"
+echo "======================================================="
+echo "    Deploying time is [ $(TZ="Asia/Seoul" date --rfc-3339=seconds) ]"
+echo "======================================================="
+
+# modified by jaewoo.kwak
+SVR_TYPE=${1:?" ==> usage:  ./deploy_real_super [FRONTWAS|MOBILEWAS|...]"}
+
+# added by jaewoo.kwak
+# -- SERVICE_TYPE : Setting Deploy Target : query route53 --#
+HOSTED_ZONE="Z2SWPMK5G125LD"
+RECORD_DOMAIN=""
+if [ ${SVR_TYPE} == "FRONTWAS" ]; then
+    RECORD_DOMAIN="frontwas.lottesuper.internal."
+    A_DNS_NAME="dualstack.internal-ec-prd-int-super-a-frontwas-202724947.ap-northeast-2.elb.amazonaws.com."
+    B_DNS_NAME="dualstack.internal-ec-prd-int-super-b-frontwas-1480062330.ap-northeast-2.elb.amazonaws.com." 
+elif [ ${SVR_TYPE} == "MOBILEWAS" ]; then
+    RECORD_DOMAIN="mobilewas.lottesuper.internal."
+    A_DNS_NAME="dualstack.internal-ec-prd-int-super-a-mobilewas-943598221.ap-northeast-2.elb.amazonaws.com."
+    B_DNS_NAME="dualstack.internal-ec-prd-int-super-b-mobilewas-1264553139.ap-northeast-2.elb.amazonaws.com."
+fi
+
+RECORD_INFO=(`aws route53 list-resource-record-sets --hosted-zone-id ${HOSTED_ZONE} --query "ResourceRecordSets[?Name == '${RECORD_DOMAIN}'].[Weight, SetIdentifier][0]" --output text`)
+
+SERVICE_TYPE="B"
+A_WEIGHT="0"
+B_WEIGHT="255"
+if [ ${RECORD_INFO[0]} -eq 0 ] && [ ${RECORD_INFO[1]} == "A" ]; then
+    SERVICE_TYPE="A"
+    A_WEIGHT="255"
+    B_WEIGHT="0"
+
+elif [ ${RECORD_INFO[0]} -eq 255 ] && [ ${RECORD_INFO[1]} == "B" ]; then
+    SERVICE_TYPE="A"
+    A_WEIGHT="255"
+    B_WEIGHT="0"
+
+fi
+
+# -- Create json of recordset info -- #
+CHANGE_WEIGHT_JSON="{
+  \"Comment\": \"Change deploy target\",
+  \"Changes\": [
+    {
+      \"Action\": \"UPSERT\",
+      \"ResourceRecordSet\": {
+        \"Name\": \"${RECORD_DOMAIN}\",
+        \"Type\": \"A\",
+        \"SetIdentifier\": \"A\",
+        \"Weight\": ${A_WEIGHT},
+        \"AliasTarget\": {
+          \"HostedZoneId\": \"ZWKZPGTI48KDX\",
+          \"DNSName\": \"${A_DNS_NAME}\",
+          \"EvaluateTargetHealth\": true
+        }
+      }
+    },
+    {
+      \"Action\": \"UPSERT\",
+      \"ResourceRecordSet\": {
+        \"Name\": \"${RECORD_DOMAIN}\",
+        \"Type\": \"A\",
+        \"SetIdentifier\": \"B\",
+        \"Weight\": ${B_WEIGHT},
+        \"AliasTarget\": {
+          \"HostedZoneId\": \"ZWKZPGTI48KDX\",
+          \"DNSName\": \"${B_DNS_NAME}\",
+          \"EvaluateTargetHealth\": true
+        }
+      }
+    }
+  ]
+}"
+
+echo ${CHANGE_WEIGHT_JSON} > change_recordset_info.json
+
+
+
+# added by jaewoo.kwak
+# -- Change value of Weighted Route -- #      
+aws route53 change-resource-record-sets --hosted-zone-id ${HOSTED_ZONE} --change-batch file://change_recordset_info.json
+
+
+echo
+echo "END Script"
+echo
+
+
+# -- End of Code (Lotte.com Deployment)-- #

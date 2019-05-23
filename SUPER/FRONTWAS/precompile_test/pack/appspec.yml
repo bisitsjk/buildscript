@@ -1,0 +1,12 @@
+version: 0.0
+os: linux
+files:
+- source: /front.xml
+  destination: /usr1/home/jeus/awsscript/precompile/front
+
+permissions:
+- object: /usr1/home/jeus/awsscript/precompile/front
+  pattern: "**"
+  owner: jeus
+  group: www
+  mode: 644

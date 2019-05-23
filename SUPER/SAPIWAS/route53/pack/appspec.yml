@@ -1,0 +1,17 @@
+version: 0.0
+os: linux
+files:
+- source: /route53_real_super
+  destination: /usr1/home/jeus/awsscript/route53
+
+permissions:
+- object: /usr1/home/jeus/awsscript/route53
+  pattern: "**"
+  owner: jeus
+  group: www
+  mode: 644
+
+hooks:
+  ApplicationStart:
+   - location: scripts/ApplicationStart.sh
+     timeout: 900
