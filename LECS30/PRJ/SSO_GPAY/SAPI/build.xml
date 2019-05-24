@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="super.prj" basedir="."><!-- Global Param: ${target} -->
+
+	<property name="path" value="E:/jenkins-lottesuper/jobs/${JOB_NAME}/workspace/awsdeploy" />
+	
+	<!-- FILECOPY -->
+		
+	<target name="copy.cd.src">
+		<delete dir="${path}"/>
+		<mkdir dir="${path}"/>
+		<copy todir="${path}">
+			<fileset dir="E:/jenkins-lottesuper/jobs/${JOB_NAME}/workspace/build/S3"/>
+		</copy>
+	</target>
+
+</project>

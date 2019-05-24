@@ -1,0 +1,20 @@
+version: 0.0
+os: linux
+files:
+- source: /PRO_prj_WAS.tar
+  destination: /esuper/project/back
+- source: /PARTNER_prj_WAS.tar
+  destination: /esuper/project/partner
+
+permissions:
+- object: /esuper/project/
+  pattern: "**"
+  owner: jeus
+  group: www
+  mode: 755
+
+hooks:
+  ApplicationStart:
+   - location: scripts/Start.sh
+     timeout: 120
+     

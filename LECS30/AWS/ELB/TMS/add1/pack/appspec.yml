@@ -1,0 +1,17 @@
+version: 0.0
+os: linux
+files:
+- source: /elb_tms
+  destination: /usr1/home/jeus/awsscript/elb/tms
+
+permissions:
+- object: /usr1/home/jeus/awsscript/elb/tms
+  pattern: "**"
+  owner: jeus
+  group: www
+  mode: 644
+
+hooks:
+  ApplicationStart:
+   - location: scripts/ApplicationStart.sh
+     timeout: 900

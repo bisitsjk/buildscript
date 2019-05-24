@@ -1,0 +1,50 @@
+#!/bin/bash
+
+# -- Last Modified : Apr 16, 2018 by Kjjung
+echo -e "\n\n"
+echo "======================================================="
+echo "    Deploying time is [ $(TZ="Asia/Seoul" date --rfc-3339=seconds) ]"
+echo "======================================================="
+
+# Define some Env Variables
+ACTION=${1:?" ==> usage: sh elb_bo add or remove"}
+TARGET=${2:?" ==> usage: sh elb_bo remove 1set or 2set"}
+
+set -x
+
+EC2_1SET_ID="i-0124e711c2a4d2e56"
+EC2_2SET_ID="i-0a8d13d8af6268c78"
+ELB_NAME="EC-PRD-INT-SUPER-WINWINWAS-01"
+
+TARGET_EC2_ID=${EC2_1SET_ID}
+
+# -- Get AZ Name & Region Name -- #
+EC2_AVAIL_ZONE=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
+export AWS_DEFULAT_REGION="`echo \"$EC2_AVAIL_ZONE\" | sed -e 's:\([0-9][0-9]*\)[a-z]*\$:\\1:'`"
+awsDefaultRegion=$AWS_DEFULAT_REGION
+
+echo "======== ELB Target $2 ========"
+
+if [ "${TARGET}" == "2set" ];
+then
+		TARGET_EC2_ID=${EC2_2SET_ID}
+fi
+
+if [ "${ACTION}" == "add" ];
+then
+        echo "Adding $TARGET_EC2_ID ..."
+        aws elb register-instances-with-load-balancer --load-balancer-name $ELB_NAME --instances $TARGET_EC2_ID --region $awsDefaultRegion
+elif [ "${ACTION}" == "remove" ];
+then
+        echo "Removing $TARGET_EC2_ID ..."
+        aws elb deregister-instances-from-load-balancer --load-balancer-name $ELB_NAME --instances $TARGET_EC2_ID --region $awsDefaultRegion
+else
+        echo "Invalid command argument given."
+fi
+
+echo
+echo "END Script"
+echo
+
+
+# -- End of Code (Lotte.com Deployment)-- #

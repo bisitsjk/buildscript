@@ -1,0 +1,20 @@
+version: 0.0
+os: linux
+files:
+- source: /deploy_real_super
+  destination: /usr1/home/jeus/awsscript/LC
+
+permissions:
+- object: /usr1/home/jeus/awsscript/LC
+  pattern: "**"
+  owner: jeus
+  group: www
+  mode: 644
+
+hooks:
+  ApplicationStop:
+   - location: scripts/ApplicationStop.sh
+     timeout: 120
+  ApplicationStart:
+   - location: scripts/ApplicationStart.sh
+     timeout: 900

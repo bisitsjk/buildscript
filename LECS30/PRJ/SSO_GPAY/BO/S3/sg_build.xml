@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="prj.deploy" basedir="."><!-- Global Param: ${target} -->
+
+	<property name="path" value="E:/jenkins-lottesuper/jobs/S_G_DEPLOY_BO/workspace/lottesuper2011/pack/PROJECT/20190423_SSO_And_GPAY/lotte-super-commons/project/partner/WEB-INF/lib" />
+	
+	<!-- FILECOPY -->
+		
+	<target name="copy.cd.src">
+		<delete dir="${path}"/>
+		<mkdir dir="${path}"/>
+		<copy todir="${path}">
+			<fileset dir="E:/jenkins-lottesuper/jobs/S_G_DEPLOY_BO/workspace/lottesuper2011/pack/PROJECT/20190423_SSO_And_GPAY/lotte-super-bos/project/back/WEB-INF/lib"/>
+		</copy>
+	</target>
+
+</project>

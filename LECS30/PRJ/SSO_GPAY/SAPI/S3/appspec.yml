@@ -1,0 +1,18 @@
+version: 0.0
+os: linux
+files:
+- source: /SAPI_prj_WAS.tar
+  destination: /esuper/project/sapi
+
+permissions:
+- object: /esuper/project/sapi
+  pattern: "**"
+  owner: jeus
+  group: www
+  mode: 644
+
+hooks:
+  ApplicationStart:
+   - location: scripts/aws_sapiprj1_Start.sh
+     timeout: 120
+     
